@@ -1,0 +1,295 @@
+<div class="clinique-container">
+
+    <div class="d-flex justify-content-end mb-3" *ngIf="auth.getToken() && auth.getRole() == 'ROLE_SUPER_ADMIN'">
+        <button class="btn-nouvelle-clinique" type="button" (click)="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> Nouveau cabinet médecin
+        </button>
+    </div>
+
+    <section class="filters-section luna-glass mb-4">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Nom, spécialité, téléphone, adresse...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Statut</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+          <option value="all">Tous les statuts</option>
+          <option value="active">Actif</option>
+          <option value="inactive">Suspendu</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="cliniques-grid">
+        <ng-container *ngIf="paginatedMedecins && paginatedMedecins.length > 0; else emptyState">
+            <div *ngFor="let m of paginatedMedecins; trackBy: trackMedecinId" class="clinique-card">
+                <div class="card-header-section">
+                    <div class="clinique-icon">
+                        <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="clinique-info">
+                        <h3 class="clinique-nom">Dr. {{ m.prenom }} {{ m.nom }}</h3>
+                        <p class="clinique-adresse" *ngIf="m.specialite">
+                            <i class="bi bi-heart-pulse"></i> {{ m.specialite }}
+                        </p>
+                        <p class="clinique-adresse" *ngIf="m.localisation">
+                            <i class="bi bi-geo-alt"></i> {{ m.localisation }}
+                        </p>
+                    </div>
+                    <span class="status-badge" [class.active]="m.actif" [class.inactive]="!m.actif">
+                        {{ m.actif ? 'Actif' : 'Suspendu' }}
+                    </span>
+                </div>
+                <div class="card-actions d-flex gap-2 justify-content-end flex-wrap">
+                    <button type="button" class="btn btn-outline-dark btn-sm" (click)="openDetailsModal(m)">
+                        <i class="bi bi-file-earmark-text"></i> Détails
+                    </button>
+                    <ng-container *ngIf="auth.getToken() && auth.getRole() == 'ROLE_SUPER_ADMIN'">
+                        <button type="button" class="btn btn-outline-dark btn-sm" (click)="openEditModal(m)">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="openDeleteModal(m.id!)">
+                            <i class="bi bi-trash"></i> Désactiver
+                        </button>
+                    </ng-container>
+                </div>
+            </div>
+        </ng-container>
+        <ng-template #emptyState>
+            <div class="empty-state">
+                <i class="bi bi-person-badge"></i>
+                <h3>Aucun cabinet médecin</h3>
+                <p>Ajoutez un cabinet avec spécialité, coordonnées et localisation</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <div class="pagination-container" *ngIf="filteredMedecins.length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredMedecins.length }} cabinets
+      </span>
+      <div class="pagination-controls">
+        <button type="button" class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button type="button" class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button type="button" class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal création -->
+    <div class="modal fade" id="createCabinetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-badge me-2"></i>
+                        Nouveau cabinet médecin
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form #createForm="ngForm" (ngSubmit)="onCreateSubmit()">
+                        <div class="section-header mb-3">
+                            <div class="section-icon"><i class="bi bi-person-badge"></i></div>
+                            <h6 class="section-title">Carte d'identité (CIN)</h6>
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Numéro CIN <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-card-text"></i></span>
+                                    <input type="text" class="form-control" [(ngModel)]="newCabinet.numeroPieceIdentite" name="cinCabinet"
+                                        required minlength="3" autocomplete="off" placeholder="Numéro de carte d'identité">
+                                </div>
+                                <small class="text-muted">Si un médecin cabinet existe déjà avec ce CIN et le même mobile, ses identifiants restent inchangés (mise à jour des infos cabinet).</small>
+                            </div>
+                        </div>
+                        <div class="section-header mb-3">
+                            <div class="section-icon"><i class="bi bi-person"></i></div>
+                            <h6 class="section-title">Identité et spécialité</h6>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nom <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" [(ngModel)]="newCabinet.nom" name="nom" required placeholder="Nom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prénom <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input type="text" class="form-control" [(ngModel)]="newCabinet.prenom" name="prenom" required placeholder="Prénom">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Spécialité <span class="text-danger">*</span></label>
+                                <select class="form-select" [(ngModel)]="newCabinet.specialite" name="specialite" required>
+                                    <option value="">Sélectionnez une spécialité</option>
+                                    <option *ngFor="let spec of specialitesMedicales" [value]="spec">{{ spec }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Téléphone mobile <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                                    <input type="text" class="form-control" inputmode="numeric" maxlength="8"
+                                        [(ngModel)]="newCabinet.telephone" name="telephone" required placeholder="8 chiffres">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Téléphone fixe</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                    <input type="text" class="form-control" inputmode="numeric" maxlength="8"
+                                        [(ngModel)]="newCabinet.telephoneFixe" name="telephoneFixe" placeholder="Optionnel, 8 chiffres">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Localisation du cabinet</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                    <input type="text" class="form-control" [(ngModel)]="newCabinet.localisation"
+                                        name="localisation" placeholder="Adresse, ville...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 px-0 pt-4">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-1"></i> Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary px-4" [disabled]="!canSubmitCreate() || !createForm.valid">
+                                <i class="bi bi-check-circle me-2"></i> Créer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal édition -->
+    <div class="modal fade" id="editCabinetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2"></i> Modifier le cabinet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form #editForm="ngForm" (ngSubmit)="onEditSubmit()">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nom *</label>
+                                <input type="text" class="form-control" [(ngModel)]="editingMedecin.nom" name="nomE" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prénom *</label>
+                                <input type="text" class="form-control" [(ngModel)]="editingMedecin.prenom" name="prenomE" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Spécialité *</label>
+                                <input type="text" class="form-control" [(ngModel)]="editingMedecin.specialite" name="specialiteE" required
+                                    [attr.list]="'specCabinetList'">
+                                <datalist id="specCabinetList">
+                                    <option *ngFor="let spec of specialitesMedicales" [value]="spec"></option>
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Téléphone mobile *</label>
+                                <input type="text" class="form-control" maxlength="8" [(ngModel)]="editingMedecin.telephone" name="telE" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Téléphone fixe</label>
+                                <input type="text" class="form-control" maxlength="8" [(ngModel)]="editingMedecin.telephoneFixe" name="fixE">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Localisation</label>
+                                <input type="text" class="form-control" [(ngModel)]="editingMedecin.localisation" name="locE">
+                            </div>
+                        </div>
+                        <div class="modal-footer px-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">Enregistrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal détails -->
+    <div class="modal fade" id="detailsCabinetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-badge me-2"></i> Dr. {{ selectedMedecin?.prenom }} {{ selectedMedecin?.nom }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" (click)="hideDetailsModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>CIN :</strong> {{ selectedMedecin?.numeroPieceIdentite || 'Non renseigné' }}</p>
+                    <p><strong>Spécialité :</strong> {{ selectedMedecin?.specialite || '—' }}</p>
+                    <p><strong>Mobile :</strong> {{ selectedMedecin?.telephone || '—' }}</p>
+                    <p><strong>Fixe :</strong> {{ selectedMedecin?.telephoneFixe || 'Non renseigné' }}</p>
+                    <p><strong>Localisation :</strong> {{ selectedMedecin?.localisation || 'Non renseignée' }}</p>
+                    <p><strong>N° d'ordre :</strong> {{ selectedMedecin?.numeroOrdre || '—' }}</p>
+                    <p><strong>Création :</strong> {{ selectedMedecin?.dateCreation | date:'dd/MM/yyyy' }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="hideDetailsModal()">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal suppression -->
+    <div class="modal fade" id="deleteCabinetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Désactiver ce cabinet ?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Le compte médecin sera désactivé (comme pour la suppression d’un accès).
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-danger" (click)="confirmDelete()">Désactiver</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal succès -->
+    <div class="modal fade" id="successCabinetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-body text-center p-4">
+                    <h4 class="mt-2 mb-2 fw-bold text-dark">Succès</h4>
+                    <p class="text-muted mb-4">{{ successMessage }}</p>
+                    <button type="button" class="btn btn-success px-4 py-2" (click)="hideSuccessModal()">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

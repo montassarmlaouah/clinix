@@ -1,0 +1,760 @@
+<div class="main-card">
+  <div class="chambres-container">
+    <!-- En-tête -->
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Gestion des Chambres</h1>
+        <p class="header-subtitle">Inventaire des chambres, affectation à l’entrée et enregistrement de la sortie du patient.</p>
+      </div>
+      <div class="header-stats" *ngIf="isSecretaire()">
+        <div class="header-stat badge-total">
+          <i class="fas fa-door-closed"></i>
+          <span>{{ statistiques.total }} total</span>
+        </div>
+        <div class="header-stat badge-available">
+          <i class="fas fa-check-circle"></i>
+          <span>{{ statistiques.disponibles }} disponible(s)</span>
+        </div>
+        <div class="header-stat badge-occupied">
+          <i class="fas fa-procedures"></i>
+          <span>{{ statistiques.occupees }} occupée(s)</span>
+        </div>
+      </div>
+      <div class="header-actions" *ngIf="canManageChambres()">
+        <button class="btn btn-secondary me-2" (click)="ouvrirModalAjoutMultiple()">
+          <i class="fas fa-layer-group"></i> Créer plusieurs chambres
+        </button>
+        <button class="btn btn-primary" (click)="ouvrirModalAjout()">
+          <i class="fas fa-plus-circle"></i> Nouvelle chambre
+        </button>
+      </div>
+    </header>
+
+    <!-- Messages -->
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+    </section>
+
+    <!-- Statistiques -->
+    <section class="stats-grid">
+      <div class="stat-card card-total">
+        <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ statistiques.total || chambres.length }}</span>
+          <span class="stat-label">Total Chambres</span>
+        </div>
+      </div>
+
+      <!-- Suppression du bloc VIP -->
+    </section>
+
+    <!-- Filtres -->
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher</label>
+        <div class="input-with-icon">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-control luna-input" [(ngModel)]="rechercheText"
+            placeholder="Numéro ou service...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Service</label>
+        <select class="form-control luna-input" [(ngModel)]="filtreService">
+          <option value="">Tous les services</option>
+          <option *ngFor="let service of services" [value]="service.id">{{ service.nom }}</option>
+        </select>
+      </div>
+
+
+
+
+      <div class="filter-group">
+        <label class="luna-label">Statut</label>
+        <select class="form-control luna-input" [(ngModel)]="filtreDisponibilite">
+          <option value="">Tous les statuts</option>
+          <option value="disponible">Disponible</option>
+          <option value="occupee">Occupée</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Onglets de types -->
+    <div class="type-tabs">
+      <button class="type-tab" [class.active]="!filtreType" (click)="filtreType = ''">
+        <i class="fas fa-layer-group"></i> Toutes ({{ chambres.length }})
+      </button>
+      <button class="type-tab" [class.active]="filtreType === 'SIMPLE'" (click)="filtreType = 'SIMPLE'">
+        <i class="fas fa-home"></i> Simple ({{ compterParType('SIMPLE') }})
+      </button>
+      <button class="type-tab" [class.active]="filtreType === 'DOUBLE'" (click)="filtreType = 'DOUBLE'">
+        <i class="fas fa-bed"></i> Double ({{ compterParType('DOUBLE') }})
+      </button>
+      <button class="type-tab" [class.active]="filtreType === 'SUITE'" (click)="filtreType = 'SUITE'">
+        <i class="fas fa-crown"></i> Suite ({{ compterParType('SUITE') }})
+      </button>
+      <button class="type-tab" [class.active]="filtreType === 'REANIMATION'" (click)="filtreType = 'REANIMATION'">
+        <i class="fas fa-heartbeat"></i> Réanimation ({{ compterParType('REANIMATION') }})
+      </button>
+      <button class="type-tab" [class.active]="filtreType === 'URGENCE'" (click)="filtreType = 'URGENCE'">
+        <i class="fas fa-ambulance"></i> Urgence ({{ compterParType('URGENCE') }})
+      </button>
+    </div>
+
+    <!-- Tableau des chambres -->
+    <div class="table-container luna-shadow">
+      <table class="chambres-table">
+        <thead>
+          <tr>
+            <th>CHAMBRE</th>
+            <th>SERVICE</th>
+            <th>TYPE</th>
+            <th>CAPACITÉ</th>
+            <th>LITS</th>
+            <th>ÉQUIPEMENTS</th>
+            <th>STATUT</th>
+            <th class="text-center">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let chambre of chambresPaginees" class="luna-row">
+            <td>
+              <div class="chambre-cell">
+                <span class="chambre-number">{{ chambre.numero }}</span>
+                <span class="chambre-id">ID: {{ chambre.id?.substring(0, 8) || 'N/A' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="service-cell">
+                <span class="service-name">{{ chambre.service?.nom || 'N/A' }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="type-badge" [ngClass]="getTypeClass(chambre.type)">
+                {{ getLibelleTypeChambre(chambre.type) }}
+              </span>
+            </td>
+            <td class="capacity-cell">
+              <div class="capacity-bar">
+                <div class="capacity-fill" [style.width.%]="getOccupationRate(chambre)"></div>
+              </div>
+              <span class="capacity-text">{{ chambre.capacite }} personnes</span>
+            </td>
+            <td>
+              <div class="beds-info">
+                <i class="fas fa-bed"></i>
+                <span>{{ chambre.nombreLits }} lits</span>
+              </div>
+            </td>
+            <td>
+              <div class="equipments-list">
+                <ng-container *ngIf="getMaterielLabels(chambre.materielIds).length > 0; else equipementsTexte">
+                  <span class="equipment-tag" *ngFor="let equip of getMaterielLabels(chambre.materielIds).slice(0, 2)">
+                    {{ equip }}
+                  </span>
+                  <span class="more-equip" *ngIf="getMaterielLabels(chambre.materielIds).length > 2">
+                    +{{ getMaterielLabels(chambre.materielIds).length - 2 }}
+                  </span>
+                </ng-container>
+                <ng-template #equipementsTexte>
+                  <ng-container *ngIf="chambre.equipements && chambre.equipements.length > 0; else noEquipements">
+                    <span class="equipment-tag" *ngFor="let equip of chambre.equipements.slice(0, 2)">
+                      {{ equip }}
+                    </span>
+                    <span class="more-equip" *ngIf="chambre.equipements.length > 2">
+                      +{{ chambre.equipements.length - 2 }}
+                    </span>
+                  </ng-container>
+                  <ng-template #noEquipements>
+                    <span class="no-equipment">Aucun</span>
+                  </ng-template>
+                </ng-template>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(chambre.disponible)">
+                <i [class]="getStatusIcon(chambre.disponible)"></i>
+                {{ getLibelleStatut(chambre.disponible) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-group">
+                <button class="btn-action btn-view" (click)="ouvrirModalDetails(chambre)" title="Détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-action btn-assign" *ngIf="canAssignPatient()" (click)="ouvrirModalAffectation(chambre)"
+                  title="Entrée — affecter un patient">
+                  <i class="fas fa-user-plus"></i>
+                </button>
+                <button class="btn-action btn-warning" *ngIf="peutGererSortiePatient() && !chambre.disponible && getHospitalisationEnCoursPourChambre(chambre)"
+                  (click)="ouvrirModalSortie(chambre)" title="Sortie — fin d'hospitalisation">
+                  <i class="fas fa-sign-out-alt"></i>
+                </button>
+                <button class="btn-action btn-view" *ngIf="canManageChambres()"
+                  (click)="ouvrirModalModification(chambre)" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action btn-delete" *ngIf="canManageChambres()"
+                  (click)="confirmerSuppression(chambre)" title="Supprimer">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="chambresPaginees.length === 0">
+            <td colspan="8" class="empty-state">
+              <i class="fas fa-door-closed"></i>
+              <p>Aucune chambre trouvée</p>
+              <button class="btn btn-outline-primary mt-3" *ngIf="canManageChambres()" (click)="ouvrirModalAjout()">
+                <i class="fas fa-plus"></i> Créer une chambre
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="chambresFiltrees.length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ chambresFiltrees.length }} chambres
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détails -->
+<div class="modal" *ngIf="showDetailsModal && chambreDetails">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-info-circle"></i> Détails de la chambre
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModalDetails()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <h6 class="section-title">
+            <i class="fas fa-door-open"></i> Informations générales
+          </h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Numéro</label>
+                <p>{{ chambreDetails.numero }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Service</label>
+                <p>{{ chambreDetails.service?.nom || 'N/A' }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Type</label>
+                <p>{{ getLibelleTypeChambre(chambreDetails.type) }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Capacité</label>
+                <p>{{ chambreDetails.capacite }} personne(s)</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Nombre de lits</label>
+                <p>{{ chambreDetails.nombreLits }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Statut</label>
+                <p>{{ getLibelleStatut(chambreDetails.disponible) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h6 class="section-title">
+            <i class="fas fa-tools"></i> Équipements
+          </h6>
+          <div *ngIf="getMaterielLabels(chambreDetails.materielIds).length > 0" class="equipments-tags">
+            <span class="equipment-tag" *ngFor="let equip of getMaterielLabels(chambreDetails.materielIds)">
+              {{ equip }}
+            </span>
+          </div>
+          <div *ngIf="(!chambreDetails.materielIds || chambreDetails.materielIds.length === 0)
+                      && (!chambreDetails.equipements || chambreDetails.equipements.length === 0)"
+               class="text-muted">
+            Aucun équipement
+          </div>
+          <div *ngIf="chambreDetails.equipements && chambreDetails.equipements.length > 0" class="equipments-tags mt-2">
+            <span class="equipment-tag" *ngFor="let equip of chambreDetails.equipements">
+              {{ equip }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModalDetails()">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ajout/Modification -->
+<div class="modal" *ngIf="showModal">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-door-open"></i>
+          {{ isEditMode ? 'Modifier la chambre' : 'Nouvelle chambre' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Numéro de chambre *</label>
+              <input type="text" class="form-control luna-input" [(ngModel)]="formData.numero" placeholder="Ex: 101"
+                required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Service *</label>
+              <select class="form-control luna-input" [(ngModel)]="formData.serviceId" required>
+                <option value="">Sélectionner un service</option>
+                <option *ngFor="let service of services" [value]="service.id">
+                  {{ service.nom }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="form-group mb-3">
+              <label class="form-label">Type *</label>
+              <select class="form-control luna-input" [(ngModel)]="formData.type" required>
+                <option [value]="TypeChambre.SIMPLE">Simple</option>
+                <option [value]="TypeChambre.DOUBLE">Double</option>
+                <option [value]="TypeChambre.SUITE">Suite</option>
+                <option [value]="TypeChambre.REANIMATION">Réanimation</option>
+                <option [value]="TypeChambre.URGENCE">Urgence</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group mb-3">
+              <label class="form-label">Capacité *</label>
+              <input type="number" class="form-control luna-input" [(ngModel)]="formData.capacite" min="1" required>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group mb-3">
+              <label class="form-label">Nombre de lits *</label>
+              <input type="number" class="form-control luna-input" [(ngModel)]="formData.nombreLits" min="1" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group mb-4">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" [(ngModel)]="formData.disponible" id="disponible">
+            <label class="form-check-label" for="disponible">
+              Chambre disponible
+            </label>
+          </div>
+        </div>
+
+
+
+        <!-- Matériel médical -->
+        <div class="materiel-section">
+          <div class="section-header">
+            <h6><i class="fas fa-stethoscope"></i> Matériel médical à lier</h6>
+          </div>
+
+          <div class="alert alert-info" *ngIf="equipementsDisponibles.length === 0">
+            <i class="fas fa-info-circle"></i> Aucun équipement médical disponible à lier.
+          </div>
+
+          <div class="materiel-list-selection" *ngIf="equipementsDisponibles.length > 0">
+            <div class="materiel-selection-card" *ngFor="let equip of equipementsDisponibles"
+              [class.selected]="isMaterielSelected(equip.id)" (click)="toggleMateriel(equip.id)">
+              <div class="materiel-select-header">
+                <span class="materiel-code">{{ equip.code || equip.nom }}</span>
+                <span class="materiel-name" *ngIf="equip.code && equip.nom"> - {{ equip.nom }}</span>
+              </div>
+              <div class="materiel-select-icon">
+                <i class="fas" [ngClass]="isMaterielSelected(equip.id) ? 'fa-check-circle' : 'fa-circle'"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3" *ngIf="formData.materielIds && formData.materielIds.length > 0">
+            <small class="text-muted">{{ formData.materielIds.length }} équipement(s) sélectionné(s)</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModal()">
+          Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="sauvegarder()">
+          <i class="fas fa-save"></i>
+          {{ isEditMode ? 'Modifier' : 'Créer' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Affectation Patient -->
+<div class="modal" *ngIf="showAffectationModal && chambrePourAffectation">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-user-plus"></i> Affecter un patient
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModalAffectation()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <h6 class="section-title">
+            <i class="fas fa-door-open"></i> Chambre sélectionnée
+          </h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Numéro</label>
+                <p>{{ chambrePourAffectation.numero }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Service</label>
+                <p>{{ chambrePourAffectation.service?.nom || 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Patient *</label>
+              <select class="form-control luna-input" [(ngModel)]="affectationForm.patientId" name="patientId" required>
+                <option value="">Sélectionner un patient</option>
+                <option *ngFor="let patient of patients" [value]="patient.id">
+                  {{ patient.nom }} {{ patient.prenom }} ({{ patient.numeroPatient || patient.telephone || 'N/A' }})
+                </option>
+              </select>
+              <small class="text-muted" *ngIf="patients.length === 0">
+                Aucun patient disponible.
+              </small>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Médecin *</label>
+              <select class="form-control luna-input" [(ngModel)]="affectationForm.medecinId" name="medecinId" required>
+                <option value="">Sélectionner un médecin</option>
+                <option *ngFor="let medecin of medecins" [value]="medecin.id">
+                  Dr. {{ medecin.nom }} {{ medecin.prenom }}
+                </option>
+              </select>
+              <small class="text-muted" *ngIf="medecins.length === 0">
+                Aucun médecin disponible.
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Date d'entrée *</label>
+              <input type="date" class="form-control luna-input" [(ngModel)]="affectationForm.dateEntree"
+                name="dateEntree" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group mb-3">
+              <label class="form-label">Motif *</label>
+              <input type="text" class="form-control luna-input" [(ngModel)]="affectationForm.motif"
+                name="motif" placeholder="Ex: Hospitalisation" required>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModalAffectation()">
+          Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="affecterPatient()">
+          <i class="fas fa-save"></i> Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal sortie patient (fin d'hospitalisation) -->
+<div class="modal" *ngIf="showSortieModal && hospitalisationSortieSelection">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-sign-out-alt"></i> Sortie patient
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModalSortie()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-section">
+          <h6 class="section-title">
+            <i class="fas fa-user-injured"></i> Séjour en cours
+          </h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Patient</label>
+                <p>
+                  {{ hospitalisationSortieSelection.patient?.nom }} {{ hospitalisationSortieSelection.patient?.prenom }}
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Chambre</label>
+                <p>{{ hospitalisationSortieSelection.chambre?.numero || '—' }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Date d'entrée</label>
+                <p>{{ hospitalisationSortieSelection.dateEntree | date : 'mediumDate' }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <label>Motif</label>
+                <p>{{ hospitalisationSortieSelection.motif }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group mb-0">
+          <label class="form-label">Date de sortie *</label>
+          <input type="date" class="form-control luna-input" [(ngModel)]="dateSortieForm" name="dateSortie" required />
+          <small class="text-muted">La chambre redeviendra disponible après validation.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModalSortie()">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="enregistrerSortiePatient()">
+          <i class="fas fa-check"></i> Enregistrer la sortie
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Création Multiple -->
+<div class="modal" *ngIf="showModalMultiple" style="display: block; background: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-layer-group"></i> Créer plusieurs chambres
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModalMultiple()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Service *</label>
+                <select class="form-control luna-input" [(ngModel)]="formDataMultiple.serviceId" name="serviceId" required>
+                  <option value="">Sélectionner un service</option>
+                  <option *ngFor="let service of services" [value]="service.id">
+                    {{ service.nom }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Type *</label>
+                <select class="form-control luna-input" [(ngModel)]="formDataMultiple.type" name="type" required>
+                  <option [value]="TypeChambre.SIMPLE">Simple</option>
+                  <option [value]="TypeChambre.DOUBLE">Double</option>
+                  <option [value]="TypeChambre.SUITE">Suite</option>
+                  <option [value]="TypeChambre.REANIMATION">Réanimation</option>
+                  <option [value]="TypeChambre.URGENCE">Urgence</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Nombre de chambres *</label>
+                <input type="number" class="form-control luna-input" [(ngModel)]="formDataMultiple.nombreChambres"
+                  name="nombreChambres" min="1" max="100" required>
+                <small class="text-muted">Entre 1 et 100</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Capacité *</label>
+                <input type="number" class="form-control luna-input" [(ngModel)]="formDataMultiple.capacite"
+                  name="capacite" min="1" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Nombre de lits *</label>
+                <input type="number" class="form-control luna-input" [(ngModel)]="formDataMultiple.nombreLits"
+                  name="nombreLits" min="1" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Préfixe numéro (optionnel)</label>
+                <input type="text" class="form-control luna-input" [(ngModel)]="formDataMultiple.prefixeNumero"
+                  name="prefixeNumero" placeholder="Ex: A, 1, CH">
+                <small class="text-muted">Ex: "A" donnera A1, A2, A3...</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label">Numéro de départ *</label>
+                <input type="number" class="form-control luna-input" [(ngModel)]="formDataMultiple.numeroDebut"
+                  name="numeroDebut" min="1" required>
+                <small class="text-muted">Premier numéro de chambre</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" [(ngModel)]="formDataMultiple.disponible"
+                id="disponibleMultiple" name="disponible">
+              <label class="form-check-label" for="disponibleMultiple">
+                Chambres disponibles
+              </label>
+            </div>
+          </div>
+
+          <div class="materiel-section">
+            <div class="section-header">
+              <h6><i class="fas fa-stethoscope"></i> Matériel médical à lier</h6>
+            </div>
+
+            <div class="alert alert-info" *ngIf="equipementsDisponibles.length === 0">
+              <i class="fas fa-info-circle"></i> Aucun équipement médical disponible à lier.
+            </div>
+
+            <div class="materiel-list-selection" *ngIf="equipementsDisponibles.length > 0">
+              <div class="materiel-selection-card" *ngFor="let equip of equipementsDisponibles"
+                [class.selected]="isMaterielMultipleSelected(equip.id)" (click)="toggleMaterielMultiple(equip.id)">
+                <div class="materiel-select-header">
+                  <span class="materiel-code">{{ equip.code || equip.nom }}</span>
+                  <span class="materiel-name" *ngIf="equip.code && equip.nom"> - {{ equip.nom }}</span>
+                </div>
+                <div class="materiel-select-icon">
+                  <i class="fas" [ngClass]="isMaterielMultipleSelected(equip.id) ? 'fa-check-circle' : 'fa-circle'"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-2" *ngIf="formDataMultiple.materielIds && formDataMultiple.materielIds.length > 0">
+              <small class="text-muted">{{ formDataMultiple.materielIds.length }} équipement(s) sélectionné(s)</small>
+            </div>
+
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle"></i>
+              <strong>Exemple :</strong> Si vous créez 5 chambres avec préfixe "A" et numéro de départ 1,
+              vous obtiendrez : A1, A2, A3, A4, A5
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModalMultiple()">
+          Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="creerPlusieursChambres()">
+          <i class="fas fa-layer-group"></i> Créer {{ formDataMultiple.nombreChambres }} chambre(s)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Suppression -->
+<div class="modal" *ngIf="showDeleteModal && chambreSelectionnee">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+        </h5>
+        <button type="button" class="btn-close" (click)="fermerModalSuppression()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          Voulez-vous vraiment supprimer la chambre
+          <strong>{{ chambreSelectionnee.numero }}</strong> ?
+        </p>
+        <p class="text-muted mb-0">
+          Service lié : <strong>{{ chambreSelectionnee.service?.nom || 'N/A' }}</strong>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="fermerModalSuppression()">
+          Annuler
+        </button>
+        <button type="button" class="btn btn-primary" (click)="supprimer()">
+          <i class="fas fa-trash"></i> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

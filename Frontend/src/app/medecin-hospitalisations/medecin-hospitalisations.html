@@ -1,0 +1,62 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+  <h1>Hospitalisations en cours</h1>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div *ngIf="loading" class="text-muted">Chargement…</div>
+
+  <div class="panel" *ngIf="!loading && liste.length">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Motif</th>
+          <th>Entrée</th>
+          <th>Chambre</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let h of liste">
+          <td>{{ h.patient ? (h.patient.prenom + ' ' + h.patient.nom) : '—' }}</td>
+          <td>{{ h.motif }}</td>
+          <td>{{ h.dateEntree | date:'shortDate' }}</td>
+          <td>{{ h.chambre?.numero || h.chambre?.id || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <section class="panel mt-3" *ngIf="!loading && liste.length">
+    <h3>Notes d'hospitalisation</h3>
+    <div class="mb-2">
+      <label>Hospitalisation</label>
+      <select [(ngModel)]="selectedHospitalisationId" (change)="onHospitalisationChange()">
+        <option value="">Sélectionner</option>
+        <option *ngFor="let h of liste" [value]="h.id">
+          {{ h.patient ? (h.patient.prenom + ' ' + h.patient.nom) : 'Patient' }} - {{ h.dateEntree | date:'shortDate' }}
+        </option>
+      </select>
+    </div>
+
+    <div class="alert alert-danger" *ngIf="notesError">{{ notesError }}</div>
+    <div *ngIf="loadingNotes" class="text-muted">Chargement des notes…</div>
+
+    <div *ngIf="selectedHospitalisationId">
+      <textarea
+        rows="3"
+        [(ngModel)]="noteText"
+        placeholder="Ajouter une note clinique pour le patient"></textarea>
+      <div class="mt-2">
+        <button class="btn btn-primary btn-sm" (click)="ajouterNote()">Ajouter la note</button>
+      </div>
+    </div>
+
+    <ul class="mt-3" *ngIf="notes.length > 0">
+      <li *ngFor="let n of notes">
+        <strong>{{ n.auteurNom }}</strong> ({{ n.auteurRole }}) - {{ n.dateCreation | date:'dd/MM/yyyy HH:mm' }}
+        <div>{{ n.contenu }}</div>
+      </li>
+    </ul>
+    <p *ngIf="!loadingNotes && notes.length === 0" class="text-muted">Aucune note pour cette hospitalisation.</p>
+  </section>
+  <p *ngIf="!loading && !liste.length && !error" class="text-muted">Aucune hospitalisation en cours.</p>
+</div>

@@ -1,0 +1,415 @@
+<div class="rx-container">
+  <nav class="rx-toolbar">
+    <a routerLink="/dashboard" class="rx-back"><i class="bi bi-arrow-left"></i> Tableau de bord</a>
+    <a routerLink="/radiologue-messagerie" class="rx-btn rx-btn-outline ms-auto">
+      <i class="bi bi-chat-dots"></i> Messagerie avec les médecins
+    </a>
+  </nav>
+
+  <header class="rx-page-head">
+    <h1>Radiologie — demandes &amp; rapports</h1>
+    <p class="rx-subtitle">
+      Demandes médecins (IRM, scanner, radio, écho…), priorité, planification, compte rendu structuré, export PDF et notification au médecin à la validation.
+      Les demandes <strong>urgentes</strong> déclenchent une alerte pour les radiologues de la clinique.
+    </p>
+  </header>
+
+  <div class="alert-luna-danger" *ngIf="error"><i class="bi bi-exclamation-triangle-fill"></i> {{ error }}</div>
+
+  <div class="stats-grid" *ngIf="!loading || liste.length">
+    <div class="stat-card card-total">
+      <div class="stat-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTotalExamens }}</span>
+        <span class="stat-label">Total examens</span>
+      </div>
+    </div>
+    <div class="stat-card card-file">
+      <div class="stat-icon"><i class="bi bi-inboxes"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ statFileAttente }}</span>
+        <span class="stat-label">File d'attente (non pris en charge)</span>
+      </div>
+    </div>
+    <div class="stat-card card-cours">
+      <div class="stat-icon"><i class="bi bi-play-btn"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ statEnCours }}</span>
+        <span class="stat-label">En cours</span>
+      </div>
+    </div>
+    <div class="stat-card card-valide">
+      <div class="stat-icon"><i class="bi bi-patch-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ statValides }}</span>
+        <span class="stat-label">Rapports validés</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="rx-prior-section" *ngIf="!loading">
+    <div class="rx-section-head">
+      <h2><i class="bi bi-exclamation-octagon"></i> Examens prioritaires &amp; urgents</h2>
+    </div>
+    <div class="rx-table-wrap" *ngIf="listePrioritaire.length">
+      <table class="rx-data-table">
+        <thead>
+          <tr>
+            <th>Patient / examen</th>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Priorité</th>
+            <th>État</th>
+            <th>Notes</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of listePrioritaire" [ngClass]="classesUrgenceLigne(e.niveauUrgence)">
+            <td>
+              <div class="rx-cell-main">
+                <i class="bi bi-person-badge"></i>
+                <div>
+                  <strong>{{ e.patient?.prenom }} {{ e.patient?.nom }}</strong>
+                  <span class="rx-cell-meta" *ngIf="e.medecinDemandeur as md">Dr. {{ md.prenom }} {{ md.nom }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge-luna">{{ e.type }}</span>
+            </td>
+            <td>{{ e.date | date : 'shortDate' }}</td>
+            <td>
+              <span [class]="classeBadgePriorite(e.niveauUrgence)">{{ libellePrioriteCourt(e.niveauUrgence) }}</span>
+            </td>
+            <td>
+              <span [class]="classeStatutExam(e.statut)">
+                <i [class]="'bi ' + iconeStatutExam(e.statut)"></i>
+                {{ libelleStatut(e.statut) }}
+              </span>
+            </td>
+            <td>
+              <span class="notes-text" [title]="e.motif || ''">{{ (e.motif || '—') | slice : 0 : 48 }}{{ e.motif && e.motif.length > 48 ? '…' : '' }}</span>
+            </td>
+            <td>
+              <div class="action-group">
+                <button type="button" class="btn-action btn-details" title="Ouvrir le détail" (click)="ouvrirDetailEv(e, $event)">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="no-pannes-message" *ngIf="!listePrioritaire.length">
+      <i class="bi bi-check2-circle d-block"></i>
+      <p>Aucun examen prioritaire ou urgent en cours de traitement.</p>
+    </div>
+  </section>
+
+  <div class="layout-split">
+    <section class="panel list-panel">
+      <div class="rx-section-head">
+        <h2><i class="bi bi-list-ul"></i> Liste des examens</h2>
+        <div class="head-actions">
+          <div class="rx-tabs" role="group" aria-label="Filtre liste">
+            <button type="button" class="rx-tab" [class.active]="filtreListe === 'tous'" (click)="filtreListe = 'tous'">Tous</button>
+            <button type="button" class="rx-tab" [class.active]="filtreListe === 'file'" (click)="filtreListe = 'file'">File</button>
+            <button type="button" class="rx-tab" [class.active]="filtreListe === 'mes'" (click)="filtreListe = 'mes'">Mes examens</button>
+            <button type="button" class="rx-tab" [class.active]="filtreListe === 'clos'" (click)="filtreListe = 'clos'">Clôturés</button>
+          </div>
+          <button type="button" class="rx-btn rx-btn-outline" (click)="rechargerListe()" [disabled]="loading">
+            <i class="bi bi-arrow-clockwise"></i> Actualiser
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="loading" class="p-3 text-muted">Chargement…</div>
+
+      <div class="rx-table-wrap rx-scroll" *ngIf="!loading && listeFiltree.length">
+        <table class="rx-data-table mb-0">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let e of listeFiltree"
+              (click)="ouvrirDetailEv(e, $event)"
+              [class.selected]="selected?.id === e.id"
+              [ngClass]="classesUrgenceLigne(e.niveauUrgence)"
+            >
+              <td>
+                <div class="rx-cell-main">
+                  <i class="bi bi-person"></i>
+                  <div>
+                    <strong>{{ e.patient?.prenom }} {{ e.patient?.nom }}</strong>
+                    <span class="rx-cell-meta" *ngIf="assigneAMoi(e)">Assigné à vous</span>
+                  </div>
+                </div>
+              </td>
+              <td>{{ e.date | date : 'shortDate' }}</td>
+              <td><span class="badge-luna">{{ e.type }}</span></td>
+              <td><span [class]="classeBadgePriorite(e.niveauUrgence)">{{ libellePrioriteCourt(e.niveauUrgence) }}</span></td>
+              <td>
+                <span [class]="classeStatutExam(e.statut)">
+                  <i [class]="'bi ' + iconeStatutExam(e.statut)"></i>
+                  {{ libelleStatut(e.statut) }}
+                </span>
+              </td>
+              <td (click)="$event.stopPropagation()">
+                <div class="action-group">
+                  <button type="button" class="btn-action btn-details" title="Détail" (click)="ouvrirDetailEv(e, $event)">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p *ngIf="!loading && !listeFiltree.length" class="text-muted p-3 mb-0">
+        <ng-container *ngIf="liste.length && filtreListe !== 'tous'; else emptyAll">Aucun examen pour ce filtre.</ng-container>
+        <ng-template #emptyAll>Aucune demande pour le moment.</ng-template>
+      </p>
+    </section>
+
+    <section class="panel detail-panel" *ngIf="selected">
+      <h2><i class="bi bi-file-earmark-medical me-2"></i>Détail de la demande</h2>
+      <div class="collab-hint" *ngIf="selected.medecinDemandeur?.id">
+        <i class="bi bi-chat-left-text me-2"></i>
+        Pour une question au médecin demandeur, utilisez la
+        <a routerLink="/radiologue-messagerie">messagerie interne</a>
+        (choisissez le médecin dans la liste des contacts).
+      </div>
+
+      <dl class="detail-dl">
+        <dt>Patient</dt>
+        <dd>{{ selected.patient?.prenom }} {{ selected.patient?.nom }}</dd>
+        <dt>Médecin demandeur</dt>
+        <dd>
+          {{ selected.medecinDemandeur?.prenom }} {{ selected.medecinDemandeur?.nom }}
+          <span *ngIf="selected.medecinDemandeur?.specialite" class="text-muted"> — {{ selected.medecinDemandeur?.specialite }}</span>
+        </dd>
+        <dt>Type d'examen (demande)</dt>
+        <dd>{{ selected.type }}</dd>
+        <dt>Modalité réalisée</dt>
+        <dd>{{ libelleModalite(selected.typeExamenRealise) }}</dd>
+        <dt>Priorité</dt>
+        <dd><span [class]="classeBadgePriorite(selected.niveauUrgence)">{{ libellePrioriteCourt(selected.niveauUrgence) }}</span></dd>
+        <dt>Statut</dt>
+        <dd>
+          <span [class]="classeStatutExam(selected.statut)">
+            <i [class]="'bi ' + iconeStatutExam(selected.statut)"></i>
+            {{ libelleStatut(selected.statut) }}
+          </span>
+        </dd>
+        <dt>Date &amp; heure prévues</dt>
+        <dd>
+          {{ selected.datePrevue || '—' }}
+          <span *ngIf="selected.heurePrevue" class="ms-1">— {{ heureAffichage(selected.heurePrevue) }}</span>
+        </dd>
+        <dt>Motif</dt>
+        <dd>{{ selected.motif || '—' }}</dd>
+        <dt>Indications cliniques</dt>
+        <dd class="text-block">{{ selected.indicationsCliniques || '—' }}</dd>
+        <dt>Questions du médecin</dt>
+        <dd class="text-block">{{ selected.questionsMedecin || '—' }}</dd>
+        <dt>Documents (références)</dt>
+        <dd class="text-block">{{ selected.piecesJointes || '—' }}</dd>
+        <dt>Protocole (enregistré)</dt>
+        <dd class="text-block">{{ selected.protocoleExamen || '—' }}</dd>
+      </dl>
+
+      <div class="subpanel" *ngIf="historiquePatient.length">
+        <h3><i class="bi bi-clock-history me-1"></i>Historique imagerie du patient</h3>
+        <p class="small text-muted mb-2">Comparer avec les examens précédents (même clinique). Ligne surlignée = examen affiché.</p>
+        <div class="rx-table-wrap historique-wrap">
+          <table class="rx-data-table mb-0">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Rapport</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let h of historiquePatient"
+                [class.table-warning]="h.id === selected.id"
+                (click)="ouvrirDetailHistorique(h, $event)"
+                style="cursor: pointer"
+                title="Cliquer pour ouvrir cet examen"
+              >
+                <td>{{ h.date | date : 'shortDate' }}</td>
+                <td>{{ h.type }}</td>
+                <td>{{ h.statut ? libelleStatut(h.statut) : '—' }}</td>
+                <td>
+                  <span *ngIf="h.rapport?.valide" class="badge bg-success">Validé</span>
+                  <span *ngIf="h.rapport && !h.rapport.valide" class="badge bg-secondary">Brouillon</span>
+                  <span *ngIf="!h.rapport" class="text-muted">—</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subpanel" *ngIf="dossierLecture as dm">
+        <h3><i class="bi bi-folder2-open me-1"></i>Dossier patient (lecture seule)</h3>
+        <p *ngIf="dm.antecedents"><strong>Antécédents :</strong> {{ dm.antecedents }}</p>
+        <p *ngIf="dm.allergies?.length"><strong>Allergies :</strong> {{ dm.allergies!.join(', ') }}</p>
+        <p *ngIf="!dm.antecedents && !dm.allergies?.length" class="text-muted">Peu d'éléments structurés dans le dossier.</p>
+      </div>
+
+      <div class="subpanel viewer-stub">
+        <h3><i class="bi bi-images me-1"></i>Visionneur d'images</h3>
+        <p class="text-muted small mb-2">
+          Références principale et fichiers supplémentaires (DICOM, PDF, JPEG via URL). Prévisualisation des images HTTP(S) lorsque l'URL pointe vers un fichier image.
+        </p>
+        <ng-container *ngIf="lignesFichiersExamens().length; else viewerVide">
+          <div *ngFor="let u of lignesFichiersExamens()" class="viewer-line">
+            <p class="small text-break mb-1"><code>{{ u }}</code></p>
+            <img *ngIf="estUrlImage(u)" class="viewer-thumb d-block mx-auto" [src]="u" alt="Aperçu" />
+            <a *ngIf="fichierEstUrl(u) && !estUrlImage(u)" class="btn btn-sm btn-outline-primary" [href]="u" target="_blank" rel="noopener noreferrer">
+              {{ estUrlPdf(u) ? 'Ouvrir le PDF' : 'Ouvrir le lien' }}
+            </a>
+          </div>
+        </ng-container>
+        <ng-template #viewerVide>
+          <div class="viewer-placeholder">
+            <i class="bi bi-image display-6 text-muted"></i>
+            <p class="mb-0 small">Aucune référence fichier. Renseignez l'examen à la fin ou ajoutez des lignes (URLs) ci-dessous.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="actions-grid" *ngIf="peutPrendreEnCharge(selected)">
+        <button type="button" class="rx-btn rx-btn-primary" (click)="prendreEnCharge()">Prendre en charge</button>
+        <div class="refuse-block">
+          <input class="form-control form-control-sm" [(ngModel)]="motifRefus" placeholder="Motif de refus (optionnel)" />
+          <button type="button" class="rx-btn rx-btn-outline text-danger border-danger" (click)="refuser()">Refuser la demande</button>
+        </div>
+      </div>
+
+      <div class="subpanel" *ngIf="peutGererPlanificationEtProtocole()">
+        <h3>Priorité, planification &amp; protocole</h3>
+        <div class="row g-2 align-items-end flex-wrap mb-2">
+          <div class="col-auto">
+            <label class="form-label mb-0">Priorité</label>
+            <select class="form-select form-select-sm" [(ngModel)]="niveauUrgenceSel">
+              <option *ngFor="let p of niveauxPriorite" [ngValue]="p.code">{{ p.label }}</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="rx-btn rx-btn-outline btn-sm" (click)="enregistrerPriorite()">Enregistrer la priorité</button>
+          </div>
+        </div>
+        <p class="small text-muted mb-2">Les niveaux <strong>Prioritaire</strong> et <strong>Urgent</strong> notifient les radiologues de la clinique lors d'une nouvelle demande médecin ; vous pouvez les ajuster ici.</p>
+        <div class="row g-2 align-items-end flex-wrap">
+          <div class="col-auto">
+            <label class="form-label mb-0">Date prévue</label>
+            <input type="date" class="form-control" [(ngModel)]="datePrevue" />
+          </div>
+          <div class="col-auto">
+            <label class="form-label mb-0">Heure</label>
+            <input type="time" class="form-control" [(ngModel)]="heurePrevueStr" />
+          </div>
+          <div class="col-auto">
+            <button type="button" class="rx-btn rx-btn-primary" (click)="planifier()">Enregistrer le créneau</button>
+          </div>
+        </div>
+        <div class="row g-2 align-items-end flex-wrap mt-3">
+          <div class="col-md-6">
+            <label class="form-label mb-0">Modalité réellement réalisée</label>
+            <select class="form-select form-select-sm" [(ngModel)]="typeExamenRealiseSel">
+              <option value="">— Non défini —</option>
+              <option *ngFor="let t of typesModalite" [ngValue]="t.code">{{ t.label }}</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="rx-btn rx-btn-outline btn-sm mt-4 mt-md-0" (click)="enregistrerTypeExamenRealise()">Enregistrer la modalité</button>
+          </div>
+        </div>
+        <label class="form-label mt-3">Protocole d'examen</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="protocoleExamen" placeholder="Séquences, paramètres, produit de contraste…"></textarea>
+        <button type="button" class="rx-btn rx-btn-outline btn-sm mt-2" (click)="enregistrerProtocole()">Enregistrer le protocole</button>
+      </div>
+
+      <div class="subpanel" *ngIf="assigneAMoi(selected)">
+        <h3>Examen en cours</h3>
+        <label class="form-label mt-1">Notes sur la coopération du patient</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="notesCoop"></textarea>
+        <button type="button" class="rx-btn rx-btn-outline btn-sm mt-1" (click)="enregistrerNotesCooperation()">Enregistrer les notes</button>
+
+        <div class="mt-3" *ngIf="selected.statut === 'EN_COURS'">
+          <label class="form-label">Fichier principal (DICOM, PDF, URL image…)</label>
+          <input class="form-control" [(ngModel)]="fichierTermine" placeholder="Ex. chemin DICOM ou URL de dépôt" />
+          <button type="button" class="rx-btn rx-btn-primary mt-2" (click)="terminerExamen()">Marquer l'examen comme terminé</button>
+        </div>
+
+        <div class="mt-3 border-top pt-3" *ngIf="selected.statut === 'EN_COURS' || selected.statut === 'TERMINE'">
+          <label class="form-label">Ajouter une référence fichier (une ligne : URL ou chemin)</label>
+          <div class="input-group input-group-sm">
+            <input class="form-control" [(ngModel)]="ligneFichierSupplementaire" placeholder="https://…/examen.dcm ou .pdf, .jpg…" />
+            <button type="button" class="btn btn-outline-secondary" (click)="ajouterFichierSupplementaire()">Ajouter</button>
+          </div>
+        </div>
+
+        <div class="mt-3 border-top pt-3" *ngIf="selected.statut === 'EN_COURS' || selected.statut === 'TERMINE'">
+          <label class="form-label">Commentaires sur les images (partage avec le médecin / relecture)</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="commentairesImages"></textarea>
+          <button type="button" class="rx-btn rx-btn-outline btn-sm mt-1" (click)="sauverCommentairesImages()">Enregistrer les commentaires</button>
+        </div>
+      </div>
+
+      <div class="subpanel rapport-panel" *ngIf="assigneAMoi(selected) && (selected.statut === 'EN_COURS' || selected.statut === 'TERMINE' || selected.statut === 'VALIDE')">
+        <h3>Compte rendu radiologique</h3>
+        <p class="text-muted small" *ngIf="rapport?.valide">
+          Rapport validé — le médecin demandeur a été notifié.
+          <span *ngIf="rapport?.dateSignatureElectronique" class="d-block mt-1">
+            Signature électronique (horodatage) : {{ rapport?.dateSignatureElectronique | date : 'short' }}
+          </span>
+        </p>
+        <p class="text-muted small" *ngIf="!rapport?.valide">Rédigez le compte rendu puis validez pour envoi au médecin. Vous pouvez exporter un PDF à tout moment.</p>
+        <label>Observations</label>
+        <textarea class="form-control mb-2" rows="3" [(ngModel)]="rapportForm.observations" [readonly]="rapport?.valide"></textarea>
+        <label>Analyse / interprétation</label>
+        <textarea class="form-control mb-2" rows="3" [(ngModel)]="rapportForm.analyse" [readonly]="rapport?.valide"></textarea>
+        <label>Conclusion</label>
+        <textarea class="form-control mb-2" rows="2" [(ngModel)]="rapportForm.conclusion" [readonly]="rapport?.valide"></textarea>
+        <label>Recommandations</label>
+        <textarea class="form-control mb-2" rows="2" [(ngModel)]="rapportForm.recommandations" [readonly]="rapport?.valide"></textarea>
+        <label>Diagnostic différentiel</label>
+        <textarea class="form-control mb-2" rows="2" [(ngModel)]="rapportForm.diagnosticDifferentiel" [readonly]="rapport?.valide"></textarea>
+        <label>Signes cliniques notables</label>
+        <textarea class="form-control mb-2" rows="2" [(ngModel)]="rapportForm.signesCliniquesNotables" [readonly]="rapport?.valide"></textarea>
+
+        <div class="btn-row">
+          <button type="button" class="rx-btn rx-btn-outline btn-sm" *ngIf="rapport?.id" (click)="telechargerRapportPdf()">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Télécharger le PDF
+          </button>
+        </div>
+
+        <div class="btn-row" *ngIf="!rapport?.valide">
+          <button type="button" class="rx-btn rx-btn-outline" *ngIf="!rapport" (click)="creerRapport()">Créer le rapport</button>
+          <button type="button" class="rx-btn rx-btn-outline" *ngIf="rapport" (click)="majBrouillonRapport()">Enregistrer le brouillon</button>
+          <button type="button" class="rx-btn rx-btn-primary" *ngIf="rapport" (click)="validerRapport()">Valider (signature électronique) et notifier le médecin</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel empty-detail" *ngIf="!selected && !loading">
+      <p class="mb-0"><i class="bi bi-hand-index me-2"></i>Sélectionnez une ligne pour afficher le détail, l'historique, le dossier patient et le rapport.</p>
+    </section>
+  </div>
+</div>

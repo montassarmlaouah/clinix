@@ -1,0 +1,606 @@
+/* ============================================== */
+/* DASHBOARD STYLES                               */
+/* ============================================== */
+:root {
+    /* Palette LUNA */
+    --luna-light: #A7EBF2;
+    --luna-teal: #54ACBF;
+    --luna-blue: #26658C;
+    --luna-deep: #023859;
+    --luna-dark: #011C40;
+
+    --primary: var(--luna-blue);
+    --primary-light: var(--luna-teal);
+    --accent: var(--luna-light);
+    --light-bg: #ffffff;
+    --dark-bg: var(--luna-dark);
+}
+
+.dashboard-container {
+    min-height: 100vh;
+    background: radial-gradient(circle at top left, rgba(167, 235, 242, 0.25), transparent 55%);
+    padding-bottom: 40px;
+    margin-top: 70px;
+    margin-left: 250px;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--luna-teal) 0%, var(--luna-deep) 45%, var(--luna-dark) 100%);
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-header h1 {
+    color: white;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.dashboard-header .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.user-badge {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-card {
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-height: 120px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+    font-size: 3rem;
+    opacity: 0.9;
+}
+
+.stat-content h6 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.stat-content h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 15px 20px;
+    border-radius: 15px 15px 0 0;
+}
+.icone-green{
+     color: #26658C;
+ 
+}
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a3a5c;
+}
+
+.table th {
+    font-weight: 600;
+    color: #1a3a5c;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.badge {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 20px;
+}
+
+.badge.bg-primary {
+    background-color: #023859 !important;
+}
+
+
+
+.hero-section {
+    background: #ffffff !important;
+    color: #1a3a5c;
+    padding: 100px 0;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #1a3a5c !important;
+}
+
+.hero-subtitle {
+    font-size: 1.4rem;
+    opacity: 0.9;
+    color: #1a3a5c !important;
+}
+
+.hero-image {
+    width: 90%;
+    max-width: 450px;
+    animation: float 3s infinite ease-in-out;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+/* ============================================== */
+/* FEATURE CARDS                                   */
+/* ============================================== */
+.feature-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #1a3a5c;
+    transition: 0.3s;
+}
+
+.feature-card:hover {
+    background: #f8f9fa;
+    transform: translateX(8px);
+    box-shadow: 0 4px 12px rgba(26, 58, 92, 0.2);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: #f59e0b;
+}
+
+.feature-title {
+    font-weight: 700;
+    color: #1a3a5c;
+    margin-bottom: 5px;
+}
+
+.feature-list {
+    color: #1a3a5c;
+}
+
+.feature-list li {
+    color: #1a3a5c;
+}
+
+/* Espace entre col-md-12 */
+.col-md-12 {
+    margin-bottom: 20px;
+}
+
+/* ============================================== */
+/* SECTION TITLES                                   */
+/* ============================================== */
+.section-title {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1a3a5c;
+    /* Bleu marine */
+}
+
+/* ============================================== */
+/* IMAGE GRID                                       */
+/* ============================================== */
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.grid-item {
+    height: 150px;
+    border-radius: 12px;
+    background-size: cover;
+    background-position: center;
+    transition: 0.3s ease;
+}
+
+.grid-item:hover {
+    transform: scale(1.05);
+}
+
+/* ============================================== */
+/* FILTERS                                          */
+/* ============================================== */
+.filter-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.filter-btn {
+    border-radius: 20px !important;
+}
+
+.filter-active {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #000 !important;
+}
+
+/* ============================================== */
+/* BOOK CARDS                                       */
+/* ============================================== */
+.book-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+}
+
+.book-img {
+    height: 250px;
+    object-fit: cover;
+}
+
+/* ============================================== */
+/* BLOG CARDS                                       */
+/* ============================================== */
+.article-card {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.article-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.15);
+}
+
+.article-img-container {
+    height: 200px;
+    overflow: hidden;
+}
+
+.article-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.4s;
+}
+
+.article-card:hover .article-img {
+    transform: scale(1.06);
+}
+
+.read-more-link {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.read-more-link:hover {
+    color: var(--primary-light);
+}
+
+/* ============================================== */
+/* BUTTONS                                          */
+/* ============================================== */
+.custom-btn {
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.btn-warning.custom-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-warning.custom-btn:hover {
+    background: #ffb43b;
+    transform: translateY(-2px);
+}
+
+/* ============================================== */
+/* RESPONSIVE                                       */
+/* ============================================== */
+@media(max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .image-grid .grid-item {
+        height: 110px;
+    }
+}
+
+/* ============================================== */
+/* CHART STYLES                                    */
+/* ============================================== */
+.chart-card {
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+}
+
+/* ============================================== */
+/* GRADIENT BACKGROUNDS - LUNA PALETTE             */
+/* ============================================== */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #A7EBF2 0%, #54ACBF 50%, #26658C 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #54ACBF 0%, #26658C 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #26658C 0%, #023859 100%);
+}
+
+.bg-gradient-green {
+    background: linear-gradient(135deg, #43e97b 0%, #38a169 100%);
+}
+
+.bg-gradient-orange {
+    background: linear-gradient(135deg, #f6a623 0%, #d9534f 100%);
+}
+
+/* Cercles équipements */
+.equip-circle-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    padding: 20px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.equip-circle-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.13);
+}
+.equip-circle-svg {
+    width: 110px;
+    height: 110px;
+    transform: rotate(-90deg);
+    position: relative;
+}
+.equip-circle-bg {
+    fill: none;
+    stroke: #e9ecef;
+    stroke-width: 12;
+}
+.equip-circle-fill {
+    fill: none;
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    transition: stroke-dashoffset 0.8s ease;
+}
+.equip-green  { stroke: url(#greenGrad);  stroke: #43e97b; }
+.equip-orange { stroke: url(#orangeGrad); stroke: #f6a623; }
+.equip-circle-card {
+    position: relative;
+}
+.equip-circle-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -28%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+}
+.equip-circle-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+.equip-circle-pct {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.8;
+}
+.equip-circle-label {
+    margin-top: 72px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #444;
+    text-align: center;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #023859 0%, #011C40 100%);
+}
+
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #54ACBF 0%, #023859 100%);
+}
+
+/* ============================================== */
+/* CHEF PERSONNEL INSIGHTS                        */
+/* ============================================== */
+.chef-insight-card {
+    border-radius: 16px;
+    padding: 18px;
+    background: linear-gradient(140deg, rgba(167, 235, 242, 0.18), rgba(84, 172, 191, 0.12));
+    border: 1px solid rgba(38, 101, 140, 0.18);
+    min-height: 150px;
+    box-shadow: 0 6px 16px rgba(2, 56, 89, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.chef-insight-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(2, 56, 89, 0.14);
+}
+
+.chef-insight-kpi {
+    display: inline-flex;
+    min-width: 54px;
+    height: 36px;
+    padding: 0 14px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #26658C, #023859);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.chef-insight-card h6 {
+    margin-bottom: 6px;
+    color: #023859;
+    font-weight: 700;
+}
+
+.chef-insight-card p {
+    margin: 0;
+    color: #3a556f;
+    font-size: 0.9rem;
+}
+
+/* ============================================== */
+/* CLINIQUE AVATAR                                 */
+/* ============================================== */
+.clinique-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #26658C 0%, #023859 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+/* ============================================== */
+/* TABLE IMPROVEMENTS                              */
+/* ============================================== */
+.table-hover tbody tr:hover {
+    background-color: rgba(38, 101, 140, 0.05);
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 15px 12px;
+}
+
+.table th {
+    padding: 15px 12px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================== */
+/* RESPONSIVE CHARTS                               */
+/* ============================================== */
+@media (max-width: 992px) {
+    .chart-container {
+        height: 280px !important;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+    }
+
+    .stat-content h3 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .chart-container {
+        height: 250px !important;
+    }
+
+    .stat-card {
+        padding: 15px;
+        min-height: 100px;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+    }
+
+    .stat-content h3 {
+        font-size: 1.8rem;
+    }
+
+    .stat-content h6 {
+        font-size: 0.8rem;
+    }
+}
+
+/* Cartes accès rapide super admin (cliniques / cabinets médecins) */
+.dashboard-hub-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+a:hover .dashboard-hub-card {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(2, 56, 89, 0.12) !important;
+}

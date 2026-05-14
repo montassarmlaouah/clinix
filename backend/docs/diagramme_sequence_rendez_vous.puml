@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Prise de rendez-vous
+
+autonumber
+
+actor Patient
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control ServiceRDV as "Service RendezVous"
+database DB as "Base de donnees"
+
+Patient -> Frontend: Choisir medecin + date + heure
+Frontend -> API: POST /rendez-vous (donneesRDV)
+API -> ServiceRDV: verifierDisponibilite(medecin, creneau)
+ServiceRDV -> DB: Rechercher conflits de planning
+DB --> ServiceRDV: Statut disponibilite
+
+alt Creneau disponible
+  ServiceRDV -> DB: Inserer rendez-vous
+  DB --> ServiceRDV: idRendezVous
+  ServiceRDV --> API: Confirmation + details
+  API --> Frontend: 201 Created
+  Frontend --> Patient: Afficher confirmation
+else Creneau indisponible
+  ServiceRDV --> API: Erreur indisponibilite
+  API --> Frontend: 409 Conflict
+  Frontend --> Patient: Proposer autres creneaux
+end
+
+@enduml

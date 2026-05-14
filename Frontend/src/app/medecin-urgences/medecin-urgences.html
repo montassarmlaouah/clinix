@@ -1,0 +1,36 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+  <h1>Urgences</h1>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div *ngIf="loading">Chargement…</div>
+
+  <div class="panel" *ngIf="!loading">
+    <h2>Urgences actives</h2>
+    <table class="table table-sm" *ngIf="actives.length">
+      <thead><tr><th>Patient</th><th>Motif</th><th>Niveau</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let u of actives">
+          <td>{{ u.patient ? (u.patient.prenom + ' ' + u.patient.nom) : '—' }}</td>
+          <td>{{ u.motif || u.description || '—' }}</td>
+          <td>{{ u.niveau || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!actives.length" class="text-muted">Aucune urgence active.</p>
+  </div>
+
+  <div class="panel" *ngIf="!loading">
+    <h2>En attente</h2>
+    <table class="table table-sm" *ngIf="enAttente.length">
+      <thead><tr><th>Patient</th><th>Motif</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let u of enAttente">
+          <td>{{ u.patient ? (u.patient.prenom + ' ' + u.patient.nom) : '—' }}</td>
+          <td>{{ u.motif || u.description || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!enAttente.length" class="text-muted">Aucune urgence en attente.</p>
+  </div>
+</div>

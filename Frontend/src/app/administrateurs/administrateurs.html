@@ -1,0 +1,476 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Gestion des Administrateurs</h1>
+        <p class="page-subtitle">Contrôle des accès et gestion du personnel administratif</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="openCreateAdminModal()">
+          <i class="fas fa-user-plus"></i>
+          Nouvel administrateur
+        </button>
+      </div>
+    </header>
+
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher un administrateur</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Nom, prénom, téléphone ou e-mail...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Statut</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+          <option value="all">Tous les statuts</option>
+          <option value="active">Actif</option>
+          <option value="pending">En attente</option>
+          <option value="suspended">Suspendu</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card card-active">
+        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ (administrateurs | filter: 'actif': true).length }}</span>
+          <span class="stat-label">Actifs</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-pending">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ (administrateurs | filter: 'actif': false).length }}</span>
+          <span class="stat-label">En attente</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-suspended">
+        <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ (administrateurs | filter: 'suspended': true).length }}</span>
+          <span class="stat-label">Suspendus</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-total">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ administrateurs.length }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="table-container luna-shadow">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Administrateur</th>
+            <th>E-mail</th>
+            <th>Rôle</th>
+            <th>Établissement</th>
+            <th>Date d'ajout</th>
+            <th>Statut</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let admin of filteredAdmins" class="luna-row" (click)="openDetailsModal(admin)">
+            <td>
+              <div class="admin-info">
+                <div class="admin-avatar">
+                  <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="admin-details">
+                  <div class="admin-name">{{ admin.nom }} {{ admin.prenom }}</div>
+                  <div class="admin-meta">{{ admin.telephone }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="text-muted">{{ admin.email || 'Non renseigné' }}</span>
+            </td>
+            <td>
+              <span class="badge-luna badge-primary">
+                <i class="fas fa-shield-alt"></i> Admin Clinique
+              </span>
+            </td>
+            <td>
+              <ng-container *ngIf="admin.clinique; else notAssigned">
+                <span class="clinique-name">{{ admin.clinique.nom }}</span>
+                <span class="clinique-sub">{{ admin.clinique.adresse }}</span>
+              </ng-container>
+              <ng-template #notAssigned>
+                <span class="text-muted">Non assigné</span>
+              </ng-template>
+            </td>
+            <td class="date-cell">
+              {{ admin.dateCreation | date:'dd/MM/yyyy' }}
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="admin.actif ? 'badge-success' : 'badge-warning'">
+                <i class="fas" [ngClass]="admin.actif ? 'fa-check-circle' : 'fa-clock'"></i>
+                {{ admin.actif ? 'Actif' : 'En attente' }}
+              </span>
+            </td>
+            <td>
+              <div class="action-group">
+                <button class="btn-action btn-sync" (click)="openDetailsModal(admin); $event.stopPropagation()" title="Voir détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredAdmins.length === 0">
+            <td colspan="7" class="empty-state">
+              <i class="fas fa-users-slash"></i>
+              <p>Aucun administrateur trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-container" *ngIf="filteredAdmins.length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredAdmins.length }} administrateurs
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Détails de l'Administrateur -->
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedAdmin" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-user-shield"></i> Détails de l'Administrateur
+            </h5>
+            <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Informations personnelles -->
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-user-circle"></i> Informations Personnelles
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nom complet</label>
+                    <p>
+                      {{
+                        (
+                          ((selectedAdmin.nom || selectedAdmin.prenom)
+                            ? ((selectedAdmin.nom || '') + ' ' + (selectedAdmin.prenom || '')).trim()
+                            : ('Admin ' + (selectedAdmin.telephone || '')).trim()
+                          )
+                        ) || 'Non renseigné'
+                      }}
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Téléphone</label>
+                    <p>{{ selectedAdmin.telephone || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>E-mail</label>
+                    <p>{{ selectedAdmin.email || 'Non renseigné' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date de création</label>
+                    <p>{{ selectedAdmin.dateCreation ? (selectedAdmin.dateCreation | date:'dd/MM/yyyy') : 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Informations de la clinique -->
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-hospital"></i> Clinique Assignée
+              </h6>
+              <div class="row">
+                <ng-container *ngIf="selectedAdmin.clinique; else noClinic">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Nom de la clinique</label>
+                      <p>{{ selectedAdmin.clinique.nom }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Téléphone clinique</label>
+                      <p>{{ selectedAdmin.clinique.telephone || 'N/A' }}</p>
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Adresse</label>
+                      <p>{{ selectedAdmin.clinique.adresse }}</p>
+                    </div>
+                  </div>
+                </ng-container>
+                <ng-template #noClinic>
+                  <div class="col-md-12">
+                    <div class="alert alert-info">
+                      <i class="fas fa-info-circle"></i> Cet administrateur n'est pas encore assigné à une clinique
+                    </div>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+
+            <!-- Informations d'accès -->
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-key"></i> Informations d'Accès
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Rôle</label>
+                    <p>
+                      <span class="badge-luna badge-primary">
+                        Administrateur Clinique
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Statut du compte</label>
+                    <p>
+                      <span class="status-pill" [ngClass]="selectedAdmin.actif === true ? 'badge-success' : 'badge-warning'">
+                        <i class="fas" [ngClass]="selectedAdmin.actif === true ? 'fa-check-circle' : 'fa-clock'"></i>
+                        {{ selectedAdmin.actif === true ? 'Actif' : 'En attente' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date d'activation</label>
+                    <p>{{ selectedAdmin.dateCreation ? (selectedAdmin.dateCreation | date:'dd/MM/yyyy') : 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="closeDetailsModal()">
+              Fermer
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              (click)="supprimerAdministrateur(selectedAdmin?.id); $event.stopPropagation()"
+              [disabled]="!selectedAdmin?.id">
+              <i class="fas fa-trash-alt"></i>
+              Supprimer l'administrateur
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Création d'un Administrateur -->
+    <div
+      class="modal fade show"
+      *ngIf="showCreateAdminModal"
+      style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-user-plus"></i> Nouvel Administrateur de Clinique
+            </h5>
+            <button type="button" class="btn-close" (click)="closeCreateAdminModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="messages-section" *ngIf="error || success">
+              <div *ngIf="error" class="alert alert-luna-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ error }}</span>
+              </div>
+              <div *ngIf="success" class="alert alert-luna-success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ success }}</span>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+              <div class="text-muted small">
+                Étape {{ createAdminStep }} sur 3
+              </div>
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn" [class.btn-primary]="createAdminStep === 1" [class.btn-outline-secondary]="createAdminStep !== 1" disabled>1. Clinique</button>
+                <button type="button" class="btn" [class.btn-primary]="createAdminStep === 2" [class.btn-outline-secondary]="createAdminStep !== 2" disabled>2. Identité</button>
+                <button type="button" class="btn" [class.btn-primary]="createAdminStep === 3" [class.btn-outline-secondary]="createAdminStep !== 3" disabled>3. Envoi</button>
+              </div>
+            </div>
+
+            <div class="detail-section" *ngIf="createAdminStep === 1">
+              <h6 class="section-title">
+                <i class="fas fa-hospital"></i> Clinique assignée
+              </h6>
+              <div class="form-group">
+                <label class="luna-label">Clinique assignée <span class="text-danger">*</span></label>
+                <select
+                  class="form-control luna-input"
+                  [(ngModel)]="newAdmin.cliniqueId"
+                  name="adminCliniqueId">
+                  <option value="">Sélectionner une clinique</option>
+                  <option *ngFor="let clinique of cliniques" [value]="clinique.id">
+                    {{ clinique.nom }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="detail-section" *ngIf="createAdminStep === 2">
+              <h6 class="section-title">
+                <i class="fas fa-user-circle"></i> Informations administrateur
+              </h6>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="luna-label">Nom <span class="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    class="form-control luna-input"
+                    [(ngModel)]="newAdmin.nom"
+                    name="adminNom"
+                    placeholder="Nom de l'administrateur">
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">Prénom <span class="text-danger">*</span></label>
+                  <input
+                    type="text"
+                    class="form-control luna-input"
+                    [(ngModel)]="newAdmin.prenom"
+                    name="adminPrenom"
+                    placeholder="Prénom de l'administrateur">
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">Téléphone <span class="text-danger">*</span></label>
+                  <input
+                    type="tel"
+                    class="form-control luna-input"
+                    [(ngModel)]="newAdmin.telephone"
+                    name="adminTelephone"
+                    placeholder="Ex: 21612345678">
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">E-mail</label>
+                  <input
+                    type="email"
+                    class="form-control luna-input"
+                    [(ngModel)]="newAdmin.email"
+                    name="adminEmail"
+                    placeholder="nom@exemple.com">
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section" *ngIf="createAdminStep === 3">
+              <h6 class="section-title">
+                <i class="fas fa-paper-plane"></i> Envoi des identifiants
+              </h6>
+              <div class="alert alert-warning">
+                <i class="fas fa-sms"></i>
+                <strong>TunisieSMS</strong> : le mot de passe sera généré automatiquement puis envoyé par SMS sur le numéro saisi à l'étape 2.
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="luna-label">Clinique</label>
+                  <input type="text" class="form-control luna-input" [value]="(cliniques | filter:'id':newAdmin.cliniqueId)[0]?.nom || 'Non renseignée'" disabled>
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">Téléphone</label>
+                  <input type="text" class="form-control luna-input" [value]="newAdmin.telephone || 'N/A'" disabled>
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">Nom complet</label>
+                  <input type="text" class="form-control luna-input" [value]="(newAdmin.nom + ' ' + newAdmin.prenom).trim()" disabled>
+                </div>
+                <div class="form-group">
+                  <label class="luna-label">E-mail</label>
+                  <input type="text" class="form-control luna-input" [value]="newAdmin.email || 'Non renseigné'" disabled>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              (click)="closeCreateAdminModal()"
+              [disabled]="creatingAdmin">
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="previousAdminStep()"
+              [disabled]="creatingAdmin || createAdminStep === 1">
+              <i class="fas fa-arrow-left"></i>
+              Précédent
+            </button>
+            <button
+              *ngIf="createAdminStep < 3"
+              type="button"
+              class="btn btn-primary"
+              (click)="nextAdminStep()"
+              [disabled]="creatingAdmin || !canGoToNextAdminStep()">
+              Suivant
+              <i class="fas fa-arrow-right"></i>
+            </button>
+            <button
+              *ngIf="createAdminStep === 3"
+              type="button"
+              class="btn btn-primary"
+              (click)="creerAdministrateurClinique()"
+              [disabled]="creatingAdmin">
+              <span *ngIf="creatingAdmin" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              <span *ngIf="!creatingAdmin">
+                <i class="fas fa-save"></i>
+                Créer l'administrateur
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

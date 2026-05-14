@@ -1,0 +1,284 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">
+          {{ isInfirmier ? 'Mon planning' : 'Planning des infirmiers' }}
+        </h1>
+        <p class="page-subtitle" *ngIf="!isInfirmier">Choisir un service et planifier les infirmiers</p>
+        <p class="page-subtitle" *ngIf="isInfirmier">Consulter vos plannings et télécharger le PDF</p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <section class="filters-section luna-glass" *ngIf="isChefPersonnel">
+      <div class="filter-group">
+        <label class="luna-label">Service</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedServiceId" (change)="applyFilters()">
+          <option value="">Sélectionner un service</option>
+          <option *ngFor="let service of services" [value]="service.id">
+            {{ service.nom }}
+          </option>
+        </select>
+        <small class="helper-text" *ngIf="selectedServiceId">
+          Le service est verrouillé pour toute la semaine (plus besoin de le choisir dans chaque case).
+        </small>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Infirmier</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedInfirmierId" (change)="applyFilters()">
+          <option value="">Tous les infirmiers</option>
+          <option *ngFor="let inf of infirmiers" [value]="inf.id">
+            {{ inf.nom || 'Non renseigné' }} {{ inf.prenom || '' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Type de planning</label>
+        <select class="form-control luna-input" [(ngModel)]="typePlanning">
+          <option value="HEBDOMADAIRE">Hebdomadaire</option>
+          <option value="MENSUEL">Mensuel</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Date de début</label>
+        <div class="input-with-icon">
+          <input type="date" class="form-control luna-input" [(ngModel)]="dateDebut" (ngModelChange)="onDateDebutChange()">
+          <button type="button" class="btn btn-secondary" (click)="setNextWeekStart()">
+            Semaine prochaine
+          </button>
+        </div>
+        <small class="helper-text">
+          Astuce: choisis le Lundi (7 jours se généreront automatiquement).
+        </small>
+      </div>
+    </section>
+
+    <section class="info-panel luna-glass" *ngIf="isChefPersonnel">
+      <div class="info-left">
+        <div class="info-title">
+          <i class="fas fa-circle-info"></i>
+          Règles de planning
+        </div>
+        <ul class="info-list">
+          <li><strong>Option A</strong>: 6 jours/semaine (sans nuits) + 1 jour de repos</li>
+          <li><strong>Option B</strong>: 3 nuits/semaine seulement (le reste = repos)</li>
+          <li>Les jours vides affichent <strong>Repos</strong> et ne créent pas de garde.</li>
+        </ul>
+      </div>
+      <div class="info-right">
+        <div class="kpi">
+          <span class="kpi-label">Infirmiers sélectionnés</span>
+          <span class="kpi-value">{{ selectedInfirmierIds.size }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Semaine</span>
+          <span class="kpi-value">{{ dateDebut || '—' }}</span>
+        </div>
+        <div class="valid-chip" [ngClass]="isPlanningValid() ? 'valid' : 'invalid'">
+          <i class="fas" [ngClass]="isPlanningValid() ? 'fa-check-circle' : 'fa-triangle-exclamation'"></i>
+          {{ isPlanningValid() ? 'Prêt à valider' : 'Incomplet / invalide' }}
+        </div>
+      </div>
+    </section>
+
+    <div class="header-actions" *ngIf="isChefPersonnel">
+      <button type="button" class="btn btn-secondary" (click)="scrollToPlanningHistory()">
+        <i class="fas fa-history"></i> Historique planning
+      </button>
+      <button type="button" class="btn btn-primary" (click)="creerPlanning()" [disabled]="isLoading || !isPlanningValid()">
+        <i class="fas" [ngClass]="isLoading ? 'fa-spinner fa-spin' : 'fa-calendar-plus'"></i>
+        {{ isLoading ? 'Validation...' : 'Valider le planning' }}
+      </button>
+    </div>
+
+    <div class="table-container luna-shadow planning-table-container" *ngIf="isChefPersonnel">
+
+      <table class="licences-table planning-table" *ngIf="weekDays.length > 0">
+        <thead>
+          <tr>
+            <th style="width: 80px;">Choix</th>
+            <th class="planning-staff">Infirmier</th>
+            <th *ngFor="let day of weekDays" class="planning-day">
+              <div class="day-label">{{ day.label }}</div>
+              <small>{{ day.date }}</small>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inf of filteredInfirmiers" class="luna-row">
+            <td class="text-center">
+              <input type="checkbox"
+                     [checked]="isSelected(inf.id)"
+                     (change)="toggleInfirmier(inf.id, $event.target.checked)">
+            </td>
+            <td class="planning-staff">
+              <div class="personnel-info">
+                <div class="personnel-avatar">
+                  <i class="fas fa-user-nurse"></i>
+                </div>
+                <div class="personnel-details">
+                  <div class="personnel-name">{{ inf.nom || 'Non renseigné' }} {{ inf.prenom || '' }}</div>
+                  <div class="personnel-role">
+                    Infirmier
+                    <span class="row-chip" [ngClass]="isSelected(inf.id) ? 'chip-on' : 'chip-off'">
+                      {{ isSelected(inf.id) ? 'Sélectionné' : 'Non sélectionné' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td *ngFor="let day of weekDays" class="planning-cell">
+              <div class="shift-cell">
+                <div class="shift-card"
+                     [ngClass]="getShiftClass(shiftSelections[inf.id]?.[day.date])"
+                     [class.shift-disabled]="!isSelected(inf.id)">
+                  <label class="shift-label">Heure</label>
+                  <select class="shift-select"
+                          [disabled]="!isSelected(inf.id)"
+                          [ngModel]="shiftSelections[inf.id]?.[day.date] || ''"
+                          (ngModelChange)="setShiftSelection(inf.id, day.date, $event)">
+                    <option value="">Choisir</option>
+                    <option value="MATIN">07:00 - 13:00</option>
+                    <option value="APRES_MIDI">13:00 - 19:00</option>
+                    <option value="NUIT">19:00 - 07:00</option>
+                  </select>
+
+                  <label class="shift-label">Service</label>
+                  <select class="service-select"
+                          [disabled]="!!selectedServiceId || !isSelected(inf.id) || !shiftSelections[inf.id]?.[day.date]"
+                          [ngModel]="serviceSelections[inf.id]?.[day.date] || selectedServiceId || inf?.service?.id || ''"
+                          (ngModelChange)="setServiceSelection(inf.id, day.date, $event)">
+                    <option value="">Service</option>
+                    <option *ngFor="let service of services" [value]="service.id">
+                      {{ service.nom }}
+                    </option>
+                  </select>
+
+                  <div class="rest-pill" *ngIf="isSelected(inf.id) && !shiftSelections[inf.id]?.[day.date]">
+                    Repos
+                  </div>
+                  <div class="disabled-hint" *ngIf="!isSelected(inf.id)">
+                    Sélectionne l’infirmier pour éditer
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="filteredInfirmiers.length === 0">
+            <td  class="empty-state">
+              <i class="fas fa-users-slash"></i>
+              <p>Aucun infirmier trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+   
+
+    <div class="table-container luna-shadow planning-history" id="planning-history">
+      <div class="summary-header">
+        <h2>{{ isInfirmier ? 'Mes plannings' : 'Historique des plannings' }}</h2>
+        
+      </div>
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Du / jusqu'à</th>
+            <th>Type</th>
+            <th>Infirmiers</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let planning of plannings" class="luna-row">
+            <td>{{ getPlanningPeriode(planning) }}</td>
+            <td>{{ planning.valide ? 'Validé' : 'Non validé' }}</td>
+            <td>{{ getPlanningInfirmiers(planning) }}</td>
+            <td class="d-flex gap-2">
+              <button type="button" class="btn btn-secondary" (click)="telechargerPdf(planning)" [disabled]="!planning?.id">
+                <i class="fas fa-file-pdf"></i> PDF
+              </button>
+              <button type="button" class="btn btn-secondary" (click)="voirDetail(planning.id)" [disabled]="!planning.id">
+                <i class="fas fa-eye"></i> Détail
+              </button>
+              <button *ngIf="isInfirmier && !planning.valide"
+                      type="button"
+                      class="btn btn-primary"
+                      (click)="validerPlanning(planning.id)"
+                      [disabled]="!planning.id">
+                Valider
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="plannings.length === 0">
+            <td colspan="6" class="empty-state">
+              <i class="fas fa-calendar-times"></i>
+              <p>Aucun historique trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MODAL DETAIL (Planning semaine comme PDF) -->
+    <div *ngIf="detailPlanning || detailLoading || detailError" class="luna-modal-overlay" (click)="fermerDetail()">
+      <div class="luna-modal" (click)="$event.stopPropagation()">
+        <div class="luna-modal-header">
+          <div class="luna-modal-title">
+            <div class="luna-modal-h1">{{ getDetailTitle() }}</div>
+            <div class="luna-modal-sub" *ngIf="getDetailUserLine()">{{ getDetailUserLine() }}</div>
+            <div class="luna-modal-sub" *ngIf="getDetailServiceLine()">{{ getDetailServiceLine() }}</div>
+            <div class="luna-modal-sub" *ngIf="getDetailPeriodLine()">{{ getDetailPeriodLine() }}</div>
+          </div>
+          <button type="button" class="btn btn-secondary" (click)="fermerDetail()">
+            <i class="fas fa-times"></i> Fermer
+          </button>
+        </div>
+
+        <div class="luna-modal-body">
+          <div *ngIf="detailLoading" class="detail-loading">Chargement...</div>
+
+          <div *ngIf="detailError && !detailLoading" class="alert alert-luna-danger">
+            <i class="fas fa-triangle-exclamation"></i>
+            {{ detailError }}
+          </div>
+
+          <table *ngIf="detailPlanning && !detailLoading" class="luna-week-table">
+            <thead>
+              <tr>
+                <th>Jour</th>
+                <th>07:00 → 13:00 Matin</th>
+                <th>13:00 → 19:00 Soir</th>
+                <th>19:00 → 07:00 Garde</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of detailWeekDays">
+                <td class="day-cell">
+                  <div class="day-name">{{ d.label }}</div>
+                  <div class="day-date">{{ d.date }}</div>
+                </td>
+                <td>{{ getDetailCell(d.date, 'matin') }}</td>
+                <td>{{ getDetailCell(d.date, 'soir') }}</td>
+                <td>{{ getDetailCell(d.date, 'nuit') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

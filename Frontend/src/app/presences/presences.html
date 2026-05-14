@@ -1,0 +1,174 @@
+<div class="main-card">
+  <div class="presences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">
+          {{ isChefPersonnel ? 'Marquage des présences' : 'Mes présences' }}
+        </h1>
+        <p class="page-subtitle" *ngIf="isChefPersonnel">
+          Consultez le planning de la semaine et marquez les présences des infirmiers
+        </p>
+        <p class="page-subtitle" *ngIf="isInfirmier">
+          Consultez l'historique de vos présences enregistrées
+        </p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <!-- ========== VUE CHEF PERSONNEL ========== -->
+    <ng-container *ngIf="isChefPersonnel">
+      <section class="filters-section luna-glass">
+        <div class="filter-group">
+          <label class="luna-label">Semaine (lundi)</label>
+          <input
+            type="date"
+            class="form-control luna-input"
+            [(ngModel)]="dateDebut"
+            (ngModelChange)="onDateDebutChange()"
+          />
+        </div>
+        <div class="filter-hint">
+          <i class="fas fa-info-circle"></i>
+          Sélectionnez le lundi de la semaine pour afficher le planning et marquer les présences.
+        </div>
+      </section>
+
+      <div class="table-container luna-shadow presence-table-wrapper" *ngIf="weekDays.length > 0">
+        <div class="presence-table-header">
+          <h2><i class="fas fa-calendar-check"></i> Planning et présences de la semaine</h2>
+          <span *ngIf="isLoadingPlanning || isLoadingPresences" class="loading-badge">
+            <i class="fas fa-spinner fa-spin"></i> Chargement...
+          </span>
+        </div>
+
+        <table class="presence-table" *ngIf="infirmiersDansPlanning.length > 0">
+          <thead>
+            <tr>
+              <th class="col-infirmier">Infirmier</th>
+              <th *ngFor="let day of weekDays" class="col-day">
+                <div class="day-label">{{ day.label }}</div>
+                <small class="day-date">{{ day.date }}</small>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inf of infirmiersDansPlanning" class="presence-row">
+              <td class="col-infirmier">
+                <div class="personnel-info">
+                  <div class="personnel-avatar">
+                    <i class="fas fa-user-nurse"></i>
+                  </div>
+                  <div class="personnel-details">
+                    <span class="personnel-name">{{ inf.nom }} {{ inf.prenom }}</span>
+                  </div>
+                </div>
+              </td>
+              <td *ngFor="let day of weekDays" class="col-day cell-presence">
+                <div class="cell-content" *ngIf="getCellPlanning(inf.id, day.date) as plan; else noPlan">
+                  <div class="shift-badge" [attr.data-shift]="plan.shiftType">
+                    {{ plan.shiftLabel }}
+                  </div>
+                  <div class="presence-status" *ngIf="getPresence(inf.id, day.date) as pres">
+                    <span class="status-badge" [class.present]="pres.present" [class.absent]="!pres.present">
+                      {{ pres.present ? 'Présent' : 'Absent' }}
+                    </span>
+                    <small *ngIf="pres.present">{{ getHeureArrivee(pres) }}</small>
+                  </div>
+                  <div class="cell-actions" *ngIf="!getPresence(inf.id, day.date)">
+                    <button
+                      type="button"
+                      class="btn-cell btn-present"
+                      (click)="marquerPresent(inf.id, day.date)"
+                      [disabled]="isMarking(inf.id, day.date)"
+                      title="Marquer présent"
+                    >
+                      <i class="fas" [ngClass]="isMarking(inf.id, day.date) ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+                      {{ isMarking(inf.id, day.date) ? '...' : 'Présent' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-cell btn-absent"
+                      (click)="marquerAbsent(inf.id, day.date)"
+                      [disabled]="isMarking(inf.id, day.date)"
+                      title="Marquer absent"
+                    >
+                      <i class="fas fa-times"></i> Absent
+                    </button>
+                  </div>
+                </div>
+                <ng-template #noPlan>
+                  <div class="cell-content cell-rest">Repos</div>
+                </ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="empty-planning luna-glass" *ngIf="!isLoadingPlanning && infirmiersDansPlanning.length === 0 && weekDays.length > 0">
+          <i class="fas fa-calendar-times"></i>
+          <p>Aucun planning pour cette semaine</p>
+          <small>Créez un planning dans « Planning des infirmiers » pour pouvoir marquer les présences.</small>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ========== VUE INFIRMIER ========== -->
+    <ng-container *ngIf="isInfirmier">
+      <section class="mes-presences-section">
+        <div class="presences-summary luna-glass" *ngIf="!isLoadingMesPresences && mesPresences.length > 0">
+          <div class="summary-stat">
+            <span class="stat-value">{{ mesPresences.length }}</span>
+            <span class="stat-label">Présences enregistrées</span>
+          </div>
+        </div>
+
+        <div class="presences-list" *ngIf="!isLoadingMesPresences && mesPresences.length > 0">
+          <div
+            *ngFor="let p of mesPresences"
+            class="presence-card luna-glass"
+            [class.card-present]="p.present"
+            [class.card-absent]="!p.present"
+          >
+            <div class="presence-card-header">
+              <span class="presence-date">
+                <i class="fas fa-calendar-day"></i>
+                {{ formatDateDisplay(p.datePresence) }}
+              </span>
+              <span class="presence-badge" [class.present]="p.present" [class.absent]="!p.present">
+                {{ p.present ? 'Présent' : 'Absent' }}
+              </span>
+            </div>
+            <div class="presence-card-body">
+              <div class="presence-detail" *ngIf="p.present">
+                <span><i class="fas fa-sign-in-alt"></i> Arrivée : {{ getHeureArrivee(p) }}</span>
+                <span *ngIf="getHeureDepart(p) !== '—'"><i class="fas fa-sign-out-alt"></i> Départ : {{ getHeureDepart(p) }}</span>
+              </div>
+              <div class="presence-detail" *ngIf="!p.present && p.observation">
+                <span><i class="fas fa-comment-alt"></i> {{ p.observation }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-presences luna-glass" *ngIf="!isLoadingMesPresences && mesPresences.length === 0">
+          <i class="fas fa-clipboard-list"></i>
+          <p>Aucune présence enregistrée</p>
+          <small>Vos présences seront affichées ici une fois marquées par le chef du personnel.</small>
+        </div>
+
+        <div class="loading-presences" *ngIf="isLoadingMesPresences">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Chargement de vos présences...</p>
+        </div>
+      </section>
+    </ng-container>
+  </div>
+</div>

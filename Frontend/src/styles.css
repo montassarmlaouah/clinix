@@ -1,0 +1,47 @@
+/* You can add global styles to this file, and also import other style files */
+/* You can add global styles to this file, and also import other style files */
+/*Style pour app.component.html*/
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  
+  /* LUNA Color Palette */
+  --color-luna-light: #A7EBF2;
+  --color-luna-medium-light: #54ACBF;
+  --color-luna-medium: #26658C;
+  --color-luna-dark: #023859;
+  --color-luna-darkest: #011C40;
+  
+  /* Usage Suggestions:
+     Backgrounds: --color-luna-darkest (Main BG), --color-luna-dark (Cards/Modals)
+     Text: White or --color-luna-light (Highlights)
+     Buttons: --color-luna-medium-light (Primary), --color-luna-medium (Hover)
+  */
+}
+
+app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* minimum hauteur de la fenêtre */
+}
+
+/* Header et Footer */
+app-header {
+  flex-shrink: 0;
+}
+
+app-footer {
+  flex-shrink: 0;
+}
+
+/* Contenu dynamique prend le reste */
+main {
+  flex: 1 0 auto;
+  /* occupe tout l'espace restant */
+  padding: 0;
+  /* pas de padding pour le main */
+  box-sizing: border-box;
+}

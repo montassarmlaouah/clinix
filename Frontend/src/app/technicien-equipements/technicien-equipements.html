@@ -1,0 +1,82 @@
+<div class="page-wrap">
+  <nav class="toolbar-top">
+    <a routerLink="/dashboard" class="back-nav"><i class="bi bi-arrow-left"></i> Tableau de bord</a>
+    <a routerLink="/chambres" class="btn btn-sm btn-outline-secondary">Chambres (consultation)</a>
+  </nav>
+
+  <h1>Équipements — maintenance</h1>
+  <p class="lead text-muted">
+    Liste des équipements de <strong>votre clinique</strong>. Les appareils <strong>en panne</strong> ou <strong>hors service</strong> sont regroupés ci-dessous.
+    Vous pouvez renvoyer une <strong>alerte par e-mail</strong> aux administrateurs de la clinique et aux techniciens (réutilise le même flux que lors du passage en panne).
+  </p>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div class="alert alert-success" *ngIf="messageSucces">{{ messageSucces }}</div>
+
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="recharger()" [disabled]="loading">Actualiser</button>
+  </div>
+
+  <section class="panel mb-4">
+    <h2 class="h5">Équipements en panne / hors service ({{ enPanne.length }})</h2>
+    <p class="small text-muted" *ngIf="enPanne.length">
+      Note optionnelle ajoutée au message pour chaque alerte :
+    </p>
+    <input *ngIf="enPanne.length" class="form-control form-control-sm mb-2" placeholder="Ex. urgence salle 3…" [(ngModel)]="noteAlerte" />
+    <div *ngIf="loading" class="text-muted py-3">Chargement…</div>
+    <div class="table-responsive" *ngIf="!loading && enPanne.length">
+      <table class="table table-sm table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Code</th>
+            <th>État</th>
+            <th>Localisation</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let eq of enPanne">
+            <td>{{ eq.nom }}</td>
+            <td><code>{{ eq.code }}</code></td>
+            <td><span class="badge bg-danger">{{ libelleEtat(eq.etatTechnique) }}</span></td>
+            <td>{{ eq.localisation || '—' }}</td>
+            <td>
+              <button type="button" class="btn btn-sm btn-warning" (click)="envoyerAlerte(eq)">
+                <i class="bi bi-envelope-exclamation me-1"></i> Renvoyer alerte
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p *ngIf="!loading && !enPanne.length" class="text-muted mb-0">Aucun équipement en panne ou hors service pour le moment.</p>
+  </section>
+
+  <section class="panel">
+    <h2 class="h5">Tous les équipements de la clinique ({{ tous.length }})</h2>
+    <div class="table-responsive" *ngIf="!loading && tous.length">
+      <table class="table table-sm table-striped mb-0">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Code</th>
+            <th>État technique</th>
+            <th>Statut</th>
+            <th>Localisation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let eq of tous">
+            <td>{{ eq.nom }}</td>
+            <td><code>{{ eq.code }}</code></td>
+            <td>{{ libelleEtat(eq.etatTechnique) }}</td>
+            <td>{{ eq.statut }}</td>
+            <td>{{ eq.localisation || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p *ngIf="!loading && !tous.length" class="text-muted mb-0">Aucun équipement enregistré pour cette clinique.</p>
+  </section>
+</div>

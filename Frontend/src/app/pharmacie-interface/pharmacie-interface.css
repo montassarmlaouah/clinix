@@ -1,0 +1,249 @@
+.main-card {
+  padding: 0 16px 24px;
+}
+
+:host {
+  --luna-light: #A7EBF2;
+  --luna-primary: #54ACBF;
+  --luna-deep: #26658C;
+  --luna-dark: #023859;
+  --luna-midnight: #011C40;
+  --luna-bg: #f4f7f9;
+}
+
+.licences-container {
+  margin-left: 300px;
+  margin-top: 100px;
+  padding: 2rem;
+  min-height: 100vh;
+  background: var(--luna-bg);
+  color: var(--luna-midnight);
+}
+
+.page-header {
+  margin-bottom: 1rem;
+}
+
+.header-title h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #023859;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: #26658c;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+}
+
+.messages-section {
+  margin-top: 0.5rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(84, 172, 191, 0.24);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(167, 235, 242, 0.22), rgba(84, 172, 191, 0.12));
+}
+
+.tab-btn {
+  border: 1px solid rgba(84, 172, 191, 0.35);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #a7ebf2;
+  color: #011c40;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #54acbf;
+  color: #fff;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #26658c, #023859);
+  color: #fff;
+  border-color: #023859;
+  box-shadow: 0 8px 20px rgba(2, 56, 89, 0.25);
+}
+
+.badge-pill {
+  margin-left: 6px;
+  background: #023859;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.btn.btn-primary {
+  background: linear-gradient(135deg, #26658c, #023859);
+  border: none;
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+}
+
+.btn.btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(2, 56, 89, 0.3);
+  transform: translateY(-1px);
+}
+
+.table-container {
+  background: #fff;
+  border: 1px solid rgba(84, 172, 191, 0.24);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(1, 28, 64, 0.05);
+}
+
+.licences-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.licences-table thead th {
+  padding: 1.05rem 1.25rem;
+  text-align: left;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: #a7ebf2;
+  color: #023859;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(84, 172, 191, 0.45);
+  white-space: nowrap;
+}
+
+.licences-table tbody td {
+  padding: 1rem 1.25rem;
+  font-size: 0.93rem;
+  color: #023859;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(2, 56, 89, 0.07);
+}
+
+.licences-table tbody tr:nth-child(even) td {
+  background: #fbfdff;
+}
+
+.licences-table tbody tr:hover td {
+  background: rgba(167, 235, 242, 0.14);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.empty-state {
+  color: #26658c;
+}
+
+.badge-danger {
+  background: rgba(2, 56, 89, 0.12);
+  color: #023859;
+}
+
+.badge-info {
+  background: rgba(84, 172, 191, 0.2);
+  color: #023859;
+}
+
+.btn-action {
+  border: none;
+  border-radius: 6px;
+  margin: 0 2px;
+  width: 24px;
+  height: 24px;
+  color: #fff;
+  font-size: 0.7rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(2, 56, 89, 0.25);
+}
+
+.btn-view,
+.btn-sync,
+.btn-warning,
+.btn-maint {
+  background: linear-gradient(135deg, #26658c, #023859);
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #023859, #011c40);
+}
+
+.bons-entree-table thead th {
+  background: #8fd6e4;
+  color: #023859;
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+}
+
+.bons-entree-table tbody td {
+  background: #fff;
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.bons-entree-table tbody tr:nth-child(even) td {
+  background: #f8fdff;
+}
+
+.bons-entree-table tbody tr:hover td {
+  background: #eefaff;
+}
+
+.ref-chip {
+  display: inline-block;
+  background: rgba(84, 172, 191, 0.18);
+  color: #023859;
+  border: 1px solid rgba(2, 56, 89, 0.15);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Colonnes plus larges sur tous les tableaux */
+.licences-table th:first-child,
+.licences-table td:first-child {
+  min-width: 170px;
+}
+
+.licences-table th:last-child,
+.licences-table td:last-child {
+  min-width: 130px;
+}
+
+@media (max-width: 991.98px) {
+  .licences-container {
+    margin-left: 0;
+    margin-top: 80px;
+  }
+}

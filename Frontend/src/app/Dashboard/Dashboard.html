@@ -1,0 +1,971 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header py-4">
+    <div class="container">
+      <div class="d-flex align-items-center gap-4">
+        <div class="user-badge">
+     <i class="bi bi-person-circle icone-green"></i>
+  </div>
+        <div>
+          <h1 style="color: #26658C;">Bienvenue, {{ userName || 'Utilisateur' }}</h1>
+          <p  style="color: #26658C;" >{{ getRoleLabel() }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <!-- Loading Spinner -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Chargement...</span>
+      </div>
+      <p class="mt-3">Chargement du tableau de bord...</p>
+    </div>
+
+    <ng-container *ngIf="authService.isSuperAdmin() && !loading">
+      <!-- Stats Cards Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon">
+              <i class="bi bi-hospital"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Cliniques</h6>
+              <h3>{{ stats.totalCliniques }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Cliniques Actives</h6>
+              <h3>{{ stats.cliniquesActives }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon">
+              <i class="bi bi-x-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Cliniques Inactives</h6>
+              <h3>{{ stats.cliniquesInactives }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-info text-white">
+            <div class="stat-icon">
+              <i class="bi bi-bed"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Capacité Totale</h6>
+              <h3>{{ stats.capaciteTotale }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interfaces dédiées (accès rapide hors menu latéral) -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <a routerLink="/clinique" class="text-decoration-none text-reset">
+            <div class="card h-100 border-0 shadow-sm dashboard-hub-card">
+              <div class="card-body d-flex align-items-center gap-3 py-4">
+                <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary">
+                  <i class="bi bi-building fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="mb-1">Interface gestion cliniques</h5>
+                  <p class="text-muted small mb-0">Créer et modifier les cliniques, administrateurs</p>
+                  <span class="badge bg-primary mt-2">{{ stats.totalCliniques }} cliniques</span>
+                </div>
+                <i class="bi bi-arrow-right-circle fs-4 text-primary"></i>
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-6">
+          <a routerLink="/cabinets-medecins" class="text-decoration-none text-reset">
+            <div class="card h-100 border-0 shadow-sm dashboard-hub-card">
+              <div class="card-body d-flex align-items-center gap-3 py-4">
+                <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success">
+                  <i class="bi bi-person-badge fs-2"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="mb-1">Interface cabinets médecins</h5>
+                  <p class="text-muted small mb-0">Spécialité, téléphones, fixe et localisation des cabinets</p>
+                  <span class="badge bg-success mt-2 me-1">{{ stats.totalCabinetsMedecins }} cabinets</span>
+                  <span class="badge bg-light text-success border border-success">{{ stats.cabinetsMedecinsActifs }} actifs</span>
+                </div>
+                <i class="bi bi-arrow-right-circle fs-4 text-success"></i>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Capacité Chart -->
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 350px;">
+                <canvas #cliniquesCapaciteChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 350px;">
+                <canvas #cliniquesStatutChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evolution Chart -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card chart-card">
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas #cliniquesCreationChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cliniques Table -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>Liste des Cliniques
+              </h5>
+              <span class="badge bg-primary">{{ cliniques.length }} cliniques</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Clinique</th>
+                      <th>Adresse</th>
+                      <th>Téléphone</th>
+                      <th class="text-center">Statut</th>
+                      <th>Date Création</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let clinique of cliniques">
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div class="clinique-avatar me-3">
+                            <i class="bi bi-hospital"></i>
+                          </div>
+                          <div>
+                            <strong>{{ clinique.nom }}</strong>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          <i class="bi bi-geo-alt me-1"></i>{{ clinique.adresse }}
+                        </small>
+                      </td>
+                      <td>
+                        <small>
+                          <i class="bi bi-telephone me-1"></i>{{ clinique.telephone || 'N/A' }}
+                        </small>
+                      </td>
+
+                      <td class="text-center">
+                        <span [class]="clinique.actif ? 'badge bg-success' : 'badge bg-danger'">
+                          {{ clinique.actif ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td>
+                        <small class="text-muted">
+                          {{ clinique.dateCreation ? (clinique.dateCreation | date:'dd/MM/yyyy') : 'N/A' }}
+                        </small>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="cliniques.length === 0" class="text-center py-5">
+                <i class="bi bi-inbox display-4 text-muted"></i>
+                <p class="text-muted mt-2">Aucune clinique enregistrée</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aperçu cabinets médecins (lien vers l’interface dédiée) -->
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <h5 class="mb-0">
+                <i class="bi bi-person-badge me-2 text-success"></i>Cabinets médecins
+              </h5>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success">{{ stats.totalCabinetsMedecins }} au total</span>
+                <a routerLink="/cabinets-medecins" class="btn btn-sm btn-success">
+                  <i class="bi bi-box-arrow-up-right me-1"></i>Ouvrir l’interface cabinets
+                </a>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive" *ngIf="cabinetsMedecins.length > 0">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Médecin</th>
+                      <th>Spécialité</th>
+                      <th>Mobile</th>
+                      <th>Fixe</th>
+                      <th>Localisation</th>
+                      <th class="text-center">Statut</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let m of cabinetsMedecins | slice:0:12">
+                      <td>
+                        <strong>Dr. {{ m.prenom }} {{ m.nom }}</strong>
+                      </td>
+                      <td><small>{{ m.specialite || '—' }}</small></td>
+                      <td><small>{{ m.telephone || '—' }}</small></td>
+                      <td><small>{{ m.telephoneFixe || '—' }}</small></td>
+                      <td><small class="text-muted">{{ m.localisation || '—' }}</small></td>
+                      <td class="text-center">
+                        <span [class]="m.actif ? 'badge bg-success' : 'badge bg-secondary'">
+                          {{ m.actif ? 'Actif' : 'Suspendu' }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="cabinetsMedecins.length === 0" class="text-center py-4">
+                <i class="bi bi-person-badge display-6 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">Aucun cabinet médecin — créez-en depuis l’interface dédiée</p>
+                <a routerLink="/cabinets-medecins" class="btn btn-outline-success btn-sm mt-2">Créer un cabinet</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- ADMIN CLINIQUE DASHBOARD         -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isAdminClinique() && !loading">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Personnel</h6>
+              <h3>{{ adminStats.totalPersonnel }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon">
+              <i class="bi bi-diagram-3"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Services</h6>
+              <h3>{{ adminStats.totalServices }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon">
+              <i class="bi bi-door-closed"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Chambres</h6>
+              <h3>{{ adminStats.totalChambres }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-info text-white">
+            <div class="stat-icon">
+              <i class="bi bi-cpu"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Équipements</h6>
+              <h3>{{ adminStats.totalEquipements }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #adminPersonnelChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #adminOverviewChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card chart-card">
+            <div class="card-body">
+              <div class="chart-container" style="height: 340px;">
+                <canvas #adminChambresServiceChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tableau détail chambres par service -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-door-closed me-2"></i>Chambres par Service
+              </h5>
+              <span class="badge bg-primary">{{ adminStats.totalChambres }} chambres</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Service</th>
+                      <th class="text-center">Nombre de Chambres</th>
+                      <th>Occupation</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let row of chambresParService">
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="clinique-avatar"><i class="bi bi-diagram-3"></i></div>
+                          <strong>{{ row.service }}</strong>
+                        </div>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge bg-primary">{{ row.count }}</span>
+                      </td>
+                      <td style="min-width:200px;">
+                        <div class="d-flex justify-content-between mb-1">
+                          <small class="text-muted">{{ row.occupied }} / {{ row.count }} occupée(s)</small>
+                          <small class="fw-semibold" style="color:#26658C;">
+                            {{ row.count > 0 ? ((row.occupied / row.count) * 100 | number:'1.0-0') : 0 }}%
+                          </small>
+                        </div>
+                        <div class="progress" style="height:8px; border-radius:4px;">
+                          <div class="progress-bar"
+                               role="progressbar"
+                               [style.width.%]="row.count > 0 ? (row.occupied / row.count) * 100 : 0"
+                               style="background: linear-gradient(90deg,#26658C,#54ACBF);">
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div *ngIf="chambresParService.length === 0" class="text-center py-4">
+                <i class="bi bi-inbox display-4 text-muted"></i>
+                <p class="text-muted mt-2">Aucune donnée disponible</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- MEDECIN DASHBOARD                -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isMedecin() && !loading">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h6>RDV Aujourd'hui</h6>
+              <h3>{{ stats.rendezVousAujourdhui }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-content">
+              <h6>En Attente</h6>
+              <h3>{{ stats.rendezVousEnAttente }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" *ngIf="rendezVousRecents.length > 0">
+        <div class="card-header bg-white">
+          <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Rendez-vous Récents</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Patient</th>
+                  <th>Motif</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let rdv of rendezVousRecents">
+                  <td>{{ formatDate(rdv.dateHeure) }}</td>
+                  <td>{{ rdv.patientNom }}</td>
+                  <td>{{ rdv.motif || 'Non spécifié' }}</td>
+                  <td><span [class]="getStatusClass(rdv.statut || '')">{{ getStatusLabel(rdv.statut || '') }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- RADIOLOGUE DASHBOARD             -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isRadiologue() && !loading">
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body py-3">
+              <div class="text-muted small">File d'attente</div>
+              <div class="fs-3 fw-semibold text-primary">{{ radiologueStats.fileAttente }}</div>
+              <div class="small text-muted">Sans prise en charge</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body py-3">
+              <div class="text-muted small">Mes examens en cours</div>
+              <div class="fs-3 fw-semibold text-warning">{{ radiologueStats.mesExamensEnCours }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body py-3">
+              <div class="text-muted small">Comptes rendus à finaliser</div>
+              <div class="fs-3 fw-semibold text-secondary">{{ radiologueStats.comptesRendusAFinaliser }}</div>
+              <div class="small text-muted">Examen terminé, rapport brouillon ou absent</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body py-3">
+              <div class="text-muted small">Examens validés</div>
+              <div class="fs-3 fw-semibold text-success">{{ radiologueStats.examensValides }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mb-4">
+        <div class="col-md-8 col-lg-6">
+          <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title"><i class="bi bi-radioactive me-2 text-primary"></i>Radiologie</h5>
+              <p class="text-muted mb-3">
+                Demandes des médecins de la clinique, planification, protocole, compte rendu et validation
+                (notification au médecin demandeur).
+              </p>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <a routerLink="/radiologue-imagerie" class="btn btn-primary">Ouvrir le bureau d'imagerie</a>
+                <a routerLink="/radiologue-messagerie" class="btn btn-outline-primary position-relative">
+                  Messagerie
+                  <span *ngIf="radiologueMessagesNonLus > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ radiologueMessagesNonLus }}
+                  </span>
+                </a>
+                <a routerLink="/profil" class="btn btn-outline-secondary btn-sm">Profil</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- TECHNICIEN MAINTENANCE           -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isTechnicienMaintenance() && !loading">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 border-0 shadow-sm border-danger border-opacity-25">
+            <div class="card-body py-3">
+              <div class="text-muted small">Équipements en panne / hors service</div>
+              <div class="fs-3 fw-semibold text-danger">{{ technicienPannesCount }}</div>
+              <div class="small text-muted">Sur votre clinique (JWT)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title"><i class="bi bi-tools me-2 text-warning"></i>Maintenance &amp; équipements</h5>
+          <p class="text-muted mb-3">
+            Consultez les pannes, renvoyez des alertes par e-mail aux administrateurs (SMTP requis sur le serveur).
+          </p>
+          <a routerLink="/technicien-equipements" class="btn btn-warning">Ouvrir la liste des équipements</a>
+          <a routerLink="/chambres" class="btn btn-outline-secondary ms-2">Chambres (lecture)</a>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- INFIRMIER DASHBOARD              -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isInfirmier() && !loading">
+
+      <!-- Stat Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-content">
+              <h6>Total Patients</h6>
+              <h3>{{ infirmierStats.totalPatients }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon"><i class="bi bi-calendar3"></i></div>
+            <div class="stat-content">
+              <h6>Mes Plannings</h6>
+              <h3>{{ infirmierStats.planningsCount }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon"><i class="bi bi-calendar-x"></i></div>
+            <div class="stat-content">
+              <h6>Congés en Attente</h6>
+              <h3>{{ infirmierStats.congesEnAttente }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-info text-white">
+            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-content">
+              <h6>Présences ce Mois</h6>
+              <h3>{{ infirmierStats.presencesMois }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphiques infirmier -->
+      <div class="row g-4 mb-4">
+        <!-- Bar + Line : Présences par mois -->
+        <div class="col-lg-8">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div style="position:relative; height:320px;">
+                <canvas #infirmierPresencesChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Doughnut : Répartition des congés -->
+        <div class="col-lg-4">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div style="position:relative; height:320px;">
+                <canvas #infirmierCongesChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Distribution par âge -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div style="position:relative; height:320px;">
+                <canvas #infirmierAgeChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Distribution par sexe -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <div style="position:relative; height:320px;">
+                <canvas #infirmierSexeChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- SECRETAIRE DASHBOARD             -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isSecretaire() && !loading">
+      <!-- Stat Cards -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-content">
+              <h6>Total Patients</h6>
+              <h3>{{ secretaireStats.totalPatients }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon"><i class="bi bi-person-plus"></i></div>
+            <div class="stat-content">
+              <h6>Ce Mois</h6>
+              <h3>{{ secretaireStats.patientsRecents }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon"><i class="bi bi-percent"></i></div>
+            <div class="stat-content">
+              <h6>Taux Croissance</h6>
+              <h3>{{ secretaireStats.taux }}%</h3>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Évolution patients par mois -->
+        <div class="col-lg-6">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #secretairePatientCountChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Distribution par sexe -->
+        <div class="col-lg-6">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #secretaireSexeChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Distribution par âge -->
+        <div class="col-12">
+          <div class="card chart-card">
+            <div class="card-body">
+              <div class="chart-container" style="height: 340px;">
+                <canvas #secretaireAgeChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ secretaireStats.totalPatients }}</span>
+            <h6>Patients enregistrés</h6>
+            <p>Base de données complète et à jour de tous les patients.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ secretaireStats.patientsRecents }}</span>
+            <h6>Nouveaux ce mois</h6>
+            <p>Nouvelles admissions et enregistrements du mois courant.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ secretaireStats.taux }}%</span>
+            <h6>Taux de croissance</h6>
+            <p>Progression du fichier patient mois sur mois.</p>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- PATIENT DASHBOARD                -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isPatient() && !loading">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-content">
+              <h6>RDV En Attente</h6>
+              <h3>{{ stats.rendezVousEnAttente }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" *ngIf="rendezVousRecents.length > 0">
+        <div class="card-header bg-white">
+          <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Mes Rendez-vous</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Médecin</th>
+                  <th>Motif</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let rdv of rendezVousRecents">
+                  <td>{{ formatDate(rdv.dateHeure) }}</td>
+                  <td>{{ rdv.medecinNom }}</td>
+                  <td>{{ rdv.motif || 'Non spécifié' }}</td>
+                  <td><span [class]="getStatusClass(rdv.statut || '')">{{ getStatusLabel(rdv.statut || '') }}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ================================ -->
+    <!-- CHEF PERSONNEL DASHBOARD         -->
+    <!-- ================================ -->
+    <ng-container *ngIf="authService.isChefPersonnel() && !loading">
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon">
+              <i class="bi bi-hospital"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Ma Clinique</h6>
+              <h3>{{ maClinique?.nom || '—' }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Total Patients</h6>
+              <h3>{{ stats.totalPatients }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="stat-card bg-gradient-info text-white">
+            <div class="stat-icon">
+              <i class="bi bi-diagram-3"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Services Actifs</h6>
+              <h3>{{ chefPersonnelStats.servicesActifs }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-primary text-white">
+            <div class="stat-icon">
+              <i class="bi bi-calendar3"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Plannings</h6>
+              <h3>{{ chefPersonnelStats.planningsCount }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-success text-white">
+            <div class="stat-icon">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Demandes Congé</h6>
+              <h3>{{ chefPersonnelStats.demandesCongeTotal }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="stat-card bg-gradient-warning text-white">
+            <div class="stat-icon">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div class="stat-content">
+              <h6>En Attente</h6>
+              <h3>{{ chefPersonnelStats.congesEnAttente }}</h3>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #chefPlanningTrendChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #chefCongesChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-12">
+          <div class="card chart-card">
+            <div class="card-body">
+              <div class="chart-container" style="height: 340px;">
+                <canvas #chefServicesChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ chefPersonnelStats.servicesActifs }}</span>
+            <h6>Services actifs suivis</h6>
+            <p>Vue globale de la structure des services de la clinique.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ chefPersonnelStats.planningsCount }}</span>
+            <h6>Plannings suivis</h6>
+            <p>Courbe mensuelle pour anticiper la charge d'organisation.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="chef-insight-card">
+            <span class="chef-insight-kpi">{{ chefPersonnelStats.congesEnAttente }}</span>
+            <h6>Congés en attente</h6>
+            <p>Indicateur direct des validations à traiter rapidement.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" *ngIf="maClinique">
+        <div class="card-header bg-white">
+          <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Détails de la Clinique</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Nom :</strong> {{ maClinique.nom }}</p>
+              <p><strong>Adresse :</strong> {{ maClinique.adresse }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Téléphone :</strong> {{ maClinique.telephone || 'N/A' }}</p>
+              <p><strong>Statut :</strong>
+                <span [class]="maClinique.actif ? 'badge bg-success' : 'badge bg-danger'">
+                  {{ maClinique.actif ? 'Active' : 'Inactive' }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+</div>

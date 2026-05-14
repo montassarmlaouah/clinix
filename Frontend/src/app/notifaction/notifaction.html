@@ -1,0 +1,65 @@
+<div class="notifications-container">
+  <div class="notifications-header">
+    <div>
+      <h2><i class="bi bi-bell"></i> Notifications du Jour</h2>
+      <p class="subtitle">{{ todayNotifications.length }} notification(s) aujourd'hui</p>
+    </div>
+    <div class="header-actions">
+      <span class="badge-count" *ngIf="unreadCount > 0">{{ unreadCount }} non lue(s)</span>
+      <button class="btn btn-primary" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
+        <i class="bi bi-check-all"></i> Tout marquer comme lu
+      </button>
+      <button class="btn btn-secondary" (click)="loadTodayNotifications()">
+        <i class="bi bi-arrow-clockwise"></i> Actualiser
+      </button>
+    </div>
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Chargement...</span>
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    <i class="bi bi-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <div class="notifications-list" *ngIf="!loading && !error">
+    <div class="empty-state" *ngIf="todayNotifications.length === 0">
+      <i class="bi bi-inbox"></i>
+      <h3>Aucune notification aujourd'hui</h3>
+      <p>Vous n'avez pas de nouvelles notifications pour le moment.</p>
+    </div>
+
+    <div class="notification-card"
+         *ngFor="let notification of todayNotifications"
+         [ngClass]="getNotificationClass(notification.type)"
+         [class.unread]="!notification.lu"
+         (click)="markAsRead(notification)">
+      <div class="notification-icon">
+        <i class="bi" [ngClass]="getNotificationIcon(notification.type)"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-header">
+          <h4>{{ notification.titre }}</h4>
+          <span class="notification-time">{{ formatDate(notification.dateCreation) }}</span>
+        </div>
+        <p class="notification-message">{{ notification.message }}</p>
+        <div class="notification-footer">
+          <span class="notification-type">{{ notification.type }}</span>
+          <span class="notification-status" *ngIf="!notification.lu">
+            <i class="bi bi-circle-fill"></i> Nouveau
+          </span>
+        </div>
+      </div>
+      <div class="notification-actions">
+        <button class="btn-icon" (click)="deleteNotification(notification.id); $event.stopPropagation()" title="Supprimer">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+</div>

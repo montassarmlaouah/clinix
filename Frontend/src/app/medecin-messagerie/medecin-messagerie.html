@@ -1,0 +1,41 @@
+<div class="page-wrap">
+  <nav class="back-nav">
+    <a *ngIf="auth.isRadiologue()" routerLink="/radiologue-imagerie"><i class="bi bi-arrow-left"></i> Bureau d'imagerie</a>
+    <a *ngIf="auth.isMedecin()" routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
+  <h1>{{ auth.isRadiologue() ? 'Messagerie — radiologue' : 'Messagerie (staff)' }}</h1>
+
+  <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel">
+    <h2>Nouveau message</h2>
+    <label>Destinataire</label>
+    <select class="form-control" [(ngModel)]="form.destinataireId">
+      <option value="">— Choisir un contact —</option>
+      <option *ngFor="let c of contacts" [value]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+    </select>
+    <label class="mt-2">Sujet</label>
+    <input class="form-control" [(ngModel)]="form.sujet" />
+    <label class="mt-2">Message</label>
+    <textarea class="form-control" rows="3" [(ngModel)]="form.contenu"></textarea>
+    <button class="btn btn-primary mt-2" (click)="envoyer()">Envoyer</button>
+    <p class="small text-muted mt-2" *ngIf="!contacts.length">Aucun contact — la liste provient du serveur.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Messages reçus</h2>
+    <div *ngIf="loading">Chargement…</div>
+    <table class="table table-sm" *ngIf="!loading && recus.length">
+      <thead><tr><th>Date</th><th>Sujet</th><th>De</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let m of recus">
+          <td>{{ m.dateEnvoi | date:'short' }}</td>
+          <td>{{ m.sujet }}</td>
+          <td>{{ m.expediteur ? (m.expediteur.prenom + ' ' + m.expediteur.nom) : '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loading && !recus.length" class="text-muted">Aucun message.</p>
+  </div>
+</div>

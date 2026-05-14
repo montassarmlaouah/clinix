@@ -1,0 +1,11 @@
+.page-wrap { max-width: 560px; margin: 0 auto; padding: 1rem 1.25rem 2rem; }
+.back-nav { margin-bottom: 1rem; }
+.back-nav a { text-decoration: none; color: #0d6efd; }
+.lead { color: #64748b; margin-bottom: 1rem; }
+.panel {
+  padding: 1rem;
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  background: #fff;
+}
+.mt-2 { margin-top: 0.5rem; }

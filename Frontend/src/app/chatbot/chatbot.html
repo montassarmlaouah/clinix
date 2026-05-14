@@ -1,0 +1,84 @@
+<!-- Bouton flottant du chatbot -->
+<div class="chatbot-button" *ngIf="!isOpen" (click)="toggleChat()">
+  <i class="bi bi-chat-dots-fill"></i>
+  <span class="pulse-ring"></span>
+</div>
+
+<div class="chatbot-window" *ngIf="isOpen" [class.minimized]="isMinimized">
+  <!-- En-tête -->
+  <div class="chat-header">
+    <div class="header-info">
+      <div class="bot-avatar">
+        <i class="bi bi-robot"></i>
+      </div>
+      <div class="bot-info">
+        <h3>Assistant CLINIX</h3>
+        <span class="status">
+          <span class="status-dot"></span>
+          En ligne
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" (click)="minimizeChat()" title="Minimiser">
+        <i class="bi" [class.bi-dash-lg]="!isMinimized" [class.bi-chevron-up]="isMinimized"></i>
+      </button>
+      <button class="header-btn" (click)="closeChat()" title="Fermer">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Corps du chat -->
+  <div class="chat-body" *ngIf="!isMinimized">
+    <div class="chat-messages">
+      <div *ngFor="let message of messages" 
+           class="message"
+           [class.bot-message]="message.isBot"
+           [class.user-message]="!message.isBot">
+        <div class="message-avatar" *ngIf="message.isBot">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            {{ message.text }}
+          </div>
+          <span class="message-time">
+            {{ message.timestamp | date: 'HH:mm' }}
+          </span>
+        </div>
+        <div class="message-avatar" *ngIf="!message.isBot">
+          <i class="bi bi-person-fill"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggestions rapides -->
+    <div class="quick-replies">
+      <button class="quick-reply" (click)="userMessage = 'Aide'; sendMessage()">
+        <i class="bi bi-question-circle"></i> Aide
+      </button>
+      <button class="quick-reply" (click)="userMessage = 'Rendez-vous'; sendMessage()">
+        <i class="bi bi-calendar-check"></i> RDV
+      </button>
+      <button class="quick-reply" (click)="userMessage = 'Services'; sendMessage()">
+        <i class="bi bi-hospital"></i> Services
+      </button>
+    </div>
+
+    <!-- Zone de saisie -->
+    <div class="chat-input-area">
+      <div class="input-wrapper">
+        <input
+          type="text"
+          class="chat-input"
+          [(ngModel)]="userMessage"
+          (keypress)="handleKeyPress($event)"
+          placeholder="Tapez votre message...">
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!userMessage.trim()">
+          <i class="bi bi-send-fill"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

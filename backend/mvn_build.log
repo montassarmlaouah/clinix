@@ -1,0 +1,112 @@
+Picked up JAVA_TOOL_OPTIONS: -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------------< com.pfe:pfe >-----------------------------
+[INFO] Building pfe 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.4.1:clean (default-clean) @ pfe ---
+[INFO] Deleting d:\Project PFE\backend\target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ pfe ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ pfe ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 189 source files with javac [debug parameters release 17] to target\classes
+[INFO] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/security/config/SecurityConfig.java: Some input files use or override a deprecated API.
+[INFO] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/security/config/SecurityConfig.java: Recompile with -Xlint:deprecation for details.
+[INFO] Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrateurCliniqueController.java:[73,67] cannot find symbol
+  symbol:   method obtenirAdminsActifsClinique(java.lang.String)
+  location: variable adminCliniqueService of type com.pfe.pfe.service.AdministrateurCliniqueService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrateurCliniqueController.java:[98,60] cannot find symbol
+  symbol:   method obtenirAdminParTelephoneEtClinique(java.lang.String,java.lang.String)
+  location: variable adminCliniqueService of type com.pfe.pfe.service.AdministrateurCliniqueService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[51,38] cannot find symbol
+  symbol:   method creerPlanningJournalier(java.lang.String,java.lang.String,java.util.List<com.pfe.pfe.dto.AdministrationTraitementDTO>)
+  location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[112,38] cannot find symbol
+  symbol:   method obtenirTraitementsParType(java.lang.String,java.lang.String)
+  location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[124,38] cannot find symbol
+  symbol:   method obtenirTraitementsInfirmier(java.lang.String)
+  location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[47,26] cannot find symbol
+  symbol:   method envoyerSms(java.lang.String,java.lang.String,java.lang.String,<nulltype>)
+  location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[132,59] cannot find symbol
+  symbol:   method obtenirHistoriqueSms(java.lang.String)
+  location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[152,45] cannot find symbol
+  symbol:   method obtenirCoutTotal(java.time.LocalDateTime,java.time.LocalDateTime)
+  location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[75,136] incompatible types: java.lang.String cannot be converted to java.lang.Double
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[136,125] incompatible types: java.lang.String cannot be converted to java.lang.Double
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[156,9] no suitable method found for envoyerSms(java.lang.String,java.lang.String,java.lang.String)
+    method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String) is not applicable
+      (actual and formal argument lists differ in length)
+    method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String,java.lang.String,java.lang.String) is not applicable
+      (actual and formal argument lists differ in length)
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[163,9] no suitable method found for envoyerSms(java.lang.String,java.lang.String,java.lang.String)
+    method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String) is not applicable
+      (actual and formal argument lists differ in length)
+    method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String,java.lang.String,java.lang.String) is not applicable
+      (actual and formal argument lists differ in length)
+[INFO] 12 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  12.313 s
+[INFO] Finished at: 2026-01-12T15:29:09+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.0:compile (default-compile) on project pfe: Compilation failure: Compilation failure: 
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrateurCliniqueController.java:[73,67] cannot find symbol
+[ERROR]   symbol:   method obtenirAdminsActifsClinique(java.lang.String)
+[ERROR]   location: variable adminCliniqueService of type com.pfe.pfe.service.AdministrateurCliniqueService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrateurCliniqueController.java:[98,60] cannot find symbol
+[ERROR]   symbol:   method obtenirAdminParTelephoneEtClinique(java.lang.String,java.lang.String)
+[ERROR]   location: variable adminCliniqueService of type com.pfe.pfe.service.AdministrateurCliniqueService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[51,38] cannot find symbol
+[ERROR]   symbol:   method creerPlanningJournalier(java.lang.String,java.lang.String,java.util.List<com.pfe.pfe.dto.AdministrationTraitementDTO>)
+[ERROR]   location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[112,38] cannot find symbol
+[ERROR]   symbol:   method obtenirTraitementsParType(java.lang.String,java.lang.String)
+[ERROR]   location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/AdministrationTraitementController.java:[124,38] cannot find symbol
+[ERROR]   symbol:   method obtenirTraitementsInfirmier(java.lang.String)
+[ERROR]   location: variable administrationService of type com.pfe.pfe.service.AdministrationTraitementService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[47,26] cannot find symbol
+[ERROR]   symbol:   method envoyerSms(java.lang.String,java.lang.String,java.lang.String,<nulltype>)
+[ERROR]   location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[132,59] cannot find symbol
+[ERROR]   symbol:   method obtenirHistoriqueSms(java.lang.String)
+[ERROR]   location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/controller/SmsController.java:[152,45] cannot find symbol
+[ERROR]   symbol:   method obtenirCoutTotal(java.time.LocalDateTime,java.time.LocalDateTime)
+[ERROR]   location: variable twilioService of type com.pfe.pfe.service.TwilioService
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[75,136] incompatible types: java.lang.String cannot be converted to java.lang.Double
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[136,125] incompatible types: java.lang.String cannot be converted to java.lang.Double
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[156,9] no suitable method found for envoyerSms(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]     method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR]     method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String,java.lang.String,java.lang.String) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR] /d:/Project PFE/backend/src/main/java/com/pfe/pfe/service/SmsService.java:[163,9] no suitable method found for envoyerSms(java.lang.String,java.lang.String,java.lang.String)
+[ERROR]     method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR]     method com.pfe.pfe.service.SmsService.envoyerSms(java.lang.String,java.lang.String,java.lang.String,java.lang.String) is not applicable
+[ERROR]       (actual and formal argument lists differ in length)
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

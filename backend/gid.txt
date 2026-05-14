@@ -1,0 +1,454 @@
+Documentation API backend (pour mobile React Native)
+
+Base URL: a definir (ex: https://api.votre-domaine.tld)
+Auth: JWT via header `Authorization: Bearer <token>` (retourne par /auth/login)
+Formats: JSON sauf mention PDF
+
+------------------------------------------------------------
+AUTHENTIFICATION & PROFIL
+------------------------------------------------------------
+AuthController (/auth)
+- POST /auth/login
+  Body: AuthRequest (username, password)
+  Retour: token JWT + role
+- POST /auth/register
+  Body: RegisterRequestDTO (telephone, nom, prenom, motDePasse, confirmationMotDePasse, role, specialite?)
+- GET /auth/verifier-compte/{telephone}
+- GET /auth/verifier-compte/{telephone}/{role}
+- GET /auth/verifier-telephone/{telephone}
+- GET /auth/diagnostic/super-admins
+
+UserProfileController (/auth)
+- GET /auth/profile (auth)
+- PUT /auth/profile (auth)
+  Body: Map<String, String> (nom, prenom)
+
+ForgotPasswordController (/auth/forgot-password)
+- POST /auth/forgot-password/send-code
+  Body: Map<String, String> (telephone)
+- POST /auth/forgot-password/verify-code
+  Body: Map<String, String> (telephone, code)
+- POST /auth/forgot-password/reset
+  Body: Map<String, String> (telephone, newPassword, resetToken)
+
+------------------------------------------------------------
+PERSONNEL
+------------------------------------------------------------
+PersonnelController (/api/personnel)
+- POST /api/personnel
+  Body: CreerPersonnelDTO
+- GET /api/personnel/verifier-compte/{telephone}/{role}
+- GET /api/personnel/medecins?cliniqueId?
+- GET /api/personnel/medecins/{id}
+- DELETE /api/personnel/medecins/{id}
+- GET /api/personnel/infirmiers?cliniqueId?
+- GET /api/personnel/infirmiers/{id}
+- DELETE /api/personnel/infirmiers/{id}
+- GET /api/personnel/radiologues?cliniqueId?
+- GET /api/personnel/radiologues/{id}
+- DELETE /api/personnel/radiologues/{id}
+- GET /api/personnel/pharmaciens?cliniqueId?
+- GET /api/personnel/pharmaciens/{id}
+- DELETE /api/personnel/pharmaciens/{id}
+- GET /api/personnel/secretaires?cliniqueId?
+- GET /api/personnel/secretaires/{id}
+- DELETE /api/personnel/secretaires/{id}
+- GET /api/personnel/responsables-logistique?cliniqueId?
+- GET /api/personnel/responsables-logistique/{id}
+- DELETE /api/personnel/responsables-logistique/{id}
+- GET /api/personnel/chefs-personnel?cliniqueId?
+- GET /api/personnel/chefs-personnel/{id}
+- DELETE /api/personnel/chefs-personnel/{id}
+- GET /api/personnel/techniciens-maintenance?cliniqueId?
+- GET /api/personnel/techniciens-maintenance/{id}
+- DELETE /api/personnel/techniciens-maintenance/{id}
+
+------------------------------------------------------------
+PATIENTS
+------------------------------------------------------------
+PatientController (/api/patients)
+- POST /api/patients
+  Body: PatientDTO
+- GET /api/patients
+- GET /api/patients/clinique/{cliniqueId}
+- GET /api/patients/{id}
+- GET /api/patients/numero/{numeroPatient}
+- PUT /api/patients/{id}
+  Body: PatientDTO
+- DELETE /api/patients/{id}
+
+------------------------------------------------------------
+CLINIQUES & ADMIN CLINIQUE
+------------------------------------------------------------
+CliniqueController (/api/cliniques)
+- POST /api/cliniques
+  Body: Clinique
+- POST /api/cliniques/avec-administrateur
+  Body: CreerCliniqueAvecAdminDTO
+- GET /api/cliniques
+- GET /api/cliniques/actives
+- GET /api/cliniques/{id}
+- GET /api/cliniques/{id}/occupation
+- PUT /api/cliniques/{id}
+  Body: Clinique
+- DELETE /api/cliniques/{id}
+- GET /api/cliniques/admin/verifier-telephone/{telephone}
+- POST /api/cliniques/admin/enregistrer
+  Body: EnregistrementAdminCliniqueDTO
+
+AdministrateurCliniqueController (/api/administrateurs-clinique)
+- GET /api/administrateurs-clinique
+- GET /api/administrateurs-clinique/{id}
+- GET /api/administrateurs-clinique/clinique/{cliniqueId}
+- GET /api/administrateurs-clinique/clinique/{cliniqueId}/actifs
+- GET /api/administrateurs-clinique/telephone/{telephone}
+- GET /api/administrateurs-clinique/telephone/{telephone}/clinique/{cliniqueId}
+- PUT /api/administrateurs-clinique/{id}
+  Body: RegisterAdminCliniqueDTO
+- PUT /api/administrateurs-clinique/{id}/desactiver
+- PUT /api/administrateurs-clinique/{id}/activer
+- DELETE /api/administrateurs-clinique/{id}
+Remarque: routes publiques (@PermitAll)
+
+------------------------------------------------------------
+SERVICES & CHAMBRES
+------------------------------------------------------------
+ServiceController (/api/services)
+- POST /api/services/initialiser/{cliniqueId}
+- POST /api/services
+  Body: ServiceDTO
+- GET /api/services
+- GET /api/services/{id}
+- GET /api/services/clinique/{cliniqueId}
+- GET /api/services/clinique/{cliniqueId}/actifs
+- GET /api/services/{id}/lits-disponibles
+- PUT /api/services/{id}
+  Body: ServiceDTO
+- DELETE /api/services/{id}
+
+ChambreController (/api/chambres)
+- POST /api/chambres
+  Body: ChambreDTO
+- POST /api/chambres/multiple
+  Body: CreationChambresDTO
+- GET /api/chambres
+- GET /api/chambres/clinique/{cliniqueId}
+- GET /api/chambres/{id}
+- GET /api/chambres/disponibles
+- GET /api/chambres/type/{typeChambre}
+- GET /api/chambres/existe/{numero}
+- GET /api/chambres/statistiques
+- GET /api/chambres/service/{serviceId}
+- PUT /api/chambres/{id}
+  Body: ChambreDTO
+- PATCH /api/chambres/{id}/equipements
+  Body: List<String> (equipements)
+- DELETE /api/chambres/{id}/equipements/{equipement}
+- DELETE /api/chambres/{id}
+
+------------------------------------------------------------
+PLANNING & GARDES
+------------------------------------------------------------
+PlanningController (/api/plannings)
+- POST /api/plannings/hebdomadaire
+  Body: PlanningRequest (dateDebut, utilisateurIds, createurId)
+- POST /api/plannings/mensuel
+  Body: PlanningRequest
+- GET /api/plannings
+- GET /api/plannings/{id}
+- GET /api/plannings/{id}/pdf?serviceId?
+  Retour: PDF (application/pdf)
+- GET /api/plannings/utilisateur/{utilisateurId}
+- GET /api/plannings/periode?debut&fin (LocalDate)
+- GET /api/plannings/type/{type}
+- PATCH /api/plannings/{id}/valider
+- PATCH /api/plannings/{id}/invalider
+- POST /api/plannings/{id}/utilisateur/{utilisateurId}
+- DELETE /api/plannings/{id}/utilisateur/{utilisateurId}
+- DELETE /api/plannings/{id}
+
+GardeController (/api/gardes)
+- POST /api/gardes/shift-jour
+  Body: ShiftJourRequest (utilisateurId, date, matin, planningId?, serviceId)
+- POST /api/gardes/garde-nuit
+  Body: GardeNuitRequest (utilisateurId, dateDebut, planningId?, serviceId)
+- POST /api/gardes/hebdomadaire-matin
+  Body: PlanningHebdoRequest
+- POST /api/gardes/hebdomadaire-apres-midi
+  Body: PlanningHebdoRequest
+- GET /api/gardes
+- GET /api/gardes/{id}
+- GET /api/gardes/utilisateur/{utilisateurId}
+- GET /api/gardes/periode?debut&fin (LocalDateTime)
+- GET /api/gardes/type/{type}
+- GET /api/gardes/planning/{planningId}
+- PUT /api/gardes/{id}
+  Body: ModifierGardeRequest (debut, fin)
+- DELETE /api/gardes/{id}
+
+AbsenceController (/api/absences)
+- POST /api/absences
+  Body: Absence
+- POST /api/absences/demande
+  Body: CreateAbsenceRequest (utilisateurId, dateDebut, dateFin, motif)
+- GET /api/absences
+- GET /api/absences/{id}
+- GET /api/absences/infirmier/{infirmierId}
+- GET /api/absences/en-attente
+- GET /api/absences/periode?debut&fin (LocalDate)
+- PATCH /api/absences/{id}/approuver
+- PATCH /api/absences/{id}/refuser?motifRefus
+- DELETE /api/absences/{id}
+
+PresenceController (/api/presences)
+- POST /api/presences/marquer-presence
+  Query: infirmierId, date (LocalDate), heureArrivee (LocalTime), chefPersonnelId, observation?
+- POST /api/presences/marquer-absence
+  Query: infirmierId, date (LocalDate), motif, chefPersonnelId
+- POST /api/presences/marquer-multiples
+  Body: Map<String, Object> (infirmierIds, date, chefPersonnelId)
+- PATCH /api/presences/{id}/depart
+  Query: heureDepart (LocalTime)
+- GET /api/presences
+- GET /api/presences/aujourdhui?date (LocalDate)
+- GET /api/presences/absences-jour?date (LocalDate)
+- GET /api/presences/retards-jour?date (LocalDate)
+- GET /api/presences/infirmier/{infirmierId}
+- GET /api/presences/periode?debut&fin (LocalDate)
+- GET /api/presences/statistiques/{infirmierId}?debut&fin (LocalDate)
+- PUT /api/presences/{id}
+  Body: Map<String, Object> (present?, heureArrivee?, heureDepart?, observation?)
+- DELETE /api/presences/{id}
+
+------------------------------------------------------------
+MEDICAL
+------------------------------------------------------------
+ConsultationController (/api/consultations)
+- POST /api/consultations
+  Body: Map<String, String> (patientId, medecinId, motif)
+- PATCH /api/consultations/{id}/diagnostic
+  Body: Map<String, String> (diagnostic, observations)
+- GET /api/consultations/patient/{patientId}
+- GET /api/consultations/medecin/{medecinId}
+
+DossierMedicalController (/api/dossiers-medicaux)
+- GET /api/dossiers-medicaux/{id}
+- GET /api/dossiers-medicaux/patient/{patientId}
+- PUT /api/dossiers-medicaux/{id}
+  Body: DossierMedical
+
+DiagnosticController (/api/diagnostic)
+- GET /api/diagnostic/user/{telephone}
+- GET /api/diagnostic/admins
+
+SurveillanceInfirmiereController (/api/surveillances)
+- POST /api/surveillances
+  Body: SurveillanceInfirmiereDTO
+- GET /api/surveillances/patient/{patientId}
+- GET /api/surveillances/patient/{patientId}/periode?debut&fin (LocalDateTime)
+- GET /api/surveillances/patient/{patientId}/aujourd-hui
+- GET /api/surveillances/patient/{patientId}/derniere
+- GET /api/surveillances/patient/{patientId}/alertes
+- GET /api/surveillances/infirmier/{infirmierId}
+- GET /api/surveillances/{id}
+- GET /api/surveillances/recherche?q?
+- GET /api/surveillances/recherche/patient?nom
+- GET /api/surveillances/recherche/infirmier?nom
+- GET /api/surveillances/recherche/avancee?patientId?&infirmierId?&dateDebut?&dateFin?&avecAlerte?
+- GET /api/surveillances/alertes/toutes
+- GET /api/surveillances/stats/patient/{patientId}
+- GET /api/surveillances/stats/globales
+- PUT /api/surveillances/{id}
+  Body: SurveillanceInfirmiereDTO
+- PATCH /api/surveillances/{id}/observations
+  Body: Map<String, String> (observations)
+- DELETE /api/surveillances/{id}
+
+AdministrationTraitementController (/api/administrations)
+- POST /api/administrations
+  Body: AdministrationTraitementDTO
+- POST /api/administrations/planning
+  Body: Map<String, Object> (patientId, infirmierId, traitements)
+- GET /api/administrations/patient/{patientId}
+- GET /api/administrations/patient/{patientId}/aujourd-hui
+- GET /api/administrations/patient/{patientId}/a-venir
+- GET /api/administrations/patient/{patientId}/non-administres
+- GET /api/administrations/patient/{patientId}/type/{typeTraitement}
+- GET /api/administrations/infirmier/{infirmierId}
+- GET /api/administrations/{id}
+- PATCH /api/administrations/{id}/administrer
+  Body: Map<String, String> (observations?)
+- PUT /api/administrations/{id}
+  Body: AdministrationTraitementDTO
+- DELETE /api/administrations/{id}
+
+RendezVousController (/api/rendez-vous)
+- POST /api/rendez-vous
+  Body: RendezVousDTO
+- GET /api/rendez-vous/patient/{patientId}
+- GET /api/rendez-vous/medecin/{medecinId}
+- PATCH /api/rendez-vous/{id}/confirmer
+- PATCH /api/rendez-vous/{id}/annuler
+- PATCH /api/rendez-vous/{id}/reporter?nouvelleDate (LocalDateTime)
+
+HospitalisationController (/api/hospitalisations)
+- POST /api/hospitalisations
+  Body: Hospitalisation
+- GET /api/hospitalisations
+- GET /api/hospitalisations/{id}
+- GET /api/hospitalisations/patient/{patientId}
+- GET /api/hospitalisations/en-cours
+- PATCH /api/hospitalisations/{id}/terminer?dateSortie (LocalDate)
+- PUT /api/hospitalisations/{id}
+  Body: Hospitalisation
+
+------------------------------------------------------------
+PHARMACIE
+------------------------------------------------------------
+MedicamentController (/api/medicaments)
+- POST /api/medicaments
+  Body: Medicament
+- GET /api/medicaments
+- GET /api/medicaments/{id}
+- GET /api/medicaments/recherche?q
+- PUT /api/medicaments/{id}
+  Body: Medicament
+- DELETE /api/medicaments/{id}
+
+OrdonnanceController (/api/ordonnances)
+- POST /api/ordonnances
+  Body: OrdonnanceRequest (consultationId, prescriptions)
+- GET /api/ordonnances
+  Remarque: ordonnances non validees
+- PATCH /api/ordonnances/{id}/signer
+- PATCH /api/ordonnances/{id}/valider?pharmacienId
+- DELETE /api/ordonnances/{id}
+
+PharmacienController (/api/pharmaciens)
+- POST /api/pharmaciens
+  Body: Pharmacien
+- GET /api/pharmaciens
+- GET /api/pharmaciens/{id}
+- GET /api/pharmaciens/telephone/{telephone}
+- GET /api/pharmaciens/numero-ordre/{numeroOrdre}
+- GET /api/pharmaciens/clinique/{cliniqueId}
+- GET /api/pharmaciens/actifs
+- GET /api/pharmaciens/inactifs
+- PUT /api/pharmaciens/{id}
+  Body: Pharmacien
+- PATCH /api/pharmaciens/{id}/activer
+- PATCH /api/pharmaciens/{id}/desactiver
+- DELETE /api/pharmaciens/{id}
+
+------------------------------------------------------------
+MEDECINS & INFIRMIERS
+------------------------------------------------------------
+MedecinController (/api/medecins)
+- POST /api/medecins
+  Body: Medecin
+- GET /api/medecins
+- GET /api/medecins/{id}
+- GET /api/medecins/clinique/{cliniqueId}
+- GET /api/medecins/specialite/{specialite}
+- PUT /api/medecins/{id}
+  Body: Medecin
+- DELETE /api/medecins/{id}
+
+InfirmierController (/api/infirmiers)
+- POST /api/infirmiers
+  Body: Infirmier
+- GET /api/infirmiers
+- GET /api/infirmiers/{id}
+- GET /api/infirmiers/clinique/{cliniqueId}
+- PUT /api/infirmiers/{id}
+  Body: Infirmier
+- DELETE /api/infirmiers/{id}
+
+------------------------------------------------------------
+EQUIPEMENTS
+------------------------------------------------------------
+EquipementController (/api/equipements)
+- POST /api/equipements
+  Body: Equipement
+- GET /api/equipements
+- GET /api/equipements/{id}
+- GET /api/equipements/code/{code}
+- GET /api/equipements/rechercher?terme?
+- GET /api/equipements/disponibles
+- GET /api/equipements/categorie/{categorie}
+- GET /api/equipements/etat-technique/{etatTechnique}
+- GET /api/equipements/statut/{statut}
+- GET /api/equipements/clinique/{cliniqueId}
+- GET /api/equipements/chambre/{chambreId}
+- PUT /api/equipements/{id}
+  Body: Equipement
+- PATCH /api/equipements/{id}/etat-technique/{etatTechnique}
+- PATCH /api/equipements/{id}/statut/{statut}
+- POST /api/equipements/{id}/traiter-panne
+  Body: TraitementPanneDTO
+- DELETE /api/equipements/{id}
+
+------------------------------------------------------------
+FACTURATION
+------------------------------------------------------------
+FacturationController (/api/facturation)
+- POST /api/facturation/factures
+  Body: Facture
+- POST /api/facturation/paiements/{factureId}?methode (MethodePaiement)
+- GET /api/facturation/factures/patient/{patientId}
+- GET /api/facturation/factures/impayees
+
+------------------------------------------------------------
+NOTIFICATIONS
+------------------------------------------------------------
+NotificationController (/api/notifications)
+- GET /api/notifications (auth)
+- GET /api/notifications/non-lues (auth)
+- GET /api/notifications/aujourdhui (auth)
+- GET /api/notifications/non-lues/count (auth)
+- PUT /api/notifications/{id}/marquer-lue (auth)
+- PUT /api/notifications/marquer-toutes-lues (auth)
+- POST /api/notifications
+  Body: NotificationUtilisateurDTO
+- DELETE /api/notifications/{id} (auth)
+
+PreferencesNotificationController (/api/preferences-notifications)
+- GET /api/preferences-notifications/{userId}
+- PUT /api/preferences-notifications/{userId}
+  Body: ConfigurationNotification
+- POST /api/preferences-notifications/{userId}/activer-tous
+- POST /api/preferences-notifications/{userId}/desactiver-tous
+
+------------------------------------------------------------
+SMS
+------------------------------------------------------------
+SmsController (/api/sms)
+- POST /api/sms/send
+  Body: Map<String, String> (telephone, message, type?)
+- POST /api/sms/send-otp
+  Body: Map<String, String> (telephone)
+- POST /api/sms/verify-otp
+  Body: Map<String, String> (telephone, code)
+- GET /api/sms/historique?telephone
+- GET /api/sms/couts?debut&fin (LocalDateTime)
+
+------------------------------------------------------------
+LICENCES (securise par roles)
+------------------------------------------------------------
+LicenceController (/api/licences)
+- POST /api/licences (SUPER_ADMIN)
+  Body: CreateLicenceDTO
+- GET /api/licences (SUPER_ADMIN)
+- GET /api/licences/{id} (SUPER_ADMIN, ADMIN_CLINIQUE)
+- GET /api/licences/clinique/{cliniqueId} (SUPER_ADMIN, ADMIN_CLINIQUE)
+- GET /api/licences/clinique/{cliniqueId}/active (SUPER_ADMIN, ADMIN_CLINIQUE)
+- PUT /api/licences/{id} (SUPER_ADMIN)
+  Body: UpdateLicenceDTO
+- PATCH /api/licences/{id}/suspendre (SUPER_ADMIN)
+- PATCH /api/licences/{id}/reactiver (SUPER_ADMIN)
+- POST /api/licences/{id}/renouveler (SUPER_ADMIN)
+  Body: Map<String, String> (typeLicence)
+- DELETE /api/licences/{id} (SUPER_ADMIN)
+- GET /api/licences/expirees (SUPER_ADMIN)
+- GET /api/licences/actives (SUPER_ADMIN)
+- GET /api/licences/clinique/{cliniqueId}/active/verifier (SUPER_ADMIN, ADMIN_CLINIQUE)

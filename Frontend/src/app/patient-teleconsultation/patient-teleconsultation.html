@@ -1,0 +1,21 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/patient"><i class="bi bi-arrow-left"></i> Mon espace santé</a></nav>
+  <h1>Téléconsultation vidéo</h1>
+  <p class="lead">
+    Lorsque votre médecin ou la secrétaire vous envoie un lien de visioconférence, enregistrez-le ici pour y accéder rapidement.
+    Aucune vidéo n’est hébergée dans l’application : vous ouvrez un service externe (Jitsi, Meet, etc.).
+  </p>
+
+  <div class="panel">
+    <label>Lien de la salle (URL)</label>
+    <input class="form-control" type="url" [(ngModel)]="lienSalle" placeholder="https://meet.example.com/..." />
+    <div class="btn-row">
+      <button type="button" class="btn btn-outline-secondary" (click)="enregistrerLien()">Enregistrer</button>
+      <button type="button" class="btn btn-primary" (click)="ouvrirLien()" [disabled]="!lienSalle.trim()">
+        <i class="bi bi-camera-video"></i> Ouvrir la visioconférence
+      </button>
+    </div>
+  </div>
+
+  <p class="small text-muted">Pour une intégration complète (appel depuis l’agenda avec notification), prévoir une évolution backend et WebRTC.</p>
+</div>

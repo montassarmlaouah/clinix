@@ -1,0 +1,152 @@
+<div class="page">
+  <h2>Espace infirmier: soins et surveillance</h2>
+
+  <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <section class="card">
+    <label>Patient</label>
+    <select [(ngModel)]="selectedPatientId" (change)="onPatientChange()">
+      <option value="">Sélectionner un patient</option>
+      <option *ngFor="let p of patients" [value]="p.id">{{ getPatientLabel(p) }}</option>
+    </select>
+  </section>
+
+  <section class="card" *ngIf="selectedPatientId">
+    <h3>Alertes critiques</h3>
+    <ul *ngIf="alertesCritiques.length > 0; else noAlert">
+      <li *ngFor="let a of alertesCritiques">{{ a }}</li>
+    </ul>
+    <ng-template #noAlert>
+      <p>Aucune alerte critique en cours.</p>
+    </ng-template>
+  </section>
+
+  <section class="grid" *ngIf="selectedPatientId">
+    <div class="card">
+      <h3>Traitements à venir</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Médicament</th>
+            <th>Heure</th>
+            <th>Statut</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of traitements">
+            <td>{{ t.nomMedicament }} ({{ t.dosage }})</td>
+            <td>{{ t.heureAdministration | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ t.administre ? 'Administré' : 'En attente' }}</td>
+            <td>
+              <button (click)="marquerAdministre(t)" [disabled]="t.administre">Marquer administré</button>
+            </td>
+          </tr>
+          <tr *ngIf="traitements.length === 0">
+            <td colspan="4">Aucun traitement planifié.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Planifier un soin</h3>
+      <div class="form-grid">
+        <input type="datetime-local" [(ngModel)]="planSoinForm.heureAdministration" />
+        <input type="text" placeholder="Type traitement" [(ngModel)]="planSoinForm.typeTraitement" />
+        <input type="text" placeholder="Médicament" [(ngModel)]="planSoinForm.nomMedicament" />
+        <input type="text" placeholder="Dosage" [(ngModel)]="planSoinForm.dosage" />
+        <input type="text" placeholder="Voie" [(ngModel)]="planSoinForm.voieAdministration" />
+        <textarea rows="2" placeholder="Observations" [(ngModel)]="planSoinForm.observations"></textarea>
+      </div>
+      <button (click)="planifierSoin()">Planifier</button>
+    </div>
+  </section>
+
+  <section class="grid" *ngIf="selectedPatientId">
+    <div class="card">
+      <h3>Constantes patient</h3>
+      <div class="form-grid">
+        <input type="number" placeholder="Température" [(ngModel)]="constantesForm.temperature" />
+        <input type="number" placeholder="Tension" [(ngModel)]="constantesForm.tension" />
+        <input type="number" placeholder="Fréquence cardiaque" [(ngModel)]="constantesForm.frequenceCardiaque" />
+        <input type="number" placeholder="Saturation O2" [(ngModel)]="constantesForm.saturationOxygene" />
+        <textarea rows="2" placeholder="Observations" [(ngModel)]="constantesForm.observations"></textarea>
+      </div>
+      <button (click)="enregistrerConstantes()">Enregistrer les constantes</button>
+    </div>
+
+    <div class="card">
+      <h3>Historique consultable</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Temp</th>
+            <th>Tension</th>
+            <th>FC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of constantesHistorique">
+            <td>{{ c.dateHeure | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ c.temperature }}</td>
+            <td>{{ c.tension }}</td>
+            <td>{{ c.frequenceCardiaque }}</td>
+          </tr>
+          <tr *ngIf="constantesHistorique.length === 0">
+            <td colspan="4">Aucune constante enregistrée.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="grid" *ngIf="selectedPatientId">
+    <div class="card">
+      <h3>Notes d'hospitalisation</h3>
+      <p *ngIf="!hospitalisationEnCoursId">Aucune hospitalisation en cours pour ce patient.</p>
+      <div *ngIf="hospitalisationEnCoursId">
+        <textarea
+          rows="3"
+          placeholder="Ajouter une note de suivi patient"
+          [(ngModel)]="noteHospitalisationForm"></textarea>
+        <button (click)="ajouterNoteHospitalisation()">Ajouter la note</button>
+      </div>
+
+      <table *ngIf="notesHospitalisation.length > 0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Auteur</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let n of notesHospitalisation">
+            <td>{{ n.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ n.auteurNom }} ({{ n.auteurRole }})</td>
+            <td>{{ n.contenu }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="hospitalisationEnCoursId && notesHospitalisation.length === 0">Aucune note enregistrée.</p>
+    </div>
+
+    <div class="card">
+      <h3>Signaler une urgence</h3>
+      <input type="text" placeholder="Localisation" [(ngModel)]="urgenceForm.localisation" />
+      <textarea rows="2" placeholder="Message urgence" [(ngModel)]="urgenceForm.message"></textarea>
+      <button class="danger" (click)="signalerUrgence()">Alerter les médecins</button>
+    </div>
+
+    <div class="card">
+      <h3>Signaler un manque de matériel</h3>
+      <input type="text" placeholder="Nom matériel" [(ngModel)]="manqueForm.equipementNom" />
+      <input type="text" placeholder="Quantité manquante" [(ngModel)]="manqueForm.quantite" />
+      <textarea rows="2" placeholder="Détail" [(ngModel)]="manqueForm.message"></textarea>
+      <button (click)="signalerManqueMateriel()">Envoyer signalement</button>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,9 @@
+# Copier vers mail-local.properties (ignoré par git) à la racine du dossier backend,
+# ou exporter les variables avant java -jar :
+#   SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD, APP_MAIL_FROM (optionnel)
+#
+# spring.mail.host=smtp.gmail.com
+# spring.mail.port=587
+# spring.mail.username=votre_compte@gmail.com
+# spring.mail.password=mot_de_passe_application_16_caracteres
+# app.mail.from=votre_compte@gmail.com

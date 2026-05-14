@@ -1,0 +1,396 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Gestion des patients</h1>
+        <p class="page-subtitle" *ngIf="!auth.isMedecinCabinet()">Ajouter et suivre les patients de la clinique</p>
+        <p class="page-subtitle" *ngIf="auth.isMedecinCabinet()">Patients de votre cabinet — ajout et suivi (sans établissement hôpital rattaché)</p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <!-- Section Filtres -->
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher un patient</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Nom, prénom, téléphone ou numéro...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Type d'admission</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedTypeAdmission" (change)="onTypeFilterChange()">
+          <option value="all">Tous les types</option>
+          <option value="URGENT">Urgent</option>
+          <option value="CABINET">Cabinet</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="d-flex justify-content-end mb-3" *ngIf="!auth.isInfirmier()">
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="fas fa-plus"></i> Ajouter un patient
+      </button>
+    </div>
+
+    <div class="table-container luna-shadow" *ngIf="!isLoading; else loadingState">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Contact</th>
+            <th>Type</th>
+            <th>Vérification</th>
+            <th>Date naissance</th>
+            <th>Numéro patient</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let patient of paginatedPatients" class="luna-row">
+            <td>
+              <div class="patient-info">
+                <div class="patient-avatar">
+                  <i class="fas fa-user-injured"></i>
+                </div>
+                <div class="patient-details">
+                  <div class="patient-name">{{ patient.nom || 'Non renseigné' }} {{ patient.prenom || '' }}</div>
+                  <div class="patient-meta">Patient</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="contact-info">
+                <div class="contact-phone">
+                  <i class="fas fa-phone"></i> {{ patient.telephone || 'N/A' }}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="patient.typeAdmission === 'URGENT' ? 'badge-warning' : 'badge-success'">
+                <i class="fas" [ngClass]="patient.typeAdmission === 'URGENT' ? 'fa-exclamation-triangle' : 'fa-check-circle'"></i>
+                {{ patient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="patient.verifieParSecretaire ? 'badge-success' : 'badge-warning'">
+                <i class="fas" [ngClass]="patient.verifieParSecretaire ? 'fa-check-circle' : 'fa-hourglass-half'"></i>
+                {{ patient.verifieParSecretaire ? 'Vérifié' : 'En attente' }}
+              </span>
+            </td>
+            <td class="date-cell">{{ patient.dateNaissance | date:'dd/MM/yyyy' }}</td>
+            <td>{{ patient.numeroPatient || '—' }}</td>
+            <td>
+              <div class="action-group">
+                <button class="btn-action btn-view" (click)="viewPatient(patient)" title="Voir détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button
+                  class="btn-action btn-view"
+                  *ngIf="auth.isSecretaire() && !patient.verifieParSecretaire"
+                  (click)="verifierPatientParSecretaire(patient)"
+                  title="Vérifier patient">
+                  <i class="fas fa-user-check"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedPatients.length === 0">
+            <td colspan="7" class="empty-state">
+              <i class="fas fa-users-slash"></i>
+              <p>Aucun patient trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="filteredPatients.length > 0 && !isLoading">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredPatients.length }} patients
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <ng-template #loadingState>
+      <div class="loading-state">Chargement...</div>
+    </ng-template>
+
+    <!-- Modal Ajout Patient (masqué pour les infirmiers) -->
+    <div class="modal fade show" *ngIf="showModal && !auth.isInfirmier()" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-user-plus"></i> Ajouter patient
+            </h5>
+            <button type="button" class="btn-close" (click)="closeModal()"></button>
+          </div>
+
+          <form (ngSubmit)="createPatient()" #patientForm="ngForm">
+            <div class="modal-body">
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-user-circle"></i> Informations personnelles
+                </h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Nom <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.nom"
+                             name="nom"
+                             required
+                             placeholder="Nom de famille">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Prénom <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.prenom"
+                             name="prenom"
+                             required
+                             placeholder="Prénom">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Téléphone <span class="text-danger">*</span></label>
+                      <input type="tel"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.telephone"
+                             name="telephone"
+                             required
+                             minlength="8"
+                             maxlength="8"
+                             pattern="\d{8}"
+                             inputmode="numeric"
+                             placeholder="12345678">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Date de naissance <span class="text-danger">*</span></label>
+                      <input type="date"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.dateNaissance"
+                             name="dateNaissance"
+                             required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Sexe <span class="text-danger">*</span></label>
+                      <select class="form-control luna-input"
+                              [(ngModel)]="newPatient.sexe"
+                              name="sexe"
+                              required>
+                        <option value="" disabled>Choisir</option>
+                        <option value="HOMME">Homme</option>
+                        <option value="FEMME">Femme</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-notes-medical"></i> Informations médicales
+                </h6>
+                <div class="row">
+                  <div class="col-md-6">
+
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Type d'admission <span class="text-danger">*</span></label>
+                      <select class="form-control luna-input"
+                              [(ngModel)]="newPatient.typeAdmission"
+                              name="typeAdmission"
+                              required>
+                        <option *ngFor="let type of admissionTypes" [value]="type.value">
+                          {{ type.label }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Groupe sanguin</label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.groupeSanguin"
+                             name="groupeSanguin"
+                             placeholder="A+, O-, ...">
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Adresse</label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="newPatient.adresse"
+                             name="adresse">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isLoading">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isLoading || patientForm.invalid">
+                <i class="fas" [ngClass]="isLoading ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
+                {{ isLoading ? 'Création...' : 'Créer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedPatient" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-user-circle"></i> Détails du patient
+            </h5>
+            <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-id-card"></i> Informations personnelles
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nom complet</label>
+                    <p>{{ selectedPatient.nom || 'Non renseigné' }} {{ selectedPatient.prenom || '' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Téléphone</label>
+                    <p>{{ selectedPatient.telephone || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date de naissance</label>
+                    <p>{{ selectedPatient.dateNaissance | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Sexe</label>
+                    <p>{{ selectedPatient.sexe === 'HOMME' ? 'Homme' : selectedPatient.sexe === 'FEMME' ? 'Femme' : 'Non renseigné' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Numéro patient</label>
+                    <p>{{ selectedPatient.numeroPatient || '—' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Vérification secrétaire</label>
+                    <p>{{ selectedPatient.verifieParSecretaire ? 'Vérifié' : 'En attente' }}</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-notes-medical"></i> Informations médicales
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Type d'admission</label>
+                    <p>
+                      <span class="status-pill" [ngClass]="selectedPatient.typeAdmission === 'URGENT' ? 'badge-warning' : 'badge-success'">
+                        {{ selectedPatient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Groupe sanguin</label>
+                    <p>{{ selectedPatient.groupeSanguin || 'Non renseigné' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="detail-item">
+                    <label>Adresse</label>
+                    <p>{{ selectedPatient.adresse || 'Non renseignée' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-hospital"></i> Clinique
+              </h6>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="detail-item">
+                    <label>Clinique assignée</label>
+                    <p>{{ selectedPatient.clinique?.nom || 'Non assignée' }}</p>
+                    <small class="text-muted">{{ selectedPatient.clinique?.adresse || '' }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

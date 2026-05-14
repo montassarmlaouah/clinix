@@ -1,0 +1,74 @@
+<div class="pay-page">
+  <a routerLink="/tarifs-abonnement" class="back-link"><i class="fas fa-arrow-left"></i> Autres forfaits</a>
+
+  <h1 class="page-title">Paiement sécurisé — Stripe (test)</h1>
+  <p class="subtitle">
+    La saisie de la carte se fait sur la page hébergée par Stripe (comme un checkout professionnel). Utilisez une
+    carte de test, par ex. <strong>4242 4242 4242 4242</strong>.
+  </p>
+
+  <div class="alert alert-danger" *ngIf="error">
+    <i class="fas fa-circle-exclamation"></i> {{ error }}
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i> Chargement…
+  </div>
+
+  <div class="layout" *ngIf="!loading && offre">
+    <section class="panel panel-left">
+      <h2>Étape suivante</h2>
+      <p class="muted">
+        Cliquez sur le bouton ci-dessous : vous serez redirigé vers Stripe pour choisir la carte ou un moyen de test.
+        Aucune donnée bancaire ne transite par nos serveurs.
+      </p>
+      <div class="method-box">
+        <div class="method-pill active"><i class="far fa-credit-card"></i> Carte (sur Stripe)</div>
+        <div class="method-pill muted-pill"><i class="fab fa-stripe-s"></i> Mode test</div>
+      </div>
+      <ul class="hints">
+        <li><i class="fas fa-check"></i> Annulation possible depuis le portail Stripe / facturation</li>
+        <li><i class="fas fa-clock"></i> Après paiement, retour automatique vers « Mon abonnement »</li>
+      </ul>
+      <button type="button" class="btn-stripe" (click)="continuerVersStripe()" [disabled]="preparing">
+        <span *ngIf="!preparing"><i class="fab fa-stripe-s"></i> Continuer vers Stripe</span>
+        <span *ngIf="preparing"><i class="fas fa-spinner fa-spin"></i> Préparation…</span>
+      </button>
+      <button type="button" class="btn-text" (click)="retourTarifs()" [disabled]="preparing">Modifier le forfait</button>
+    </section>
+
+    <aside class="panel panel-right">
+      <h2>Récapitulatif — {{ offre.nom }}</h2>
+      <p class="muted small">{{ offre.description || 'Forfait clinique' }}</p>
+      <ul class="summary-list">
+        <li><i class="fas fa-calendar-check"></i> Facturation : {{ interval === 'YEARLY' ? 'annuelle' : 'mensuelle' }}</li>
+        <li *ngIf="(offre.periodeEssaiJours ?? 0) > 0">
+          <i class="fas fa-gift"></i> Essai : {{ offre.periodeEssaiJours }} jours (Stripe)
+        </li>
+        <li *ngFor="let line of resumeLimites()"><i class="fas fa-circle-check"></i> {{ line }}</li>
+      </ul>
+      <div class="price-break">
+        <div class="row">
+          <span>Sous-total (affichage DT)</span>
+          <span>{{ prix() | number : '1.2-2' }} DT</span>
+        </div>
+        <div class="row promo" *ngIf="(offre.periodeEssaiJours ?? 0) > 0">
+          <span>Estimation « à payer aujourd’hui » (essai)</span>
+          <span>{{ aujourdhuiEstime() | number : '1.2-2' }} DT</span>
+        </div>
+        <p class="fine-print">
+          Les montants réels sont en devise du compte Stripe (ex. USD). Les webhooks mettent à jour le statut de
+          l’abonnement dans Clinix.
+        </p>
+      </div>
+      <div class="economie" *ngIf="interval === 'YEARLY' && economieAnnuelle() > 0">
+        <i class="fas fa-piggy-bank"></i> Économie annuelle estimée ~{{ economieAnnuelle() | number : '1.0-0' }} DT
+      </div>
+    </aside>
+  </div>
+
+  <div class="empty" *ngIf="!loading && !offre">
+    <p *ngIf="error">{{ error }}</p>
+    <button type="button" class="btn-stripe" routerLink="/tarifs-abonnement">Retour aux forfaits</button>
+  </div>
+</div>

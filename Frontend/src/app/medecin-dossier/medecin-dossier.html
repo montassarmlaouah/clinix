@@ -1,0 +1,27 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+  <h1>Dossier médical</h1>
+  <p class="lead">Sélectionnez un patient pour consulter son dossier.</p>
+
+  <div class="panel">
+    <label>Patient</label>
+    <select class="form-control" [(ngModel)]="patientId">
+      <option value="">— Choisir —</option>
+      <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+    </select>
+    <button class="btn btn-primary mt-2" (click)="chargerDossier()" [disabled]="!patientId || loading">
+      Charger le dossier
+    </button>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <div *ngIf="loading" class="text-muted">Chargement…</div>
+
+  <div class="panel dossier-detail" *ngIf="dossier && !loading">
+    <h2>Résumé</h2>
+    <p><strong>Antécédents :</strong> {{ dossier.antecedents || '—' }}</p>
+    <p><strong>Allergies :</strong> {{ (dossier.allergies && dossier.allergies.length) ? (dossier.allergies | json) : '—' }}</p>
+    <p *ngIf="dossier.patient"><strong>Patient :</strong> {{ dossier.patient.prenom }} {{ dossier.patient.nom }}</p>
+    <p class="hint text-muted small">Les consultations détaillées sont disponibles dans « Rédiger consultation ».</p>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+.page-wrap { max-width: 720px; margin: 0 auto; padding: 1rem 1.25rem 2rem; }
+.back-nav { margin-bottom: 1rem; }
+.back-nav a { text-decoration: none; color: #dc3545; }
+.lead { color: #64748b; margin-bottom: 1rem; font-size: 0.95rem; }
+.panel {
+  padding: 1rem;
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }

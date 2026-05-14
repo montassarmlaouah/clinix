@@ -1,0 +1,63 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/infirmier"><i class="bi bi-arrow-left"></i> Espace infirmier</a></nav>
+  <h1>Visites du jour</h1>
+  <p class="text-muted">Rendez-vous de la clinique pour la date choisie : validation de passage, observations, accès adresse (domicile).</p>
+
+  <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="row g-2 align-items-end panel" *ngIf="cliniqueId">
+    <div class="col-auto">
+      <label class="form-label mb-0">Date</label>
+      <input type="date" class="form-control" [(ngModel)]="dateJour" (change)="charger()" />
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn btn-outline-primary" (click)="charger()">Actualiser</button>
+    </div>
+  </div>
+
+  <div class="panel" *ngIf="visites.length">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Heure</th>
+            <th>Patient</th>
+            <th>Médecin</th>
+            <th>Motif</th>
+            <th>État avant visite</th>
+            <th>Adresse / carte</th>
+            <th>Validation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of visites">
+            <td>{{ r.dateHeure | date:'short' }}</td>
+            <td>
+              {{ nomPatient(r) }}
+              <a class="ms-1 small" routerLink="/patients">Patients</a>
+            </td>
+            <td>{{ r.medecin?.prenom }} {{ r.medecin?.nom }}</td>
+            <td>{{ r.motif }}</td>
+            <td><span class="badge bg-secondary">{{ r.statut }}</span></td>
+            <td>
+              <span *ngIf="adressePatient(r); else noAddr">{{ adressePatient(r) }}</span>
+              <ng-template #noAddr>—</ng-template>
+              <a *ngIf="adressePatient(r)" class="d-block small" [href]="lienCarte(adressePatient(r))" target="_blank" rel="noopener">Ouvrir la carte</a>
+            </td>
+            <td>
+              <div *ngIf="r.visiteValideeParInfirmier" class="text-success small">
+                Validée le {{ r.dateValidationVisiteInfirmier | date:'short' }}
+              </div>
+              <ng-container *ngIf="!r.visiteValideeParInfirmier">
+                <textarea class="form-control form-control-sm mb-1" rows="2" placeholder="Observations de visite" [(ngModel)]="$any(r)._obsVisite"></textarea>
+                <button type="button" class="btn btn-sm btn-primary" (click)="validerVisite(r)">Valider (date + signature)</button>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted" *ngIf="cliniqueId && !visites.length">Aucun rendez-vous pour cette date.</p>
+</div>

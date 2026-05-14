@@ -1,0 +1,302 @@
+<div class="cm-page">
+
+  <!-- Alerts -->
+  <div class="cm-alert cm-alert-success" *ngIf="success">
+    <i class="bi bi-check-circle-fill"></i> {{ success }}
+  </div>
+  <div class="cm-alert cm-alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+  </div>
+
+  <!-- ====================== VUE MÉDECIN ====================== -->
+  <ng-container *ngIf="isMedecin">
+
+    <div class="cm-header">
+      <div class="cm-header-icon"><i class="bi bi-calendar-x"></i></div>
+      <div>
+        <h2 class="cm-title">Mes Congés</h2>
+        <p class="cm-subtitle">Enregistrez votre congé directement, sans validation.</p>
+      </div>
+    </div>
+
+    <!-- Formulaire conge -->
+    <div class="cm-card">
+      <h3 class="cm-card-title"><i class="bi bi-plus-circle"></i> Nouveau conge</h3>
+      <div class="cm-form-grid">
+        <div class="cm-field">
+          <label>Type de congé</label>
+          <select [(ngModel)]="typeConge" class="cm-select">
+            <option *ngFor="let t of typesConge" [value]="t.value">{{ t.label }}</option>
+          </select>
+        </div>
+        <div class="cm-field">
+          <label>Date de début</label>
+          <input type="date" [(ngModel)]="dateDebut" [min]="minDate" class="cm-input" />
+        </div>
+        <div class="cm-field">
+          <label>Date de fin</label>
+          <input type="date" [(ngModel)]="dateFin" [min]="dateDebut || minDate" class="cm-input" />
+        </div>
+        <div class="cm-field cm-field-full">
+          <label>Motif (optionnel)</label>
+          <input type="text" [(ngModel)]="motif" placeholder="Motif du congé…" class="cm-input" />
+        </div>
+      </div>
+      <button class="cm-btn cm-btn-primary" (click)="demanderConge()" [disabled]="loading || !dateDebut">
+        <i class="bi bi-send" *ngIf="!loading"></i>
+        <i class="bi bi-hourglass-split" *ngIf="loading"></i>
+        {{ loading ? 'Envoi…' : 'Enregistrer le conge' }}
+      </button>
+    </div>
+
+    <!-- Mes conges -->
+    <div class="cm-card">
+      <h3 class="cm-card-title"><i class="bi bi-list-ul"></i> Mes conges</h3>
+      <div class="cm-empty" *ngIf="!mesConges.length">
+        <i class="bi bi-inbox"></i><p>Aucun conge.</p>
+      </div>
+      <div class="cm-table-wrap" *ngIf="mesConges.length">
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Motif</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of mesConges">
+              <td>{{ typeLabel(c.typeConge) }}</td>
+              <td>{{ formatDate(c.dateDebut) }}</td>
+              <td>{{ formatDate(c.dateFin) }}</td>
+              <td>{{ c.motif || '—' }}</td>
+              <td><span class="cm-badge" [ngClass]="statutClass(c.statut)">{{ statutLabel(c.statut) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ====================== VUE ADMIN / CHEF PERSONNEL ====================== -->
+  <ng-container *ngIf="isAdmin">
+
+    <div class="cm-header">
+      <div class="cm-header-icon cm-header-icon-admin"><i class="bi bi-calendar-check"></i></div>
+      <div>
+        <h2 class="cm-title">Gestion des congés médecins</h2>
+        <p class="cm-subtitle">Approuvez ou refusez les demandes de congé des médecins.</p>
+      </div>
+    </div>
+
+    <!-- En attente -->
+    <div class="cm-card">
+      <h3 class="cm-card-title">
+        <i class="bi bi-clock-history"></i> En attente
+        <span class="cm-count" *ngIf="congesEnAttente.length">{{ congesEnAttente.length }}</span>
+      </h3>
+      <div class="cm-empty" *ngIf="!congesEnAttente.length">
+        <i class="bi bi-check-all"></i><p>Aucune demande en attente.</p>
+      </div>
+      <div class="cm-table-wrap" *ngIf="congesEnAttente.length">
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th>Médecin</th>
+              <th>Type</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Motif</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of congesEnAttente">
+              <td>
+                <span class="cm-medecin-name">Dr. {{ c.medecin.nom }} {{ c.medecin.prenom }}</span>
+              </td>
+              <td>{{ typeLabel(c.typeConge) }}</td>
+              <td>{{ formatDate(c.dateDebut) }}</td>
+              <td>{{ formatDate(c.dateFin) }}</td>
+              <td>{{ c.motif || '—' }}</td>
+              <td>
+                <div class="cm-action-group">
+                  <button class="cm-btn-action cm-btn-approve" (click)="approuver(c.id)" [disabled]="loadingAction" title="Approuver">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="cm-btn-action cm-btn-refuse" (click)="refuser(c.id)" [disabled]="loadingAction" title="Refuser">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Historique -->
+    <div class="cm-card">
+      <h3 class="cm-card-title"><i class="bi bi-archive"></i> Historique de tous les congés</h3>
+      <div class="cm-empty" *ngIf="!tousLesConges.length">
+        <i class="bi bi-inbox"></i><p>Aucun congé enregistré.</p>
+      </div>
+      <div class="cm-table-wrap" *ngIf="tousLesConges.length">
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th>Médecin</th>
+              <th>Type</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of tousLesConges">
+              <td>Dr. {{ c.medecin.nom }} {{ c.medecin.prenom }}</td>
+              <td>{{ typeLabel(c.typeConge) }}</td>
+              <td>{{ formatDate(c.dateDebut) }}</td>
+              <td>{{ formatDate(c.dateFin) }}</td>
+              <td><span class="cm-badge" [ngClass]="statutClass(c.statut)">{{ statutLabel(c.statut) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ====================== VUE CHEF PERSONNEL ====================== -->
+  <ng-container *ngIf="isChefPersonnel">
+
+    <div class="cm-header">
+      <div class="cm-header-icon cm-header-icon-chef"><i class="bi bi-person-badge"></i></div>
+      <div>
+        <h2 class="cm-title">Gestion des congés médecins</h2>
+        <p class="cm-subtitle">Approuvez ou refusez les demandes de congé des médecins.</p>
+      </div>
+    </div>
+
+    <!-- En attente -->
+    <div class="cm-card">
+      <h3 class="cm-card-title">
+        <i class="bi bi-clock-history"></i> En attente
+        <span class="cm-count" *ngIf="congesEnAttente.length">{{ congesEnAttente.length }}</span>
+      </h3>
+      <div class="cm-empty" *ngIf="!congesEnAttente.length">
+        <i class="bi bi-check-all"></i><p>Aucune demande en attente.</p>
+      </div>
+      <div class="cm-table-wrap" *ngIf="congesEnAttente.length">
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th>Médecin</th>
+              <th>Type</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Motif</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of congesEnAttente">
+              <td>
+                <span class="cm-medecin-name">Dr. {{ c.medecin.nom }} {{ c.medecin.prenom }}</span>
+              </td>
+              <td>{{ typeLabel(c.typeConge) }}</td>
+              <td>{{ formatDate(c.dateDebut) }}</td>
+              <td>{{ formatDate(c.dateFin) }}</td>
+              <td>{{ c.motif || '—' }}</td>
+              <td>
+                <div class="cm-action-group">
+                  <button class="cm-btn-action cm-btn-approve" (click)="approuver(c.id)" [disabled]="loadingAction" title="Approuver">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="cm-btn-action cm-btn-refuse" (click)="refuser(c.id)" [disabled]="loadingAction" title="Refuser">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Historique -->
+    <div class="cm-card">
+      <h3 class="cm-card-title"><i class="bi bi-archive"></i> Historique de tous les congés</h3>
+      <div class="cm-empty" *ngIf="!tousLesConges.length">
+        <i class="bi bi-inbox"></i><p>Aucun congé enregistré.</p>
+      </div>
+      <div class="cm-table-wrap" *ngIf="tousLesConges.length">
+        <table class="cm-table">
+          <thead>
+            <tr>
+              <th>Médecin</th>
+              <th>Type</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of tousLesConges">
+              <td>Dr. {{ c.medecin.nom }} {{ c.medecin.prenom }}</td>
+              <td>{{ typeLabel(c.typeConge) }}</td>
+              <td>{{ formatDate(c.dateDebut) }}</td>
+              <td>{{ formatDate(c.dateFin) }}</td>
+              <td><span class="cm-badge" [ngClass]="statutClass(c.statut)">{{ statutLabel(c.statut) }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ====================== VUE SECRÉTAIRE ====================== -->
+  <ng-container *ngIf="isSecretaire">
+    <div class="cm-header">
+      <div class="cm-header-icon cm-header-icon-sec"><i class="bi bi-person-check"></i></div>
+      <div>
+        <h2 class="cm-title">Médecins disponibles</h2>
+        <p class="cm-subtitle">Recherchez les médecins disponibles à une date donnée (sans congé approuvé).</p>
+      </div>
+    </div>
+
+    <div class="cm-card">
+      <div class="cm-search-row">
+        <div class="cm-field">
+          <label>Date de consultation</label>
+          <input type="date" [(ngModel)]="dateDisponibilite" [min]="minDate" class="cm-input" />
+        </div>
+        <button class="cm-btn cm-btn-primary" (click)="rechercherDisponibles()" [disabled]="rechercheDisponibilite || !dateDisponibilite">
+          <i class="bi bi-search"></i> Rechercher
+        </button>
+      </div>
+
+      <div class="cm-empty" *ngIf="!medecinsDisponibles.length && !rechercheDisponibilite">
+        <i class="bi bi-people"></i><p>Lancez une recherche pour voir les médecins disponibles.</p>
+      </div>
+      <div class="cm-empty" *ngIf="rechercheDisponibilite">
+        <i class="bi bi-hourglass-split"></i><p>Recherche en cours…</p>
+      </div>
+
+      <div class="cm-medecins-grid" *ngIf="medecinsDisponibles.length">
+        <div class="cm-medecin-card" *ngFor="let m of medecinsDisponibles">
+          <div class="cm-medecin-avatar">
+            <i class="bi bi-person-circle"></i>
+          </div>
+          <div class="cm-medecin-info">
+            <div class="cm-medecin-name">Dr. {{ m.nom }} {{ m.prenom }}</div>
+            <div class="cm-medecin-spec">{{ m.specialite || 'Médecine générale' }}</div>
+          </div>
+          <span class="cm-badge badge-success">Disponible</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

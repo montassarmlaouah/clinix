@@ -1,0 +1,31 @@
+# Backend - fichiers compilés Java/Maven
+backend/target/
+backend/.mvn/
+*.jar
+*.war
+*.class
+
+# Frontend - dépendances Node.js
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.angular/
+
+# Fichiers d'environnement et secrets
+*.env
+.env.*
+backend/src/main/resources/application-local.properties
+backend/stripe-local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db

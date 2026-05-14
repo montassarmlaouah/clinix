@@ -1,0 +1,12 @@
+.page-wrap { max-width: 800px; margin: 0 auto; padding: 1rem 1.25rem 2rem; }
+.back-nav { margin-bottom: 1rem; }
+.back-nav a { text-decoration: none; color: #dc3545; }
+.panel { display: flex; flex-direction: column; gap: 1rem; }
+.ord-card {
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fff;
+}
+.ord-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.med-list { margin: 0; padding-left: 1.2rem; }

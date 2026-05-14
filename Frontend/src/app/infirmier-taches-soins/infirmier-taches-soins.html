@@ -1,0 +1,78 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/infirmier"><i class="bi bi-arrow-left"></i> Espace infirmier</a></nav>
+  <h1>Mes tâches &amp; soins</h1>
+  <p class="text-muted">Tâches assignées, statut (en cours / réalisé / non réalisé), priorité et lien document.</p>
+
+  <div class="alert alert-success" *ngIf="success">{{ success }}</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel" *ngIf="infirmierId">
+    <h2 class="h6">Rapport de fin de journée</h2>
+    <textarea class="form-control" rows="3" [(ngModel)]="rapportMessage" placeholder="Synthèse pour les médecins…"></textarea>
+    <button type="button" class="btn btn-primary mt-2" (click)="envoyerRapport()">Envoyer aux médecins de la clinique</button>
+  </div>
+
+  <div class="panel" *ngIf="infirmierId">
+    <h2 class="h6">Signalement / anomalie au médecin</h2>
+    <div class="row g-2">
+      <div class="col-md-4">
+        <label>Médecin</label>
+        <select class="form-control" [(ngModel)]="signalement.medecinId">
+          <option value="">— Choisir —</option>
+          <option *ngFor="let m of medecins" [value]="m.id">{{ m.prenom }} {{ m.nom }}</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label>Patient (optionnel)</label>
+        <select class="form-control" [(ngModel)]="signalement.patientId">
+          <option value="">—</option>
+          <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+        </select>
+      </div>
+    </div>
+    <textarea class="form-control mt-2" rows="2" [(ngModel)]="signalement.message" placeholder="Détail du signalement…"></textarea>
+    <button type="button" class="btn btn-outline-danger mt-2" (click)="envoyerSignalement()">Envoyer au médecin</button>
+  </div>
+
+  <div class="panel" *ngIf="taches.length">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Prévu</th>
+            <th>Patient</th>
+            <th>Soin</th>
+            <th>Statut</th>
+            <th>Urgent</th>
+            <th>Remarque / lien</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of taches">
+            <td>{{ t.heureAdministration | date:'short' }}</td>
+            <td>{{ nomPatient(t) }}</td>
+            <td>{{ t.nomMedicament }} <span class="text-muted">({{ t.typeTraitement }})</span></td>
+            <td>{{ statut(t) }}</td>
+            <td>
+              <button type="button" class="btn btn-sm" [class.btn-danger]="t.prioriteUrgente" [class.btn-outline-secondary]="!t.prioriteUrgente" (click)="toggleUrgent(t)">
+                {{ t.prioriteUrgente ? 'Urgent' : 'Marquer urgent' }}
+              </button>
+            </td>
+            <td>
+              <input class="form-control form-control-sm mb-1" placeholder="Remarque (douleur, état…)" [(ngModel)]="$any(t)._remarqueDraft" />
+              <input class="form-control form-control-sm" placeholder="URL photo / document" [(ngModel)]="$any(t)._pjUrl" />
+              <button type="button" class="btn btn-link btn-sm p-0" (click)="enregistrerPieceJointe(t)">Enregistrer le lien</button>
+            </td>
+            <td class="text-nowrap">
+              <button type="button" class="btn btn-sm btn-outline-primary me-1" *ngIf="!t.administre" (click)="patchStatut(t, 'EN_COURS')">En cours</button>
+              <button type="button" class="btn btn-sm btn-success me-1" *ngIf="!t.administre" (click)="patchStatut(t, 'REALISE')">Réalisé</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" *ngIf="!t.administre" (click)="patchStatut(t, 'NON_REALISE')">Non réalisé</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="text-muted" *ngIf="infirmierId && !taches.length">Aucune tâche assignée pour le moment.</p>
+</div>

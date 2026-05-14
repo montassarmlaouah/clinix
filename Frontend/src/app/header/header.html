@@ -1,0 +1,399 @@
+<aside class="sidebar" [class.collapsed]="isSidebarCollapsed">
+  <div class="sidebar-header">
+    <div class="logo-container">
+      <img src="/astess/logo2.png" alt="CLINIX Logo" class="main-logo">
+    </div>
+    <div class="app-title" *ngIf="!isSidebarCollapsed">
+      <h1 class="logo-text">CLINIX</h1>
+      <p class="welcome-text">Bienvenue</p>
+      <p class="user-name">{{ currentUser?.name }}</p>
+    </div>
+  </div>
+
+  <nav class="nav-menu">
+    <!-- SUPER ADMIN MENU -->
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_SUPER_ADMIN'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/clinique" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-building"></i>
+        <span *ngIf="!isSidebarCollapsed">Gestion Cliniques</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/cabinets-medecins" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-badge"></i>
+        <span *ngIf="!isSidebarCollapsed">Cabinets médecins</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/administrateurs" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-people"></i>
+        <span *ngIf="!isSidebarCollapsed">Administrateurs</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-credit-card-2-front"></i>
+        <span *ngIf="!isSidebarCollapsed">Abonnements Stripe</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+
+    <!-- ADMIN CLINIQUE MENU -->
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_ADMIN_CLINIQUE'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/personnel" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-people"></i>
+        <span *ngIf="!isSidebarCollapsed">Personnel</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/services-medicaux" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-hospital"></i>
+        <span *ngIf="!isSidebarCollapsed">Services Médicaux</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+      <a routerLink="/chambres" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-door-closed"></i>
+        <span *ngIf="!isSidebarCollapsed">Chambres</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/equipements" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-tools"></i>
+        <span *ngIf="!isSidebarCollapsed">Gestion des équipements</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-credit-card-2-front"></i>
+        <span *ngIf="!isSidebarCollapsed">Mon abonnement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/tarifs-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <span *ngIf="!isSidebarCollapsed">Forfaits &amp; paiement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+
+    <div class="menu-section" *ngIf="auth.isSecretaire()">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patients" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-lines-fill"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/chambres" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-door-closed"></i>
+        <span *ngIf="!isSidebarCollapsed">Chambres — entrée / sortie</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/rendez-vous" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Rendez-vous</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/conges-medecin" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Médecins disponibles</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-operation" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-heart-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes d’opération</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes médicaments</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-credit-card-2-front"></i>
+        <span *ngIf="!isSidebarCollapsed">Facturation — abonnement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/tarifs-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-grid-3x3-gap"></i>
+        <span *ngIf="!isSidebarCollapsed">Forfaits &amp; paiement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_MEDECIN'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+      <a routerLink="/medecin-statistiques" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-graph-up-arrow"></i>
+        <span *ngIf="!isSidebarCollapsed">Statistiques</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-taches-soins" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clipboard2-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Tâches infirmiers</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-notes" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-file-earmark-lock"></i>
+        <span *ngIf="!isSidebarCollapsed">Notes confidentielles</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-ordonnances" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-prescription2"></i>
+        <span *ngIf="!isSidebarCollapsed">Ordonnances</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patients" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-lines-fill"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/rendez-vous" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Rendez-vous</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/conges-medecin" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-x"></i>
+        <span *ngIf="!isSidebarCollapsed">Mes Congés</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-operation" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-heart-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes Opération</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes Médicaments</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_INFIRMIER'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+      <a routerLink="/patients" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-lines-fill"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+      <a routerLink="/planning-infirmiers" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar2-week"></i>
+        <span *ngIf="!isSidebarCollapsed"> Mon Planning </span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/congie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-plus text-dark"></i>
+        <span *ngIf="!isSidebarCollapsed">Demande Congé</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+      <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes Médicaments</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-person-hearts"></i>
+        <span *ngIf="!isSidebarCollapsed">Espace infirmier</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-taches-soins" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-list-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Tâches &amp; soins</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-visites-jour" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-day"></i>
+        <span *ngIf="!isSidebarCollapsed">Visites du jour</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-soins" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-heart-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Soins &amp; Urgences</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/presences" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clock-history"></i>
+        <span *ngIf="!isSidebarCollapsed">Présences</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+    </div>
+
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_CHEF_PERSONNEL'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/planning-infirmiers" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar2-week"></i>
+        <span *ngIf="!isSidebarCollapsed">Planning</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/congie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-plus"></i>
+        <span *ngIf="!isSidebarCollapsed">Congés Infirmiers</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/conges-medecin" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-x"></i>
+        <span *ngIf="!isSidebarCollapsed">Congés Médecins</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/presences" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clock-history"></i>
+        <span *ngIf="!isSidebarCollapsed">Présences</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+
+    <!-- PHARMACIEN MENU -->
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_RADIOLOGUE'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/radiologue-imagerie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-radioactive"></i>
+        <span *ngIf="!isSidebarCollapsed">Imagerie &amp; rapports</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/radiologue-messagerie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-chat-dots"></i>
+        <span *ngIf="!isSidebarCollapsed">Messagerie (médecins)</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+    </div>
+
+    <div class="menu-section" *ngIf="hasAnyRole(['ROLE_PHARMACIEN'])">
+      <a routerLink="/pharmacien" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes Médicaments</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/pharmacie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule-pill"></i>
+        <span *ngIf="!isSidebarCollapsed">Stock Pharmacie</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+
+    <div class="menu-section" *ngIf="auth.isTechnicienMaintenance()">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/technicien-equipements" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span *ngIf="!isSidebarCollapsed">Équipements en panne</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+
+    </div>
+
+    <div class="menu-section" *ngIf="hasAnyRole(['PATIENT', 'ROLE_PATIENT'])">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-speedometer2"></i>
+        <span *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patient" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-heart-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Mon espace santé</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/rendez-vous" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-event"></i>
+        <span *ngIf="!isSidebarCollapsed">Mes rendez-vous</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patient-dossier" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-file-medical"></i>
+        <span *ngIf="!isSidebarCollapsed">Dossier médical</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patient-ordonnances" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-capsule"></i>
+        <span *ngIf="!isSidebarCollapsed">Ordonnances</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patient-resultats" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clipboard2-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Résultats analyses</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/patient-teleconsultation" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-camera-video"></i>
+        <span *ngIf="!isSidebarCollapsed">Téléconsultation</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-box">
+      <a routerLink="/profil" class="profile-link">
+        <i class="bi bi-person-circle avatar"></i>
+      </a>
+      <div class="user-info" *ngIf="!isSidebarCollapsed">
+        <p class="role-text">{{ formatRole(currentUser?.role) }}</p>
+      </div>
+      <button (click)="auth.logout()" class="logout-btn" title="Déconnexion" *ngIf="!isSidebarCollapsed">
+        <i class="bi bi-box-arrow-right"></i>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- TOP HEADER BAR -->
+<div class="top-header-bar" [class.collapsed]="isSidebarCollapsed">
+  <header class="content-header">
+    <div class="d-flex align-items-center justify-content-between gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-link text-dark p-0 border-0" (click)="toggleSidebar()">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+        <div>
+          <h3 class="logo-text">{{ currentPageTitle }}</h3>
+          <div class="subtitle-text">{{ currentPageSubtitle }}</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="search-box">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Rechercher..." spellcheck="false" />
+        </div>
+        <div class="notif" routerLink="/notifications" style="cursor: pointer;">
+          <i class="bi bi-bell"></i>
+          <span class="badge" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>

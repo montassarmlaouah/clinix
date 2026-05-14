@@ -1,0 +1,13 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/infirmier"><i class="bi bi-arrow-left"></i> Espace infirmier</a></nav>
+  <h1>Scanner bracelet patient</h1>
+  <p class="lead">Saisissez l’identifiant affiché sur le bracelet (ou scannez avec un pistolet relié au clavier).</p>
+
+  <div class="panel">
+    <label for="bid">Identifiant patient</label>
+    <input id="bid" class="form-control" [(ngModel)]="identifiantBracelet" placeholder="Ex. UUID ou numéro dossier" />
+    <button class="btn btn-primary mt-2" type="button" (click)="ouvrirSoins()" [disabled]="!identifiantBracelet.trim()">
+      Ouvrir la fiche soins
+    </button>
+  </div>
+</div>

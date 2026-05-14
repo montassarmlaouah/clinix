@@ -1,0 +1,363 @@
+<div class="clinique-container">
+
+    <div class="d-flex justify-content-end mb-3" *ngIf="auth.getToken() && auth.isSuperAdmin()">
+        <button class="btn-nouvelle-clinique" (click)="openCreateModal()">
+            <i class="bi bi-plus-lg"></i> Nouvelle Clinique
+        </button>
+    </div>
+
+    <!-- Section Filtres -->
+    <section class="filters-section luna-glass mb-4">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher une clinique</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Nom, adresse ou téléphone...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Statut</label>
+        <select class="form-control luna-input" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()">
+          <option value="all">Tous les statuts</option>
+          <option value="active">Active</option>
+          <option value="inactive">Suspendue</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Grille des cliniques -->
+    <div class="cliniques-grid">
+        <ng-container *ngIf="paginatedCliniques && paginatedCliniques.length > 0; else emptyClinique">
+            <div *ngFor="let clinique of paginatedCliniques; trackBy: trackCliniqueId" class="clinique-card">
+                <div class="card-header-section">
+                    <div class="clinique-icon">
+                        <i class="bi bi-hospital"></i>
+                    </div>
+                    <div class="clinique-info">
+                        <h3 class="clinique-nom">{{ clinique.nom }}</h3>
+                        <p class="clinique-adresse">
+                            <i class="bi bi-geo-alt"></i> {{ clinique.adresse }}
+                        </p>
+                    </div>
+                    <span class="status-badge" [class.active]="clinique.actif" [class.inactive]="!clinique.actif">
+                        {{ clinique.actif ? 'Active' : 'Suspendue' }}
+                    </span>
+                </div>
+                <div class="card-actions d-flex gap-2 justify-content-end">
+                    <button class="btn btn-outline-dark btn-sm" (click)="openDetailsModal(clinique)">
+                        <i class="bi bi-file-earmark-text"></i> Détails
+                    </button>
+                    <ng-container *ngIf="auth.getToken() && auth.isSuperAdmin()">
+                        <button class="btn btn-outline-dark btn-sm" (click)="openEditModal(clinique)">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" (click)="openDeleteModal(clinique.id!)">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </ng-container>
+                </div>
+            </div>
+        </ng-container>
+        <ng-template #emptyClinique>
+            <div class="empty-state">
+                <i class="bi bi-building"></i>
+                <h3>Aucune clinique trouvée</h3>
+                <p>Commencez par créer une nouvelle clinique</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="filteredCliniques.length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredCliniques.length }} cliniques
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL CREATION CLINIQUE -->
+    <div class="modal fade" id="createCliniqueModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-hospital me-2"></i>
+                        Nouvelle Clinique
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <form #createForm="ngForm" (ngSubmit)="onCreateSubmit()">
+
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+                                <div class="text-muted small">Étape {{ createCliniqueStep }} sur 3</div>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn" [class.btn-primary]="createCliniqueStep === 1" [class.btn-outline-secondary]="createCliniqueStep !== 1" disabled>1. Clinique</button>
+                                    <button type="button" class="btn" [class.btn-primary]="createCliniqueStep === 2" [class.btn-outline-secondary]="createCliniqueStep !== 2" disabled>2. Admin</button>
+                                    <button type="button" class="btn" [class.btn-primary]="createCliniqueStep === 3" [class.btn-outline-secondary]="createCliniqueStep !== 3" disabled>3. Finalisation</button>
+                                </div>
+                            </div>
+
+                            <div *ngIf="createCliniqueStep === 1">
+                                <div class="section-header mb-3">
+                                    <div class="section-icon">
+                                        <i class="bi bi-building"></i>
+                                    </div>
+                                    <h6 class="section-title">Informations de la clinique</h6>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom de la clinique <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-building"></i></span>
+                                            <input type="text" class="form-control"
+                                                [(ngModel)]="newCliniqueWithAdmin.nomClinique" name="nomClinique" required
+                                                placeholder="Ex: Clinique Centrale">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Téléphone</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <input type="text" class="form-control"
+                                                inputmode="numeric" pattern="\d{8}" minlength="8" maxlength="8"
+                                                [(ngModel)]="newCliniqueWithAdmin.telephoneClinique" name="telephoneClinique"
+                                                placeholder="Ex: 12-345-678">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Adresse <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <input type="text" class="form-control"
+                                                [(ngModel)]="newCliniqueWithAdmin.adresseClinique"
+                                                name="adresseClinique" required placeholder="Ex: AVENUE HABIB BOURGUIBA">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="createCliniqueStep === 2">
+                                <div class="section-header mb-3">
+                                    <div class="section-icon">
+                                        <i class="bi bi-person-badge"></i>
+                                    </div>
+                                    <h6 class="section-title">Administrateur de la clinique</h6>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                            <input type="text" class="form-control" [(ngModel)]="newCliniqueWithAdmin.nomAdmin"
+                                                name="nomAdmin" required placeholder="Ex: Mohamed">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Prénom <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                            <input type="text" class="form-control"
+                                                [(ngModel)]="newCliniqueWithAdmin.prenomAdmin" name="prenomAdmin" required
+                                                placeholder="Ex: Ali">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Téléphone Admin <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                            <input type="text" class="form-control" inputmode="numeric" pattern="\d{11}"
+                                                minlength="11" maxlength="11" [(ngModel)]="newCliniqueWithAdmin.telephoneAdmin"
+                                                (input)="onAdminPhoneInput()" name="telephoneAdmin" required
+                                                placeholder="Ex: 21612345678">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">E-mail Admin</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                            <input type="email" class="form-control"
+                                                [(ngModel)]="newCliniqueWithAdmin.emailAdmin"
+                                                name="emailAdmin"
+                                                placeholder="nom@exemple.com">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="detail-section mt-4 pt-4 border-top" *ngIf="createCliniqueStep === 3">
+                                <h6 class="section-title">Finalisation</h6>
+                                <div class="alert alert-warning mb-0">
+                                    <i class="bi bi-chat-dots me-2"></i>
+                                    Le mot de passe de l'administrateur sera généré automatiquement puis envoyé par SMS sur le numéro saisi à l'étape 2.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer border-0 px-0 pt-4">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">
+                                <i class="bi bi-x-lg me-1"></i> Annuler
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" (click)="previousCreateStep()" [disabled]="createCliniqueStep === 1">
+                                <i class="bi bi-arrow-left me-1"></i> Précédent
+                            </button>
+                            <button class="btn btn-primary px-4" type="button" *ngIf="createCliniqueStep < 3" (click)="nextCreateStep()" [disabled]="!canGoNext()">
+                                Suivant <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                            <button class="btn btn-primary px-4" type="submit" *ngIf="createCliniqueStep === 3" [disabled]="!canGoNext()">
+                                <i class="bi bi-check-circle me-2"></i> Créer la clinique
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- MODAL EDIT -->
+<div class="modal fade" id="editCliniqueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil me-2"></i> Modifier la clinique
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <form #editForm="ngForm" (ngSubmit)="onEditSubmit()">
+
+                    <label class="form-label">Nom *</label>
+                    <input type="text" class="form-control mb-3" [(ngModel)]="editingClinique.nom" name="nom" required>
+
+                    <label class="form-label">Adresse *</label>
+                    <input type="text" class="form-control mb-3" [(ngModel)]="editingClinique.adresse" name="adresse"
+                        required>
+
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" class="form-control mb-3" inputmode="numeric" pattern="\d{8}"
+                        minlength="8" maxlength="8" [(ngModel)]="editingClinique.telephone" name="telephone">
+
+                    <div class="modal-footer px-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">
+                            Enregistrer
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- MODAL DETAIL -->
+<div class="modal fade" id="detailsCliniqueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-building me-2"></i> {{ selectedClinique?.nom }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" (click)="hideDetailsModal()"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <p><strong>Adresse : </strong> {{ selectedClinique?.adresse }}</p>
+                <p><strong>Téléphone : </strong> {{ selectedClinique?.telephone || 'Non renseigné' }}</p>
+                <p><strong>Création : </strong> {{ selectedClinique?.dateCreation | date:'dd/MM/yyyy' }}</p>
+
+                <hr>
+
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" (click)="hideDetailsModal()">Fermer</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DELETE -->
+<div class="modal fade" id="deleteCliniqueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i> Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Voulez-vous vraiment supprimer cette clinique ? Cette action est irréversible.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+                    <i class="bi bi-trash me-1"></i> Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL SUCCESS -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div class="success-checkmark">
+                    <div class="check-icon">
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
+                    </div>
+                </div>
+                <h4 class="mt-4 mb-2 fw-bold text-dark">Success</h4>
+                <p class="text-muted mb-4">{{ successMessage }}</p>
+                <button class="btn btn-success px-4 py-2" (click)="hideSuccessModal()">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

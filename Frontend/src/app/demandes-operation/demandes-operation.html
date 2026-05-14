@@ -1,0 +1,314 @@
+<div class="do-page">
+
+  <div class="do-alert do-alert-success" *ngIf="success">
+    <i class="bi bi-check-circle-fill"></i> {{ success }}
+  </div>
+  <div class="do-alert do-alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+  </div>
+
+  <ng-template #formNouvelleDemande>
+    <div class="do-modal-backdrop" *ngIf="showFormModal" (click)="fermerFormulaire()">
+      <div class="do-modal" (click)="$event.stopPropagation()">
+        <div class="do-modal-header">
+          <div>
+            <h3 class="do-card-title do-modal-title">
+              <i class="bi" [ngClass]="modeEdition ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+              {{ modeEdition ? 'Modifier la demande' : 'Nouvelle demande' }}
+            </h3>
+            <p class="do-modal-subtitle">Complétez le formulaire puis enregistrez la demande.</p>
+          </div>
+          <button type="button" class="do-modal-close" (click)="fermerFormulaire()" [disabled]="loading" aria-label="Fermer">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="do-modal-body">
+      <div class="do-form-grid">
+
+        <div class="do-field">
+          <label>Origine</label>
+          <select [(ngModel)]="origine" class="do-select" (ngModelChange)="chargerMedecinsPourEquipe()">
+            <option value="CLINIQUE">Clinique / hôpital (équipe rattachée)</option>
+            <option value="CABINET">Cabinet médical (prise en charge à orienter)</option>
+          </select>
+        </div>
+
+        <div class="do-field" *ngIf="cliniqueCibleObligatoire || origine === 'CABINET'">
+          <label>Clinique cible (bloc / hospitalisation) {{ cliniqueCibleObligatoire ? '*' : '' }}</label>
+          <select [(ngModel)]="cliniqueCibleId" class="do-select" (ngModelChange)="chargerMedecinsPourEquipe()">
+            <option value="">-- Choisir une clinique --</option>
+            <option *ngFor="let c of cliniquesActives" [value]="c.id">{{ c.nom }}</option>
+          </select>
+        </div>
+
+        <div class="do-field do-field-full do-periops-intro">
+          <i class="bi bi-info-circle"></i> Bloc périopératoire (équipe, pharmacie, salle / chambre) — transmis à la clinique cible.
+        </div>
+
+        <div class="do-field do-field-full">
+          <label>Patient *</label>
+          <select [(ngModel)]="patientId" class="do-select">
+            <option value="">-- Sélectionner un patient --</option>
+            <option *ngFor="let p of patients" [value]="p.id">
+              {{ patientNom(p) }} — {{ p.numeroPatient }}
+            </option>
+          </select>
+        </div>
+
+        <div class="do-field">
+          <label>Type d'opération *</label>
+          <input type="text" [(ngModel)]="typeOperation" placeholder="Ex: Cholécystectomie…" class="do-input" />
+        </div>
+        <div class="do-field">
+          <label>Priorité</label>
+          <select [(ngModel)]="priorite" class="do-select">
+            <option *ngFor="let p of priorites" [value]="p.value">{{ p.label }}</option>
+          </select>
+        </div>
+        <div class="do-field">
+          <label>Date prévue (optionnel)</label>
+          <input type="date" [(ngModel)]="datePrevue" class="do-input" />
+        </div>
+        <div class="do-field do-field-full">
+          <label>Description / notes cliniques</label>
+          <textarea [(ngModel)]="description" rows="2" placeholder="Contexte clinique…" class="do-textarea"></textarea>
+        </div>
+      </div>
+
+      <div class="do-subcard">
+        <h4 class="do-subtitle"><i class="bi bi-people"></i> Équipe médicale (spécialités, rôles)</h4>
+        <p class="do-hint" *ngIf="!idCliniquePourMedecins">Renseignez la clinique cible ou connectez-vous à une clinique pour lier des médecins de l’établissement.</p>
+        <div class="do-repeat-row" *ngFor="let ligne of equipeLignes; let i = index">
+          <select class="do-select do-select-sm" *ngIf="medecinsChoix.length" [(ngModel)]="ligne.medecinId" (ngModelChange)="onEquipeMedecinSelect(ligne, $event)">
+            <option value="">— Médecin (optionnel) —</option>
+            <option *ngFor="let m of medecinsChoix" [value]="m.id">{{ m.prenom }} {{ m.nom }}<span *ngIf="m.specialite"> ({{ m.specialite }})</span></option>
+          </select>
+          <input type="text" [(ngModel)]="ligne.specialite" class="do-input" placeholder="Spécialité *" />
+          <select [(ngModel)]="ligne.role" class="do-select do-select-sm">
+            <option *ngFor="let r of rolesEquipe" [value]="r.value">{{ r.label }}</option>
+          </select>
+          <input type="text" [(ngModel)]="ligne.nomComplet" class="do-input" placeholder="Nom (si externe / hors liste)" />
+          <button type="button" class="do-icon-sq" (click)="retirerLigneEquipe(i)" [disabled]="equipeLignes.length < 2" title="Retirer">✕</button>
+        </div>
+        <button type="button" class="do-line-add" (click)="ajouterLigneEquipe()">+ Ajouter un praticien</button>
+      </div>
+
+      <div class="do-subcard">
+        <h4 class="do-subtitle"><i class="bi bi-capsule-pill"></i> Produits pharmacie / consommables</h4>
+        <div class="do-repeat-row" *ngFor="let pr of produitsLignes; let i = index">
+          <input type="text" [(ngModel)]="pr.libelle" class="do-input" placeholder="Libellé" />
+          <input type="number" min="1" [(ngModel)]="pr.quantite" class="do-input do-input-narrow" />
+          <input type="text" [(ngModel)]="pr.note" class="do-input" placeholder="Note" />
+          <button type="button" class="do-icon-sq" (click)="retirerLigneProduit(i)" [disabled]="produitsLignes.length < 1">✕</button>
+        </div>
+        <button type="button" class="do-line-add" (click)="ajouterLigneProduit()">+ Ligne</button>
+      </div>
+
+      <div class="do-form-grid do-subgrid">
+        <div class="do-field">
+          <label>Salle / bloc d’opération (souhaité)</label>
+          <input type="text" [(ngModel)]="sallePrevue" class="do-input" placeholder="Ex. Bloc A" />
+        </div>
+        <div class="do-field">
+          <label>Chambre / post-op (souhaité)</label>
+          <input type="text" [(ngModel)]="chambrePrevue" class="do-input" placeholder="Ex. 301" />
+        </div>
+        <div class="do-field do-field-full">
+          <label>Remarques moyens / matériel</label>
+          <textarea [(ngModel)]="remarquesMoyens" rows="2" class="do-textarea" placeholder="C-Arm, perfusion, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="do-form-actions">
+        <button class="do-btn do-btn-primary" (click)="soumettreFormulaire()"
+        [disabled]="loading || !patientId || !typeOperation || (cliniqueCibleObligatoire && !cliniqueCibleId)">
+        <i class="bi" [ngClass]="modeEdition ? 'bi-save' : 'bi-send'" *ngIf="!loading"></i>
+        <i class="bi bi-hourglass-split" *ngIf="loading"></i>
+        {{ loading ? (modeEdition ? 'Enregistrement…' : 'Envoi…') : (modeEdition ? 'Enregistrer les changements' : 'Envoyer la demande') }}
+        </button>
+        <button type="button" class="do-btn do-btn-danger" *ngIf="modeEdition"
+          [disabled]="loading"
+          (click)="supprimerDemandeEnEdition()">
+          <i class="bi bi-trash"></i>
+          Supprimer
+        </button>
+      </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- VUE MÉDECIN -->
+  <ng-container *ngIf="isMedecin">
+    <div class="do-header do-header-with-action">
+      <div class="do-header-icon do-header-icon-medecin"><i class="bi bi-scissors"></i></div>
+      <div>
+        <h2 class="do-title">Mes demandes d’opération / périop.</h2>
+        <p class="do-subtitle">Demande d’opération, équipe, besoins pharmacie, salle et chambre (cabinet → clinique).</p>
+      </div>
+      <button type="button" class="do-btn do-btn-primary do-header-action" (click)="ouvrirNouvelleDemande()">
+        <i class="bi bi-plus-lg"></i>
+        Nouvelle demande
+      </button>
+    </div>
+    <ng-container *ngTemplateOutlet="formNouvelleDemande"></ng-container>
+    <div class="do-card">
+      <div class="do-list-header">
+        <h3 class="do-card-title"><i class="bi bi-list-check"></i> Mes demandes</h3>
+        <select [(ngModel)]="filtreStatut" class="do-select do-select-sm">
+          <option *ngFor="let s of statuts" [value]="s.value">{{ s.label }}</option>
+        </select>
+      </div>
+      <div class="do-loader" *ngIf="loadingList">
+        <i class="bi bi-hourglass-split"></i> Chargement…
+      </div>
+      <div class="do-empty" *ngIf="!loadingList && !demandesFiltreesMes.length">
+        <i class="bi bi-inbox"></i><p>Aucune demande.</p>
+      </div>
+      <div class="do-table-wrap" *ngIf="!loadingList && demandesFiltreesMes.length">
+        <table class="do-table">
+          <thead>
+            <tr>
+              <th>Origine</th>
+              <th>Patient</th>
+              <th>Opération</th>
+              <th>Périop. / moyens</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th>Date prévue</th>
+              <th>Créée le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of demandesFiltreesMes">
+              <td><span class="do-orig" [ngClass]="d.origine === 'CABINET' ? 'do-orig-cab' : 'do-orig-clin'">{{ d.origine === 'CABINET' ? 'Cabinet' : 'Clinique' }}</span></td>
+              <td>
+                <div class="do-patient-name">{{ patientNom(d.patient) }}</div>
+                <div class="do-patient-num">{{ d.patient.numeroPatient }}</div>
+              </td>
+              <td>
+                <span class="do-operation-type">{{ d.typeOperation }}</span>
+                <div class="do-description" *ngIf="d.description">{{ d.description | slice:0:50 }}{{ d.description!.length > 50 ? '…' : '' }}</div>
+              </td>
+              <td class="do-cell-small">{{ resumePeriops(d) || '—' }}</td>
+              <td><span class="do-badge" [ngClass]="prioriteConfig(d.priorite).cls">{{ prioriteConfig(d.priorite).label }}</span></td>
+              <td><span class="do-badge" [ngClass]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span></td>
+              <td>{{ formatDate(d.datePrevue || '') }}</td>
+              <td>{{ formatDate(d.dateCreation) }}</td>
+              <td>
+                <div class="do-actions" *ngIf="peutModifierSupprimer(d)">
+                  <button class="do-btn-sm do-btn-plan" (click)="commencerEdition(d)" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="do-btn-sm do-btn-refuse" (click)="supprimerDemande(d)" title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+                <span class="do-final" *ngIf="!peutModifierSupprimer(d)">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ADMIN / SECRÉTAIRE -->
+  <ng-container *ngIf="isAdmin || isSecretaire">
+    <div class="do-header do-header-with-action" *ngIf="!isMedecin">
+      <div class="do-header-icon do-header-icon-admin"><i class="bi bi-clipboard2-pulse"></i></div>
+      <div>
+        <h2 class="do-title">Gestion des demandes d’opération</h2>
+        <p class="do-subtitle">Toutes les demandes, y compris périop. depuis le cabinet.</p>
+      </div>
+      <button type="button" class="do-btn do-btn-primary do-header-action" (click)="ouvrirNouvelleDemande()">
+        <i class="bi bi-plus-lg"></i>
+        Nouvelle demande
+      </button>
+    </div>
+    <ng-container *ngIf="isSecretaire && !isMedecin">
+      <ng-container *ngTemplateOutlet="formNouvelleDemande"></ng-container>
+    </ng-container>
+    <div class="do-card">
+      <div class="do-list-header">
+        <h3 class="do-card-title"><i class="bi bi-list-check"></i> Toutes les demandes</h3>
+        <select [(ngModel)]="filtreStatut" class="do-select do-select-sm">
+          <option *ngFor="let s of statuts" [value]="s.value">{{ s.label }}</option>
+        </select>
+      </div>
+      <div class="do-loader" *ngIf="loadingList">
+        <i class="bi bi-hourglass-split"></i> Chargement…
+      </div>
+      <div class="do-empty" *ngIf="!loadingList && !demandesFiltreesToutes.length">
+        <i class="bi bi-inbox"></i><p>Aucune demande.</p>
+      </div>
+      <div class="do-table-wrap" *ngIf="!loadingList && demandesFiltreesToutes.length">
+        <table class="do-table">
+          <thead>
+            <tr>
+              <th>Origine</th>
+              <th>Patient</th>
+              <th>Opération</th>
+              <th>Périop.</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th>Date prévue</th>
+              <th>Demandeur</th>
+              <th>Créée le</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of demandesFiltreesToutes">
+              <td><span class="do-orig" [ngClass]="d.origine === 'CABINET' ? 'do-orig-cab' : 'do-orig-clin'">{{ d.origine === 'CABINET' ? 'Cabinet' : 'Clinique' }}</span></td>
+              <td>
+                <div class="do-patient-name">{{ patientNom(d.patient) }}</div>
+                <div class="do-patient-num">{{ d.patient.numeroPatient }}</div>
+              </td>
+              <td>
+                <span class="do-operation-type">{{ d.typeOperation }}</span>
+                <div class="do-description" *ngIf="d.description">{{ d.description | slice:0:50 }}{{ d.description!.length > 50 ? '…' : '' }}</div>
+              </td>
+              <td class="do-cell-small">{{ resumePeriops(d) || '—' }}</td>
+              <td><span class="do-badge" [ngClass]="prioriteConfig(d.priorite).cls">{{ prioriteConfig(d.priorite).label }}</span></td>
+              <td><span class="do-badge" [ngClass]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span></td>
+              <td>{{ formatDate(d.datePrevue || '') }}</td>
+              <td>{{ d.demandeur.nom }} {{ d.demandeur.prenom }}</td>
+              <td>{{ formatDate(d.dateCreation) }}</td>
+              <td>
+                <div class="do-actions" *ngIf="isAdmin && d.statut === 'EN_ATTENTE'">
+                  <button class="do-btn-sm do-btn-approve" (click)="changerStatut(d.id, 'APPROUVEE')" title="Approuver">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="do-btn-sm do-btn-plan" (click)="changerStatut(d.id, 'PLANIFIEE')" title="Planifier">
+                    <i class="bi bi-calendar-event"></i>
+                  </button>
+                  <button class="do-btn-sm do-btn-refuse" (click)="changerStatut(d.id, 'REFUSEE')" title="Refuser">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+                <div class="do-actions" *ngIf="isAdmin && d.statut === 'PLANIFIEE'">
+                  <button class="do-btn-sm do-btn-done" (click)="changerStatut(d.id, 'EFFECTUEE')" title="Effectuée">
+                    <i class="bi bi-check2-all"></i>
+                  </button>
+                </div>
+                <div class="do-actions" *ngIf="peutModifierSupprimer(d)">
+                  <button class="do-btn-sm do-btn-plan" (click)="commencerEdition(d)" title="Modifier">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="do-btn-sm do-btn-refuse" (click)="supprimerDemande(d)" title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+                <span class="do-final" *ngIf="!((isAdmin && d.statut === 'EN_ATTENTE') || (isAdmin && d.statut === 'PLANIFIEE') || peutModifierSupprimer(d))">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+</div>

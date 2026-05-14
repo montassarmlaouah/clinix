@@ -1,0 +1,25 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/patient"><i class="bi bi-arrow-left"></i> Mon espace santé</a></nav>
+  <h1>Mes ordonnances</h1>
+
+  <div *ngIf="loading">Chargement…</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel" *ngIf="!loading && liste.length">
+    <div class="ord-card" *ngFor="let o of liste">
+      <div class="ord-head">
+        <span>{{ o.date | date:'mediumDate' }}</span>
+        <span class="badge" [class.bg-success]="o.validee" [class.bg-secondary]="!o.validee">
+          {{ o.validee ? 'Validée pharmacie' : 'En cours' }}
+        </span>
+      </div>
+      <ul class="med-list" *ngIf="o.prescriptions?.length">
+        <li *ngFor="let pr of o.prescriptions">
+          <strong>{{ pr.medicament }}</strong> — {{ pr.dosage }} · {{ pr.frequence }} · {{ pr.duree }} j.
+        </li>
+      </ul>
+      <p *ngIf="!o.prescriptions?.length" class="text-muted small">Détail des lignes indisponible.</p>
+    </div>
+  </div>
+  <p *ngIf="!loading && !liste.length && !error" class="text-muted">Aucune ordonnance enregistrée.</p>
+</div>

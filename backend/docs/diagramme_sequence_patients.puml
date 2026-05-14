@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Gestion patients
+
+autonumber
+
+actor Receptionniste
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control ServicePatient as "Service Patient"
+database DB as "Base de donnees"
+
+Receptionniste -> Frontend: Saisir informations patient
+Frontend -> API: POST /patients (fichePatient)
+API -> ServicePatient: validerDonnees(fichePatient)
+ServicePatient -> DB: Verifier unicite CIN / email
+DB --> ServicePatient: Resultat verification
+
+alt Donnees valides
+  ServicePatient -> DB: Inserer nouveau patient
+  DB --> ServicePatient: idPatient
+  ServicePatient --> API: Patient cree
+  API --> Frontend: 201 Created + patient
+  Frontend --> Receptionniste: Afficher confirmation
+else Donnees invalides ou doublon
+  ServicePatient --> API: Erreur validation
+  API --> Frontend: 400 Bad Request
+  Frontend --> Receptionniste: Afficher erreurs
+end
+
+@enduml

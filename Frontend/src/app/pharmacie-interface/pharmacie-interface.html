@@ -1,0 +1,278 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Interface Pharmacie</h1>
+        <p class="page-subtitle">CRUD médicaments, stock, alertes et bons d'entrée</p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <section class="tabs luna-glass">
+      <button class="tab-btn" [class.active]="activeTab==='medicaments'" (click)="activeTab='medicaments'">Médicaments</button>
+      <button class="tab-btn" [class.active]="activeTab==='stocks'" (click)="activeTab='stocks'">Stock</button>
+      <button class="tab-btn" [class.active]="activeTab==='alertes'" (click)="activeTab='alertes'">
+        Alertes stock bas <span class="badge-pill">{{ alertesStockBas.length }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab==='bons-entree'" (click)="activeTab='bons-entree'">Bons d'entrée</button>
+      <button class="tab-btn" [class.active]="activeTab==='demandes'" (click)="activeTab='demandes'">
+        Demandes médecins <span class="badge-pill">{{ demandesMedicaments.length }}</span>
+      </button>
+    </section>
+    <section class="header-actions">
+      <a class="btn btn-primary" href="/demandes-medicament">
+        <i class="fas fa-list-check"></i> Voir les demandes médicaments
+      </a>
+    </section>
+
+    <section *ngIf="activeTab==='medicaments'">
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="ouvrirMedicamentModal()"><i class="fas fa-plus"></i> Ajouter médicament</button>
+      </div>
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead><tr><th>Nom</th><th>Description</th><th class="text-center">Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let m of medicaments">
+              <td>{{ m.nom }}</td>
+              <td>{{ m.description || '—' }}</td>
+              <td class="text-center">
+                <button class="btn-action btn-sync" (click)="ouvrirMedicamentModal(m)" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button class="btn-action btn-delete" (click)="supprimerMedicament(m.id)" title="Supprimer"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab==='stocks'">
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="ouvrirStockModal()"><i class="fas fa-plus"></i> Ajouter stock</button>
+      </div>
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead><tr><th>Médicament</th><th>Quantité</th><th>Lot</th><th>Seuil alerte</th><th>Expiration</th><th class="text-center">Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let s of stocks">
+              <td>{{ s.medicament?.nom || '—' }}</td>
+              <td>{{ s.quantite }}</td>
+              <td>{{ s.lot }}</td>
+              <td>{{ s.seuilAlerte }}</td>
+              <td>{{ s.dateExpiration | date:'dd/MM/yyyy' }}</td>
+              <td class="text-center">
+                <button class="btn-action btn-view" (click)="ouvrirMouvement(s,'entree')" title="Entrée"><i class="fas fa-arrow-down"></i></button>
+                <button class="btn-action btn-warning" (click)="ouvrirMouvement(s,'sortie')" title="Sortie"><i class="fas fa-arrow-up"></i></button>
+                <button class="btn-action btn-sync" (click)="ouvrirStockModal(s)" title="Modifier"><i class="fas fa-edit"></i></button>
+                <button class="btn-action btn-delete" (click)="supprimerStock(s.id)" title="Supprimer"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab==='alertes'">
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead><tr><th>Médicament</th><th>Quantité</th><th>Seuil</th><th>Alerte</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let a of alertesStockBas">
+              <td>{{ a.medicament?.nom || '—' }}</td>
+              <td>{{ a.quantite }}</td>
+              <td>{{ a.seuilAlerte }}</td>
+              <td><span class="status-pill badge-danger">Stock bas</span></td>
+            </tr>
+            <tr *ngIf="alertesStockBas.length===0"><td colspan="4" class="empty-state">Aucune alerte pour le moment</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab==='bons-entree'">
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="ouvrirBonEntreeModal()"><i class="fas fa-file-circle-plus"></i> Nouveau bon d'entrée</button>
+      </div>
+      <div class="table-container luna-shadow">
+        <table class="licences-table bons-entree-table">
+          <thead><tr><th>Réf</th><th>Médicament</th><th>Quantité</th><th>Lot</th><th>Date</th><th class="text-center">Actions</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let b of bonsEntree">
+              <td><span class="ref-chip">{{ b.id }}</span></td>
+              <td>{{ b.medicamentNom }}</td>
+              <td>{{ b.quantite }}</td>
+              <td>{{ b.lot || '—' }}</td>
+              <td>{{ b.dateEntree | date:'dd/MM/yyyy' }}</td>
+              <td class="text-center">
+                <button class="btn-action btn-delete" (click)="supprimerBonEntree(b.id)" title="Supprimer"><i class="fas fa-trash"></i></button>
+              </td>
+            </tr>
+            <tr *ngIf="bonsEntree.length===0"><td colspan="6" class="empty-state">Aucun bon d'entrée</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab==='demandes'">
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Médicaments demandés</th>
+              <th>Notes</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of demandesMedicaments">
+              <td>
+                <div>{{ patientLabel(d) }}</div>
+                <small>{{ d.patient?.numeroPatient || '—' }}</small>
+              </td>
+              <td>
+                <div *ngFor="let item of d.items">
+                  {{ item.medicament?.nom || 'Médicament' }} x{{ item.quantite }}
+                </div>
+              </td>
+              <td>{{ d.notes || '—' }}</td>
+              <td class="text-center">
+                <button class="btn-action btn-view" (click)="changerStatutDemande(d.id, 'DELIVREE')" title="Délivrer">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-action btn-warning" (click)="changerStatutDemande(d.id, 'PARTIELLE')" title="Partielle">
+                  <i class="fas fa-minus-circle"></i>
+                </button>
+                <button class="btn-action btn-delete" (click)="changerStatutDemande(d.id, 'REFUSEE')" title="Refuser">
+                  <i class="fas fa-times"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="demandesMedicaments.length===0">
+              <td colspan="4" class="empty-state">Aucune demande en attente.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal fade show" *ngIf="showMedicamentModal" style="display:block;background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingMedicamentId ? 'Modifier médicament' : 'Ajouter médicament' }}</h5>
+        <button type="button" class="btn-close" (click)="showMedicamentModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <label class="luna-label">Nom</label>
+        <input class="form-control luna-input" [(ngModel)]="medicamentForm.nom" />
+        <label class="luna-label mt-2">Description</label>
+        <textarea class="form-control luna-input" rows="3" [(ngModel)]="medicamentForm.description"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showMedicamentModal=false">Annuler</button>
+        <button class="btn btn-primary" (click)="enregistrerMedicament()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade show" *ngIf="showStockModal" style="display:block;background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ editingStockId ? 'Modifier stock' : 'Ajouter stock' }}</h5>
+        <button type="button" class="btn-close" (click)="showStockModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <label class="luna-label">Médicament</label>
+            <select class="form-control luna-input" [(ngModel)]="stockForm.medicamentId">
+              <option value="">Sélectionner</option>
+              <option *ngFor="let m of medicaments" [value]="m.id">{{ m.nom }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="luna-label">Quantité</label>
+            <input type="number" class="form-control luna-input" [(ngModel)]="stockForm.quantite" />
+          </div>
+          <div class="col-md-3">
+            <label class="luna-label">Seuil alerte</label>
+            <input type="number" class="form-control luna-input" [(ngModel)]="stockForm.seuilAlerte" />
+          </div>
+          <div class="col-md-6 mt-2">
+            <label class="luna-label">Lot</label>
+            <input class="form-control luna-input" [(ngModel)]="stockForm.lot" />
+          </div>
+          <div class="col-md-6 mt-2">
+            <label class="luna-label">Date expiration</label>
+            <input type="date" class="form-control luna-input" [(ngModel)]="stockForm.dateExpiration" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showStockModal=false">Annuler</button>
+        <button class="btn btn-primary" (click)="enregistrerStock()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade show" *ngIf="showMouvementModal && mouvementStock" style="display:block;background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ mouvementType === 'entree' ? 'Entrée stock' : 'Sortie stock' }}</h5>
+        <button type="button" class="btn-close" (click)="showMouvementModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>{{ mouvementStock.medicament?.nom }}</strong> (actuel: {{ mouvementStock.quantite }})</p>
+        <label class="luna-label">Quantité</label>
+        <input type="number" class="form-control luna-input" min="1" [(ngModel)]="mouvementQuantite" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showMouvementModal=false">Annuler</button>
+        <button class="btn btn-primary" (click)="confirmerMouvement()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade show" *ngIf="showBonEntreeModal" style="display:block;background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content luna-glass">
+      <div class="modal-header">
+        <h5 class="modal-title">Nouveau bon d'entrée</h5>
+        <button type="button" class="btn-close" (click)="showBonEntreeModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <label class="luna-label">Médicament</label>
+        <select class="form-control luna-input" [(ngModel)]="bonEntreeForm.medicamentId">
+          <option value="">Sélectionner</option>
+          <option *ngFor="let m of medicaments" [value]="m.id">{{ m.nom }}</option>
+        </select>
+        <label class="luna-label mt-2">Quantité</label>
+        <input type="number" min="1" class="form-control luna-input" [(ngModel)]="bonEntreeForm.quantite" />
+        <label class="luna-label mt-2">Lot</label>
+        <input class="form-control luna-input" [(ngModel)]="bonEntreeForm.lot" />
+        <label class="luna-label mt-2">Date</label>
+        <input type="date" class="form-control luna-input" [(ngModel)]="bonEntreeForm.dateEntree" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showBonEntreeModal=false">Annuler</button>
+        <button class="btn btn-primary" (click)="creerBonEntree()">Créer</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,121 @@
+<div class="profil-container">
+  <div class="profile-main">
+   <header class="profile-header-card">
+  <div class="profile-cover"></div>
+  <div class="profile-header-content">
+    <div class="avatar-wrapper">
+      <div class="avatar-large">
+        <i class="bi bi-person-fill"></i>
+      </div>
+    </div>
+    <div class="text-group">
+      <h1 class="user-name">{{ getRoleLabel() }}</h1>
+      <p class="user-username">{{ (user.telephone || 'admin') }}</p>
+      <span class="role-badge">{{ getRoleLabel() | uppercase }}</span>
+    </div>
+  </div>
+</header>
+
+    <div class="profile-grid" [class.with-sidebar]="isPersonnel()">
+      <div class="left-col">
+        <section class="glass-card personal-card">
+        <div class="profile-card">
+   <div class="card-header">
+                <i class="fas fa-user-circle"></i>
+                    <h3>Informations Personnelles</h3>
+          </div>
+        </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-icon">
+                <div class="profile-info-icon"><i class="fas fa-user"></i></div>
+                </div>
+                <div>
+                  <label>NOM D'UTILISATEUR</label>
+                  <p>{{ (user.telephone || 'compte') }}</p>
+                </div>
+              </div>
+              <div class="info-item">
+                <div class="info-icon">
+                  <div class="profile-info-icon"><i class="fas fa-id-card"></i></div>
+                </div>
+                <div>
+                  <label>NOM COMPLET</label>
+                  <p>{{ user.prenom || '—' }} {{ user.nom || '' }}</p>
+                </div>
+              </div>
+
+              <div class="info-item"  >
+                <div class="info-icon">
+                  <div class="profile-info-icon"><i class="fas fa-hospital"></i></div>
+                </div>
+                <div>
+                  <label>MA CLINIQUE ASSOCIÉE</label>
+                  <p> {{ maClinique?.nom || '—' }}</p>
+                </div>
+              </div>
+             
+              <div class="info-item">
+                <div class="info-icon">
+                            <div class="profile-info-icon"><i class="fas fa-calendar-alt"></i></div>
+                </div>
+                <div>
+                  <label>DERINE CONNEXION </label>
+                  <p>{{ user.membreDepuis || '—' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <hr class="divider">
+
+          </div>
+        </section>
+
+        <section class="glass-card">
+          
+          <div class="card-header">
+            <div class="icon-box"><i class="bi bi-shield-lock"></i></div>
+            <h3 >Sécurité</h3>
+          </div>
+          <div class="card-body">
+            <div class="security-row">
+              <div class="sec-text">
+       <label>Mot de passe</label>
+                <p>••••••••••••</p>
+              </div>
+              <button class="btn" (click)="goToChangePassword()">
+                <i class="bi bi-key"></i>
+                Changer le mot de passe
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      @if (isPersonnel()) {
+        <div class="right-col">
+          <section class="glass-card">
+            <div class="card-header">
+              <div class="icon-box"><i class="bi bi-building"></i></div>
+              <h3>Ma Clinique</h3>
+            </div>
+            <div class="card-body">
+              @if (isLoadingClinique) {
+                <div class="loader-inner">Chargement...</div>
+              } @else if (clinique) {
+                <h4 class="clinic-name">{{ clinique.nom }}</h4>
+                <p class="clinic-location">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  {{ clinique.adresse }}
+                </p>
+              } @else {
+                <p class="no-data">Aucune clinique rattachée</p>
+              }
+            </div>
+          </section>
+        </div>
+      }
+    </div>
+  </div>
+</div>

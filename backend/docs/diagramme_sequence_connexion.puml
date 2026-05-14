@@ -1,0 +1,34 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Connexion utilisateur
+
+autonumber
+
+actor Utilisateur
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control AuthService as "Service Authentification"
+database DB as "Base de donnees"
+
+Utilisateur -> Frontend: Saisir email + mot de passe
+Frontend -> API: POST /auth/login (credentials)
+API -> AuthService: authentifier(credentials)
+AuthService -> DB: Rechercher utilisateur par email
+DB --> AuthService: Utilisateur + hash + roles
+AuthService -> AuthService: Verifier le mot de passe
+
+alt Identifiants valides
+	AuthService -> AuthService: Generer access token (JWT)
+	AuthService -> AuthService: Generer refresh token
+	AuthService --> API: Tokens + profil utilisateur
+	API --> Frontend: 200 OK + tokens + profil
+	Frontend -> Frontend: Stocker token + ouvrir session
+	Frontend --> Utilisateur: Redirection vers tableau de bord
+else Identifiants invalides
+	AuthService --> API: Erreur d'authentification
+	API --> Frontend: 401 Unauthorized
+	Frontend --> Utilisateur: Afficher message d'erreur
+end
+
+@enduml

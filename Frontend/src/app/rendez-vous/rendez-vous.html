@@ -1,0 +1,181 @@
+<div class="main-card">
+    <div class="licences-container">
+        <header class="page-header">
+            <div class="header-title">
+                <h1 class="luna-dark-text">{{ isPatient() ? 'Mes rendez-vous' : 'Gestion des rendez-vous' }}</h1>
+                <p class="page-subtitle">{{ isPatient() ? 'Prendre un rendez-vous et suivre vos créneaux' : 'Créer et suivre les rendez-vous de la clinique' }}</p>
+            </div>
+        </header>
+
+        <section class="messages-section">
+            <div class="alert alert-luna-success" *ngIf="successMessage">
+                <i class="fas fa-check-circle"></i> {{ successMessage }}
+            </div>
+            <div class="alert alert-luna-danger" *ngIf="error">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+            </div>
+        </section>
+
+        <div class="d-flex justify-content-end mb-3 gap-2">
+            <button class="btn btn-primary" *ngIf="isSecretaire()" (click)="ouvrirModalAjout()">
+                <i class="fas fa-plus"></i> Ajouter un rendez-vous
+            </button>
+            <button class="btn btn-primary" *ngIf="isPatient()" (click)="ouvrirModalPrendreRdv()">
+                <i class="fas fa-plus"></i> Prendre rendez-vous
+            </button>
+        </div>
+
+        <!-- Section de filtrage -->
+        <div class="filters-section mb-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="form-control search-input" placeholder="Rechercher par patient, médecin ou motif..."
+                            [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-control" [(ngModel)]="selectedStatus" (ngModelChange)="onSearchChange()">
+                        <option value="">Tous les statuts</option>
+                        <option value="PLANIFIE">Planifié</option>
+                        <option value="CONFIRME">Confirmé</option>
+                        <option value="ANNULE">Annulé</option>
+                        <option value="TERMINE">Terminé</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container luna-shadow" *ngIf="!loading; else loadingState">
+            <table class="licences-table">
+                <thead>
+                    <tr>
+                        <th>Date & Heure</th>
+                        <th>Patient</th>
+                        <th>Médecin</th>
+                        <th>Motif</th>
+                        <th>Statut</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let rdv of paginatedRendezVous" class="luna-row">
+                        <td class="date-cell">{{ formatDate(rdv.dateHeure) }}</td>
+                        <td>{{ rdv.patient?.nom }} {{ rdv.patient?.prenom }}</td>
+                        <td>Dr. {{ rdv.medecin?.nom }} {{ rdv.medecin?.prenom }}</td>
+                        <td>{{ rdv.motif }}</td>
+                        <td>
+                            <span class="status-pill" [ngClass]="rdv.statut === 'CONFIRME' ? 'badge-success' : rdv.statut === 'ANNULE' ? 'badge-danger' : 'badge-warning'">
+                                {{ getStatusLabel(rdv.statut || 'PLANIFIE') }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="action-group" *ngIf="isSecretaire()">
+                                <button class="btn-action btn-confirm" (click)="confirmerRendezVous(rdv.id!)"
+                                    [disabled]="rdv.statut === 'CONFIRME'" title="Confirmer">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn-action btn-edit" (click)="ouvrirModalModification(rdv)"
+                                    title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action btn-cancel" (click)="annulerRendezVous(rdv.id!)"
+                                    [disabled]="rdv.statut === 'ANNULE'" title="Annuler">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button class="btn-action btn-delete" (click)="supprimerRendezVous(rdv.id!)"
+                                    title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="paginatedRendezVous.length === 0">
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <p>Aucun rendez-vous trouvé</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="filteredRendezVous.length > 0">
+            <span class="pagination-info">
+                Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredRendezVous.length }} rendez-vous
+            </span>
+            <div class="pagination-controls">
+                <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <ng-container *ngFor="let page of totalPagesArray">
+                    <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+                        {{ page }}
+                    </button>
+                </ng-container>
+                <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <ng-template #loadingState>
+            <div class="loading-state">Chargement...</div>
+        </ng-template>
+    </div>
+</div>
+
+<div class="modal fade show" *ngIf="showModal" style="display: block; background: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {{ isEditMode ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous' }}
+                </h5>
+                <button type="button" class="btn-close" (click)="fermerModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3" *ngIf="!isPatient()">
+                        <label class="form-label">Patient *</label>
+                        <select class="form-control" [(ngModel)]="formData.patientId">
+                            <option value="">Sélectionner un patient</option>
+                            <option *ngFor="let p of patients" [value]="p.id">
+                                {{ p.nom }} {{ p.prenom }} ({{ p.telephone }})
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-12 mb-2" *ngIf="isPatient()">
+                        <p class="text-muted small mb-0">Rendez-vous pour votre compte patient.</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Médecin *</label>
+                        <select class="form-control" [(ngModel)]="formData.medecinId">
+                            <option value="">Sélectionner un médecin</option>
+                            <option *ngFor="let m of medecins" [value]="m.id">
+                                Dr. {{ m.nom }} {{ m.prenom }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date & Heure *</label>
+                        <input type="datetime-local" class="form-control" [(ngModel)]="formData.dateHeure">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Motif</label>
+                        <input type="text" class="form-control" [(ngModel)]="formData.motif"
+                            placeholder="Ex: Consultation">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="fermerModal()">Annuler</button>
+                <button type="button" class="btn btn-primary" (click)="sauvegarder()">
+                    {{ isEditMode ? 'Enregistrer' : 'Créer' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

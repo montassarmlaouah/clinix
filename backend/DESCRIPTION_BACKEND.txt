@@ -1,0 +1,104 @@
+DESCRIPTION COMPLETE DU BACKEND (PFE)
+
+1) VUE D'ENSEMBLE
+Backend Java Spring Boot (archi en couches) :
+Controllers -> Services -> Repositories -> Models (JPA).
+Securite Spring Security + JWT. Base PostgreSQL.
+Fonctions metier: gestion clinique, personnel, patients, soins,
+logistique, facturation, planning, notifications, etc.
+
+2) ARCHITECTURE EN COUCHES
+- controller/: expose les endpoints REST.
+- service/: logique metier et regles de gestion.
+- repository/: acces aux donnees via Spring Data JPA.
+- model/: entites JPA (domain).
+- dto/: objets de transfert (entrees/sorties API).
+- security/: auth, JWT, roles/permissions, filtres.
+- config/ et configuration/: initialisation et CORS.
+- exception/: gestion centralisee des erreurs.
+
+3) MODULES FONCTIONNELS PRINCIPAUX (API)
+- Authentification: login/register, profil, verification compte,
+  reset mot de passe par SMS.
+- Cliniques: creation, activation, occupation, admin clinique.
+- Services: services par clinique, lits disponibles.
+- Personnel: creation/gestion par role (medecin, infirmier, etc.).
+- Patients: creation, recherche, mise a jour, suppression.
+- Chambres: types, disponibilite, equipements, stats.
+- Equipements: inventaire, etat technique, statut, pannes.
+- Medicaments: catalogue et recherche.
+- Pharmaciens: activation/desactivation, suivi.
+- Rendez-vous: creation, confirmation, annulation, report.
+- Consultations: creation, diagnostic, listes.
+- Ordonnances: creation, signature, validation pharmacien.
+- Dossiers medicaux: antecedents et suivi.
+- Hospitalisations: admission, suivi, cloture.
+- Facturation: factures, paiements, impayes.
+- Absences/Conges: demandes, approbation, periodes.
+- Presences: marquage presence/absence, stats.
+- Plannings: hebdo/mensuel, validation, PDF.
+- Gardes: shifts jour/nuit, suivi.
+- Surveillances infirmieres: mesures, alertes, stats.
+- Administrations de traitements: planning et suivi.
+
+4) CONTROLLERS (EXEMPLES)
+Chaque controller mappe un module metier:
+AbsenceController, AdministrateurCliniqueController,
+ChambreController, CliniqueController, ConsultationController,
+DossierMedicalController, EquipementController,
+FacturationController, HospitalisationController,
+MedecinController, MedicamentController,
+NotificationController, OrdonnanceController,
+PatientController, PersonnelController, PharmacienController,
+PlanningController, RendezVousController,
+ServiceController, SurveillanceInfirmiereController, etc.
+
+5) SERVICES (EXEMPLES)
+AuthService, PatientService, MedecinService, RendezVousService,
+ConsultationService, DossierMedicalService, FacturationService,
+NotificationUtilisateurService, SmsService/TwilioService,
+ForgotPasswordService, PlanningPdfService, etc.
+
+6) REPOSITORIES (EXEMPLES)
+PatientRepository, MedecinRepository, RendezVousRepository,
+ConsultationRepository, DossierMedicalRepository,
+FactureRepository, EquipementRepository, MedicamentRepository,
+ChambreRepository, RoleRepository, PermissionRepository, etc.
+
+7) MODELS / ENTITES (EXEMPLES)
+User (classe de base), Patient, Medecin, Infirmier,
+Pharmacien, Radiologue, Secretaire, AdministrateurClinique,
+ChefPersonnel, ResponsableLogistique, TechnicienMaintenance,
+SuperAdministrateur, Role, Permission, Clinique, Service,
+Chambre, DossierMedical, Consultation, RendezVous, Ordonnance,
+Medicament, Equipement, Facture, Hospitalisation, Planning,
+Garde, Absence, Presence, NotificationUtilisateur, etc.
+
+8) SECURITE ET ROLES
+- JWT: filtre et utilitaires.
+- UserDetailsService et AppUserService.
+- AppRole (enum des roles):
+  SUPER_ADMIN, ADMIN_CLINIQUE, MEDECIN, INFIRMIER,
+  RADIOLOGUE, PHARMACIEN, SECRETAIRE, PATIENT,
+  RESPONSABLE_LOGISTIQUE, CHEF_PERSONNEL,
+  TECHNICIEN_MAINTENANCE.
+- SecurityConfig: regles d'acces par role.
+
+9) CONFIGURATION ET INIT
+- DataInitializer: creation/initialisation (ex: super admin).
+- WebConfig: CORS.
+- application.properties: DB, JWT, Twilio, etc.
+- PFEApplication: demarrage, async/scheduling/caching.
+
+10) OUTILS ET INTEGRATIONS
+- Spring Boot 3.5.6, Java 17
+- Spring Security + JWT
+- Spring Data JPA, PostgreSQL
+- Twilio (SMS)
+- iText (PDF)
+- Swagger/OpenAPI
+- Redis (optionnel)
+
+
+
+

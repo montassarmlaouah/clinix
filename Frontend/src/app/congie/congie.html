@@ -1,0 +1,171 @@
+<div class="page">
+  <div class="header">
+    <div class="title">
+      <h1 class="page-subtitle2">Demande de congé</h1>
+      <p  class="page-subtitle">Sélectionnez le jour de congé dans le calendrier et envoyez la demande.</p>
+    </div>
+  </div>
+
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+  </div>
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- Vue infirmier: créer une demande — uniquement le calendrier -->
+  <div class="card" *ngIf="isInfirmier">
+    <h3 style="margin-top:0;">Nouvelle demande</h3>
+    <p class="calendar-instruction">Sélectionnez le jour de congé dans le calendrier et envoyez la demande.</p>
+
+    <div class="calendar-wrap">
+      <div class="calendar-header">
+        <button type="button" class="btn-calendar" (click)="prevMonth()" aria-label="Mois précédent">‹</button>
+        <span class="calendar-title">{{ monthNames[calendarMonth] }} {{ calendarYear }}</span>
+        <button type="button" class="btn-calendar" (click)="nextMonth()" aria-label="Mois suivant">›</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span *ngFor="let w of dayLabels" class="calendar-weekday">{{ w }}</span>
+      </div>
+      <div class="calendar-grid">
+        <button
+          *ngFor="let d of getCalendarDays()"
+          type="button"
+          class="calendar-day"
+          [class.other-month]="!d.isCurrentMonth"
+          [class.selected]="d.isSelected"
+          [class.today]="d.isToday"
+          [class.past]="d.isPast"
+          [disabled]="d.isPast || !d.isCurrentMonth"
+          (click)="d.isCurrentMonth && !d.isPast && selectDay(d.date)">
+          {{ d.day }}
+        </button>
+      </div>
+    </div>
+
+    <div class="calendar-actions">
+      <button class="btn btn-primary" (click)="envoyerDemande()" [disabled]="isLoading || !dateDebut">
+        <span *ngIf="!isLoading">Envoyer la demande</span>
+        <span *ngIf="isLoading">En cours...</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Vue infirmier: mes demandes -->
+  <div class="card" *ngIf="isInfirmier">
+    <h3 style="margin-top:0;">Mes demandes</h3>
+    <div class="table-container" *ngIf="absences.length > 0; else emptyMine">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Motif</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of absences" class="luna-row">
+            <td>{{ a.dateDebut }} <span *ngIf="a.dateFin && a.dateFin !== a.dateDebut">→ {{ a.dateFin }}</span></td>
+            <td>{{ a.motif }}</td>
+            <td>
+              <span class="chip pending" *ngIf="a.statut === 'EN_ATTENTE'">En attente</span>
+              <span class="chip ok" *ngIf="a.statut === 'APPROUVEE'">Approuvée</span>
+              <span class="chip no" *ngIf="a.statut === 'REFUSEE'">Refusée</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyMine>
+      <p style="color:#64748b;font-weight:700;margin:0;">Aucune demande pour le moment.</p>
+    </ng-template>
+  </div>
+
+  <!-- Vue chef personnel: demandes en attente (optionnel mais utile car lien existe dans le menu) -->
+  <div class="card" *ngIf="isChefPersonnel">
+    <h3 style="margin-top:0;">Demandes en attente</h3>
+    <div class="table-container" *ngIf="pendingAbsences.length > 0; else emptyPending">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Infirmier</th>
+            <th>Période</th>
+            <th>Motif</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let a of pendingAbsences" class="luna-row">
+            <td>{{ (a.utilisateur?.nom || '') + ' ' + (a.utilisateur?.prenom || '') }}</td>
+            <td>{{ a.dateDebut }} <span *ngIf="a.dateFin && a.dateFin !== a.dateDebut">→ {{ a.dateFin }}</span></td>
+            <td>{{ a.motif }}</td>
+            <td style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button class="btn btn-primary" (click)="approuver(a.id!)" [disabled]="isLoadingAction">
+                Approuver
+              </button>
+              <button class="btn btn-secondary" (click)="refuser(a.id!)" [disabled]="isLoadingAction">
+                Refuser
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyPending>
+      <p style="color:#64748b;font-weight:700;margin:0;">Aucune demande en attente.</p>
+    </ng-template>
+  </div>
+
+  <!-- Vue chef personnel: historique -->
+  <div class="card" *ngIf="isChefPersonnel">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+      <div>
+        <h3 style="margin:0;">Historique des congés</h3>
+        <p style="margin:.35rem 0 0;color:#64748b;font-weight:700;">Toutes les demandes (en attente, approuvées, refusées).</p>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:end;">
+        <div>
+          <label>Du</label>
+          <input type="date" [(ngModel)]="filtreDebut" />
+        </div>
+        <div>
+          <label>Au</label>
+          <input type="date" [(ngModel)]="filtreFin" />
+        </div>
+        <button class="btn btn-secondary" (click)="loadHistory()">
+          Filtrer
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;">
+      <div class="table-container" *ngIf="historyAbsences.length > 0; else emptyHistory">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Infirmier</th>
+              <th>Période</th>
+              <th>Motif</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of historyAbsences" class="luna-row">
+              <td>{{ (a.utilisateur?.nom || '') + ' ' + (a.utilisateur?.prenom || '') }}</td>
+              <td>{{ a.dateDebut }} <span *ngIf="a.dateFin && a.dateFin !== a.dateDebut">→ {{ a.dateFin }}</span></td>
+              <td>{{ a.motif }}</td>
+              <td>
+                <span class="chip pending" *ngIf="a.statut === 'EN_ATTENTE'">En attente</span>
+                <span class="chip ok" *ngIf="a.statut === 'APPROUVEE'">Approuvée</span>
+                <span class="chip no" *ngIf="a.statut === 'REFUSEE'">Refusée</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #emptyHistory>
+        <p style="color:#64748b;font-weight:700;margin:0;">Aucun historique trouvé.</p>
+      </ng-template>
+    </div>
+  </div>
+</div>

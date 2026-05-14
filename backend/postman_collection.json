@@ -1,0 +1,964 @@
+{
+  "info": {
+    "name": "PFE Backend API - Luna Clinique",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection complète pour tester le backend Luna Clinique"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "medecinToken", "value": "" },
+    { "key": "infirmierToken", "value": "" },
+    { "key": "radiologueToken", "value": "" },
+    { "key": "patientToken", "value": "" },
+    { "key": "cliniqueId", "value": "" },
+    { "key": "patientId", "value": "" },
+    { "key": "medecinId", "value": "" },
+    { "key": "infirmierId", "value": "" },
+    { "key": "radiologueId", "value": "" },
+    { "key": "consultationId", "value": "" },
+    { "key": "ordonnanceId", "value": "" },
+    { "key": "rendezVousId", "value": "" },
+    { "key": "hospitalisationId", "value": "" },
+    { "key": "imagerieId", "value": "" },
+    { "key": "rapportId", "value": "" },
+    { "key": "urgenceId", "value": "" },
+    { "key": "messageId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}" }]
+  },
+  "item": [
+    {
+      "name": "01 - Auth",
+      "item": [
+        {
+          "name": "Login (Super Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    pm.collectionVariables.set('adminToken', jsonData.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"super.admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Login (Médecin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('medecinToken', jsonData.token);",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"TELEPHONE_MEDECIN\",\n  \"password\": \"MOT_DE_PASSE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Login (Infirmier)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('infirmierToken', jsonData.token);",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"TELEPHONE_INFIRMIER\",\n  \"password\": \"MOT_DE_PASSE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Login (Patient)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('patientToken', jsonData.token);",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"TELEPHONE_PATIENT\",\n  \"password\": \"MOT_DE_PASSE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Vérifier compte",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/verifier-compte/21600000000" }
+          }
+        },
+        {
+          "name": "Profil utilisateur",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/auth/profile" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Patients (Secrétaire)",
+      "item": [
+        {
+          "name": "Créer un patient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('patientId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Ben Ali\",\n  \"prenom\": \"Mohamed\",\n  \"telephone\": \"21655000001\",\n  \"dateNaissance\": \"1990-05-15\",\n  \"sexe\": \"MASCULIN\",\n  \"groupeSanguin\": \"A+\",\n  \"adresse\": \"Tunis, Tunisie\",\n  \"cliniqueId\": \"{{cliniqueId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/patients" }
+          }
+        },
+        {
+          "name": "Lister les patients",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/patients" }
+          }
+        },
+        {
+          "name": "Obtenir un patient par ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/patients/{{patientId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Dossier Médical",
+      "item": [
+        {
+          "name": "Obtenir dossier par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/dossiers-medicaux/patient/{{patientId}}" }
+          }
+        },
+        {
+          "name": "Mettre à jour dossier",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"antecedents\": \"Diabète type 2, Hypertension\",\n  \"allergies\": [\"Pénicilline\", \"Aspirine\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/dossiers-medicaux/DOSSIER_ID" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Consultations (Médecin)",
+      "item": [
+        {
+          "name": "Créer consultation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('consultationId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"medecinId\": \"{{medecinId}}\",\n  \"motif\": \"Douleurs abdominales\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/consultations" }
+          }
+        },
+        {
+          "name": "Ajouter diagnostic",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnostic\": \"Gastrite aiguë\",\n  \"observations\": \"Douleurs épigastriques, sensibilité à la palpation\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/consultations/{{consultationId}}/diagnostic" }
+          }
+        },
+        {
+          "name": "Consultations par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/consultations/patient/{{patientId}}" }
+          }
+        },
+        {
+          "name": "Consultations par médecin",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/consultations/medecin/{{medecinId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Ordonnances",
+      "item": [
+        {
+          "name": "Créer ordonnance (avec consultation)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('ordonnanceId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consultationId\": \"{{consultationId}}\",\n  \"medicaments\": [\n    {\n      \"medicament\": \"Oméprazole 20mg\",\n      \"dosage\": \"20mg\",\n      \"frequence\": \"1 fois par jour\",\n      \"duree\": \"14 jours\",\n      \"instructions\": \"À jeun, 30 min avant le repas\"\n    },\n    {\n      \"medicament\": \"Gaviscon\",\n      \"dosage\": \"10ml\",\n      \"frequence\": \"3 fois par jour\",\n      \"duree\": \"7 jours\",\n      \"instructions\": \"Après les repas\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ordonnances" }
+          }
+        },
+        {
+          "name": "Créer ordonnance (sans consultation)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medecinId\": \"{{medecinId}}\",\n  \"patientId\": \"{{patientId}}\",\n  \"medicaments\": [\n    {\n      \"medicament\": \"Paracétamol 1g\",\n      \"dosage\": \"1g\",\n      \"frequence\": \"3 fois par jour\",\n      \"duree\": \"5 jours\",\n      \"instructions\": \"Si douleur, max 3g/jour\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/ordonnances" }
+          }
+        },
+        {
+          "name": "Lister toutes les ordonnances",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances" }
+          }
+        },
+        {
+          "name": "Ordonnances par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances?patientId={{patientId}}" }
+          }
+        },
+        {
+          "name": "Ordonnances non validées",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances?nonValideesOnly=true" }
+          }
+        },
+        {
+          "name": "Signer ordonnance",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances/{{ordonnanceId}}/signer" }
+          }
+        },
+        {
+          "name": "Télécharger PDF ordonnance",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances/{{ordonnanceId}}/pdf" }
+          }
+        },
+        {
+          "name": "Supprimer ordonnance",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/ordonnances/{{ordonnanceId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Rendez-vous",
+      "item": [
+        {
+          "name": "Créer rendez-vous",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('rendezVousId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"medecinId\": \"{{medecinId}}\",\n  \"dateHeure\": \"2026-04-15T10:00:00\",\n  \"motif\": \"Contrôle de routine\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous" }
+          }
+        },
+        {
+          "name": "Lister tous les rendez-vous",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous" }
+          }
+        },
+        {
+          "name": "Rendez-vous par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/patient/{{patientId}}" }
+          }
+        },
+        {
+          "name": "Rendez-vous par médecin",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/medecin/{{medecinId}}" }
+          }
+        },
+        {
+          "name": "Confirmer rendez-vous",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/{{rendezVousId}}/confirmer" }
+          }
+        },
+        {
+          "name": "Annuler rendez-vous",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/{{rendezVousId}}/annuler" }
+          }
+        },
+        {
+          "name": "Reporter rendez-vous",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/{{rendezVousId}}/reporter?nouvelleDate=2026-04-20T14:00:00" }
+          }
+        },
+        {
+          "name": "Supprimer rendez-vous",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/rendez-vous/{{rendezVousId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Constantes Vitales (Infirmier)",
+      "item": [
+        {
+          "name": "Saisir constantes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{infirmierToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tension\": 12.8,\n  \"temperature\": 37.2,\n  \"frequenceCardiaque\": 72,\n  \"saturationOxygene\": 98,\n  \"poids\": 75.5,\n  \"glycemie\": 1.1,\n  \"patient\": { \"id\": \"{{patientId}}\" },\n  \"infirmier\": { \"id\": \"{{infirmierId}}\" }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/constantes-vitales" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Surveillance Infirmière",
+      "item": [
+        {
+          "name": "Créer surveillance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{infirmierToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"infirmierId\": \"{{infirmierId}}\",\n  \"tensionArterielleSystemique\": 120,\n  \"tensionArterielleDiastolique\": 80,\n  \"frequenceCardiaque\": 72,\n  \"saturationOxygene\": 98.0,\n  \"temperature\": 37.1,\n  \"glycemieCapillaire\": 1.2,\n  \"scoreGlasgow\": 15,\n  \"observations\": \"Patient stable\",\n  \"soinsRealises\": \"Pansement refait\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/surveillances" }
+          }
+        },
+        {
+          "name": "Surveillances par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/surveillances/patient/{{patientId}}" }
+          }
+        },
+        {
+          "name": "Alertes actives",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/surveillances/alertes" }
+          }
+        },
+        {
+          "name": "Statistiques patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/surveillances/stats/patient/{{patientId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Administration Traitements (Infirmier)",
+      "item": [
+        {
+          "name": "Créer administration",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{infirmierToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"infirmierId\": \"{{infirmierId}}\",\n  \"typeTraitement\": \"MEDICAMENT\",\n  \"nomMedicament\": \"Oméprazole\",\n  \"dosage\": \"20mg\",\n  \"voieAdministration\": \"ORALE\",\n  \"administre\": false\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/administrations" }
+          }
+        },
+        {
+          "name": "Marquer comme administré",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"observations\": \"Administré sans incident\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/administrations/ADMIN_ID/administrer" }
+          }
+        },
+        {
+          "name": "Traitements du jour",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/administrations/patient/{{patientId}}/jour" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Radiologie (NOUVEAU)",
+      "item": [
+        {
+          "name": "Demander examen (Médecin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('imagerieId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"medecinId\": \"{{medecinId}}\",\n  \"type\": \"RADIOGRAPHIE\",\n  \"motif\": \"Suspicion de fracture du poignet droit\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/imageries/demander" }
+          }
+        },
+        {
+          "name": "Lister demandes en attente",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{radiologueToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/imageries/en-attente" }
+          }
+        },
+        {
+          "name": "Prendre en charge examen (Radiologue)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{radiologueToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/imageries/{{imagerieId}}/prendre-en-charge?radiologueId={{radiologueId}}" }
+          }
+        },
+        {
+          "name": "Terminer examen + upload fichier",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{radiologueToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fichier\": \"/images/radio_poignet_001.dcm\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/imageries/{{imagerieId}}/terminer" }
+          }
+        },
+        {
+          "name": "Créer rapport imagerie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('rapportId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{radiologueToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imagerieId\": \"{{imagerieId}}\",\n  \"radiologueId\": \"{{radiologueId}}\",\n  \"observations\": \"Fracture non déplacée du radius distal droit\",\n  \"conclusion\": \"Fracture de Pouteau-Colles. Immobilisation par attelle recommandée. Contrôle à J+15.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/rapports-imagerie" }
+          }
+        },
+        {
+          "name": "Valider et signer rapport",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{radiologueToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/rapports-imagerie/{{rapportId}}/valider?radiologueId={{radiologueId}}" }
+          }
+        },
+        {
+          "name": "Obtenir rapport par imagerie",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/rapports-imagerie/imagerie/{{imagerieId}}" }
+          }
+        },
+        {
+          "name": "Imageries par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/imageries/patient/{{patientId}}" }
+          }
+        },
+        {
+          "name": "Imageries par médecin demandeur",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/imageries/medecin/{{medecinId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Urgences (NOUVEAU)",
+      "item": [
+        {
+          "name": "Signaler urgence",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('urgenceId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"signaleParId\": \"{{infirmierId}}\",\n  \"motif\": \"Détresse respiratoire\",\n  \"description\": \"SpO2 à 85%, patient dyspnéique, cyanose des extrémités\",\n  \"niveau\": \"CRITIQUE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/urgences" }
+          }
+        },
+        {
+          "name": "Lister urgences actives",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/urgences/actives" }
+          }
+        },
+        {
+          "name": "Urgences en attente",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/urgences/en-attente" }
+          }
+        },
+        {
+          "name": "Prendre en charge urgence (Médecin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/urgences/{{urgenceId}}/prendre-en-charge?medecinId={{medecinId}}" }
+          }
+        },
+        {
+          "name": "Mettre en traitement",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"O2 par masque à haute concentration, voie veineuse posée, bilan sanguin demandé\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/urgences/{{urgenceId}}/traiter" }
+          }
+        },
+        {
+          "name": "Résoudre urgence",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Patient stabilisé, SpO2 remontée à 96%. Transfert en pneumologie pour surveillance.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/urgences/{{urgenceId}}/resoudre" }
+          }
+        },
+        {
+          "name": "Urgences par patient",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/urgences/patient/{{patientId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Messagerie Interne (NOUVEAU)",
+      "item": [
+        {
+          "name": "Envoyer message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('messageId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expediteurId\": \"{{medecinId}}\",\n  \"destinataireId\": \"{{radiologueId}}\",\n  \"sujet\": \"Résultat radio patient Ben Ali\",\n  \"contenu\": \"Bonjour, pourriez-vous me transmettre les résultats de la radiographie du poignet demandée ce matin ? Merci.\",\n  \"priorite\": \"NORMALE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/messages" }
+          }
+        },
+        {
+          "name": "Envoyer message urgent",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expediteurId\": \"{{infirmierId}}\",\n  \"destinataireId\": \"{{medecinId}}\",\n  \"sujet\": \"Alerte patient chambre 12\",\n  \"contenu\": \"Le patient en chambre 12 présente une chute de tension importante (8/5). Intervention requise.\",\n  \"priorite\": \"URGENTE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/messages" }
+          }
+        },
+        {
+          "name": "Messages reçus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/recus/{{medecinId}}" }
+          }
+        },
+        {
+          "name": "Messages envoyés",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/envoyes/{{medecinId}}" }
+          }
+        },
+        {
+          "name": "Messages non lus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/non-lus/{{medecinId}}" }
+          }
+        },
+        {
+          "name": "Compter messages non lus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/non-lus/{{medecinId}}/count" }
+          }
+        },
+        {
+          "name": "Conversation entre 2 utilisateurs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/conversation/{{medecinId}}/{{radiologueId}}" }
+          }
+        },
+        {
+          "name": "Contacts (liste conversations)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/messages/contacts/{{medecinId}}" }
+          }
+        },
+        {
+          "name": "Marquer message comme lu",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/messages/{{messageId}}/lire?userId={{medecinId}}" }
+          }
+        },
+        {
+          "name": "Supprimer message",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/messages/{{messageId}}?userId={{medecinId}}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Hospitalisations",
+      "item": [
+        {
+          "name": "Créer hospitalisation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) pm.collectionVariables.set('hospitalisationId', jsonData.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient\": { \"id\": \"{{patientId}}\" },\n  \"motif\": \"Intervention chirurgicale programmée\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/hospitalisations" }
+          }
+        },
+        {
+          "name": "Hospitalisations en cours",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/hospitalisations/en-cours" }
+          }
+        },
+        {
+          "name": "Terminer hospitalisation",
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/hospitalisations/{{hospitalisationId}}/terminer?dateSortie=2026-04-15" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Planning & Gardes",
+      "item": [
+        {
+          "name": "Lister plannings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/plannings" }
+          }
+        },
+        {
+          "name": "Lister gardes",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/gardes" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Congés & Absences",
+      "item": [
+        {
+          "name": "Demander congé médecin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" },
+                        { "key": "Authorization", "value": "Bearer {{medecinToken}}" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medecinId\": \"{{medecinId}}\",\n  \"dateDebut\": \"2026-05-01\",\n  \"dateFin\": \"2026-05-07\",\n  \"typeConge\": \"ANNUEL\",\n  \"motif\": \"Congé annuel\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/conges-medecin" }
+          }
+        },
+        {
+          "name": "Demander absence (infirmier)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{infirmierId}}\",\n  \"dateDebut\": \"2026-05-10\",\n  \"dateFin\": \"2026-05-12\",\n  \"motif\": \"Congé personnel\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/absences" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 - Équipements & Alertes",
+      "item": [
+        {
+          "name": "Lister équipements",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/equipements" }
+          }
+        },
+        {
+          "name": "Signaler panne",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"equipementId\": \"EQUIP_ID\",\n  \"description\": \"Écran du moniteur ne s'allume plus\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/alertes/panne" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 - Notifications",
+      "item": [
+        {
+          "name": "Notifications du jour",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/notifications/today" }
+          }
+        },
+        {
+          "name": "Notifications non lues",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/notifications/unread" }
+          }
+        },
+        {
+          "name": "Compter non lues",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/notifications/unread/count" }
+          }
+        }
+      ]
+    }
+  ]
+}

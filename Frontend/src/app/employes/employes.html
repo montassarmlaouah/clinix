@@ -1,0 +1,621 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">
+          {{ isSuperAdmin ? 'Gestion des Médecins' : 'Gestion du Personnel' }}
+        </h1>
+        <p class="page-subtitle">
+          {{
+            isSuperAdmin
+              ? 'Gérer les médecins dans toutes les cliniques'
+              : 'Gérer les médecins, infirmiers et tout le personnel médical de la clinique'
+          }}
+        </p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2" *ngIf="pdfInvitationBase64">
+        <span><i class="fas fa-file-pdf me-2"></i> PDF d’identifiants disponible. Vous pouvez l’ouvrir ou le télécharger ici.</span>
+        <div class="btn-group btn-group-sm flex-shrink-0">
+          <button type="button" class="btn btn-outline-primary" (click)="voirPdfInvitation()">
+            <i class="fas fa-eye"></i> Voir le PDF
+          </button>
+          <button type="button" class="btn btn-primary" (click)="telechargerPdfInvitation()">
+            <i class="fas fa-download"></i> Télécharger
+          </button>
+          <button type="button" class="btn btn-outline-secondary" (click)="effacerBandeauPdf()" title="Masquer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error && !showModal">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-section luna-glass">
+      <div class="tabs-container">
+        <button class="tab" *ngIf="isSuperAdmin || isAdminClinique" [class.active]="activeTab === 'medecins'" (click)="changerTab('medecins')">
+          <i class="fas fa-user-md"></i> Médecins <span class="tab-count">{{getTabCount('medecins')}}</span>
+        </button>
+        <button class="tab" *ngIf="isSuperAdmin" [class.active]="activeTab === 'infirmiers'" (click)="changerTab('infirmiers')">
+          <i class="fas fa-user-nurse"></i> Personnel clinique <span class="tab-count">{{getTabCount('infirmiers')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique && !isSuperAdmin" [class.active]="activeTab === 'infirmiers'" (click)="changerTab('infirmiers')">
+          <i class="fas fa-user-nurse"></i> Infirmiers <span class="tab-count">{{getTabCount('infirmiers')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique" [class.active]="activeTab === 'pharmaciens'" (click)="changerTab('pharmaciens')">
+          <i class="fas fa-pills"></i> Pharmaciens <span class="tab-count">{{getTabCount('pharmaciens')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique" [class.active]="activeTab === 'secretaires'" (click)="changerTab('secretaires')">
+          <i class="fas fa-headset"></i> Secrétaires <span class="tab-count">{{getTabCount('secretaires')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique" [class.active]="activeTab === 'radiologues'" (click)="changerTab('radiologues')">
+          <i class="fas fa-x-ray"></i> Radiologues <span class="tab-count">{{getTabCount('radiologues')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique" [class.active]="activeTab === 'chefs'" (click)="changerTab('chefs')">
+          <i class="fas fa-user-tie"></i> Chefs du personnel <span class="tab-count">{{getTabCount('chefs')}}</span>
+        </button>
+        <button class="tab" *ngIf="isAdminClinique" [class.active]="activeTab === 'techniciens-maintenance'" (click)="changerTab('techniciens-maintenance')">
+          <i class="fas fa-screwdriver-wrench"></i> Techniciens maintenance <span class="tab-count">{{getTabCount('techniciens-maintenance')}}</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Statistiques -->
+    <section class="stats-grid">
+      <div class="stat-card card-total">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getTotalPersonnel() }}</span>
+          <span class="stat-label">Total personnel</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-active">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getActiveCount() }}</span>
+          <span class="stat-label">Actifs</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-pending">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getPendingCount() }}</span>
+          <span class="stat-label">En attente</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-role">
+        <div class="stat-icon"><i class="fas" [ngClass]="getRoleIcon()"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getPersonnelList().length }}</span>
+          <span class="stat-label">{{ getRoleLabel() }}s</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section Filtres -->
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher un {{ getRoleLabel() }}</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange()"
+            placeholder="Nom, prénom, téléphone...">
+        </div>
+      </div>
+    </section>
+
+    <div class="header-actions" *ngIf="activeTab !== 'admins' && (!isSuperAdmin || activeTab !== 'medecins')" style="margin-top: 20px;">
+      <button class="btn btn-primary" (click)="ouvrirModal(getRoleValue())">
+        <i class="fas fa-user-plus"></i> Ajouter {{getRoleLabel() || 'Personnel'}}
+      </button>
+    </div>
+    <div class="alert alert-warning d-flex align-items-start gap-2 mt-2 mx-0" *ngIf="isSuperAdmin && activeTab === 'medecins'" role="status">
+      <i class="fas fa-info-circle mt-1"></i>
+      <span>Super administrateur : l’ajout de médecins depuis cette liste n’est pas disponible ici (réservé à l’administration par clinique).</span>
+    </div>
+
+    <!-- Tableau du Personnel -->
+    <div class="table-container luna-shadow">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Personnel</th>
+            <th>Contact</th>
+            <th *ngIf="activeTab === 'medecins'">Spécialité</th>
+            <th *ngIf="!isSuperAdmin">Établissement</th>
+            <th>Statut</th>
+            <th>Date d'ajout</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let personnel of getPaginatedPersonnelList()" class="luna-row">
+            <td>
+              <div class="personnel-info">
+                <div class="personnel-avatar">
+                  <i class="fas" [ngClass]="getPersonnelIcon(personnel.role || getRoleValue())"></i>
+                </div>
+                <div class="personnel-details">
+                  <div class="personnel-name">{{personnel.nom || 'Non renseigné'}} {{personnel.prenom || ''}}</div>
+                  <div class="personnel-role">{{ getRoleDisplay(personnel.role || getRoleValue()) }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="contact-info">
+                <div class="contact-phone">
+                  <i class="fas fa-phone"></i> {{personnel.telephone || 'N/A'}}
+                </div>
+
+              </div>
+            </td>
+            <td *ngIf="activeTab === 'medecins'">
+              <span class="specialite-badge">{{personnel.specialite || 'Généraliste'}}</span>
+            </td>
+            <td *ngIf="!isSuperAdmin">
+              <span class="clinique-name">{{personnel.clinique?.nom || 'Non assigné'}}</span>
+              <span *ngIf="personnel.clinique?.adresse" class="clinique-address">
+                {{personnel.clinique.adresse}}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="personnel.actif ? 'badge-success' : 'badge-warning'">
+                <i class="fas" [ngClass]="personnel.actif ? 'fa-check-circle' : 'fa-clock'"></i>
+                {{personnel.actif ? 'Actif' : 'En attente'}}
+              </span>
+            </td>
+            <td class="date-cell">
+              {{ personnel.dateCreation ? (personnel.dateCreation | date:'dd/MM/yyyy') : '—' }}
+            </td>
+            <td>
+              <div class="action-group">
+                <button class="btn-action btn-view" (click)="viewPersonnel(personnel)" title="Voir détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="getPaginatedPersonnelList().length === 0">
+            <td [attr.colspan]="activeTab === 'medecins' ? (isSuperAdmin ? 6 : 7) : 6" class="empty-state">
+              <i class="fas fa-users-slash"></i>
+              <p>Aucun {{getRoleLabel()}} trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="getFilteredPersonnelList().length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ getFilteredPersonnelList().length }} {{ getRoleLabel() }}s
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Ajout Personnel -->
+    <div class="modal fade show" *ngIf="showModal" style="display: block; background: rgba(0,0,0,0.5);" role="dialog" aria-modal="true" aria-labelledby="modalAjoutPersonnelTitle">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalAjoutPersonnelTitle">
+              <i class="fas fa-user-plus"></i> Ajouter {{getRoleLabel()}}
+            </h5>
+            <button type="button" class="btn-close" (click)="fermerModal()"></button>
+          </div>
+
+          <form>
+            <div class="modal-body">
+              <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div class="text-muted small">
+                  Étape {{ modalStep }} sur 3
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 1" [class.btn-outline-secondary]="modalStep !== 1" disabled>1. CIN</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 2" [class.btn-outline-secondary]="modalStep !== 2" disabled>2. Identité</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 3" [class.btn-outline-secondary]="modalStep !== 3" disabled>3. Envoi</button>
+                </div>
+              </div>
+
+              <div class="alert alert-luna-danger" *ngIf="error">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+              </div>
+              <div class="alert alert-info" *ngIf="isAdminClinique && nouveauPersonnel.role === 'MEDECIN'">
+                <i class="fas fa-hospital"></i>
+                Le médecin sera rattaché à votre clinique.
+              </div>
+
+              <!-- Étape 1 : CIN -->
+              <div class="detail-section" *ngIf="modalStep === 1">
+                <h6 class="section-title">
+                  <i class="fas fa-id-card"></i> Carte d’identité (CIN)
+                </h6>
+                <div class="row">
+                  <div class="col-md-12">
+                    <label>Numéro CIN <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.numeroPieceIdentite" name="cinEtape1"
+                           placeholder="Numéro de carte d’identité" autocomplete="off">
+                    <small class="text-muted">Obligatoire. Si vous sélectionnez un médecin existant à l’étape 2, le CIN peut être repris depuis son dossier.</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Étape 2 : identité (nom, prénom, téléphone, clinique, médecin…) -->
+              <ng-container *ngIf="modalStep === 2">
+
+              <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN'">
+                <h6 class="section-title">
+                  <i class="fas fa-search"></i> Médecin déjà dans le système (optionnel)
+                </h6>
+                <p class="text-muted small">Recherchez par nom, prénom ou téléphone pour rattacher un compte existant à votre clinique.</p>
+                <p class="text-muted small mb-2">Le numéro CIN saisi à l’étape 1 est aussi transmis au serveur pour affiner les résultats.</p>
+                <div class="row g-2 align-items-end mb-2">
+                  <div class="col-md-6">
+                    <label class="small">Recherche</label>
+                    <input type="text" class="form-control luna-input" [(ngModel)]="rechercheMedecinQuery" name="rq" placeholder="Nom, prénom ou téléphone (min. 2 caractères)">
+                  </div>
+                  <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-primary w-100" (click)="lancerRechercheMedecin()" [disabled]="rechercheMedecinLoading">
+                      <i class="fas fa-search" *ngIf="!rechercheMedecinLoading"></i>
+                      <i class="fas fa-spinner fa-spin" *ngIf="rechercheMedecinLoading"></i> Rechercher
+                    </button>
+                  </div>
+                  <div class="col-md-3" *ngIf="nouveauPersonnel.medecinExistantId">
+                    <button type="button" class="btn btn-outline-secondary w-100" (click)="effacerSelectionMedecin()">Effacer</button>
+                  </div>
+                </div>
+                <div class="table-responsive" *ngIf="resultatsRechercheMedecin.length">
+                  <table class="table table-sm table-bordered bg-white">
+                    <thead><tr><th>Nom</th><th>Téléphone</th><th>Spécialité</th><th>Clinique actuelle</th><th></th></tr></thead>
+                    <tbody>
+                      <tr *ngFor="let m of resultatsRechercheMedecin">
+                        <td>{{ m['prenom'] }} {{ m['nom'] }}</td>
+                        <td>{{ m['telephone'] }}</td>
+                        <td>{{ m['specialite'] }}</td>
+                        <td>{{ m['cliniqueNom'] || '—' }}</td>
+                        <td><button type="button" class="btn btn-sm btn-primary" (click)="selectionnerMedecinExistant(m)">Choisir</button></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="alert alert-success py-2" *ngIf="nouveauPersonnel.medecinExistantId">
+                  <i class="fas fa-link"></i> Rattachement : compte médecin existant sélectionné.
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-user-circle"></i> Informations personnelles
+                </h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Nom <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauPersonnel.nom"
+                             name="nom"
+                             required
+                             placeholder="Nom de famille">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Prénom <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauPersonnel.prenom"
+                             name="prenom"
+                             required
+                             placeholder="Prénom">
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Téléphone <span class="text-danger">*</span></label>
+                      <input type="tel"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauPersonnel.telephone"
+                             name="telephone"
+                             [required]="(nouveauPersonnel.medecinExistantId ?? '') === ''"
+                             minlength="8"
+                             maxlength="8"
+                             pattern="\d{8}"
+                             inputmode="numeric"
+                             placeholder="8 chiffres (sans 216)"
+                             [disabled]="!!nouveauPersonnel.medecinExistantId">
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>E-mail du collaborateur</label>
+                      <input type="email"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauPersonnel.email"
+                             name="emailStep2"
+                             placeholder="nom@exemple.com">
+                      <small class="text-muted">
+                        Requis seulement si vous choisissez <strong>E-mail + PDF</strong> à l'étape 3.
+                      </small>
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>E-mail en copie cachée (optionnel)</label>
+                      <input type="email"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauPersonnel.emailCopieInvitation"
+                             name="emailBcc"
+                             placeholder="Autre boîte (BCC), ex. autre clinique">
+                      <small class="text-muted">Reçoit une copie invisible du message de bienvenue.</small>
+                    </div>
+                  </div>
+                  <div class="col-md-12" *ngIf="isSuperAdmin">
+                    <div class="detail-item">
+                      <label>
+                        Clinique d'affectation
+                        <span class="text-danger">*</span>
+                        <small class="text-muted">(établissement du collaborateur)</small>
+                      </label>
+                      <select class="form-control luna-input"
+                              [(ngModel)]="nouveauPersonnel.cliniqueId"
+                              name="cliniqueId"
+                              [required]="isSuperAdmin">
+                        <option value="">Sélectionnez une clinique</option>
+                        <option *ngFor="let clinique of cliniques" [value]="clinique.id">
+                          {{clinique.nom}}
+                        </option>
+                      </select>
+                      <small class="text-muted" *ngIf="cliniques.length === 0">
+                        Aucune clinique disponible. Créez une clinique dans Gestion Cliniques.
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN' && !nouveauPersonnel.medecinExistantId">
+                <h6 class="section-title">
+                  <i class="fas fa-stethoscope"></i> Spécialité médicale
+                </h6>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Spécialité <span class="text-danger">*</span></label>
+                      <select class="form-control luna-input"
+                              [(ngModel)]="nouveauPersonnel.specialite"
+                              name="specialite"
+                              required>
+                        <option value="">Sélectionnez une spécialité</option>
+                        <option *ngFor="let spec of specialitesMedicales" [value]="spec">
+                          {{spec}}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              </ng-container>
+
+              <!-- Étape 3 : mode d’envoi (SMS / e-mail+PDF / PDF) -->
+              <div class="detail-section" *ngIf="modalStep === 3">
+                <h6 class="section-title">
+                  <i class="fas fa-paper-plane"></i> Envoi des identifiants
+                </h6>
+                <p class="text-muted small mb-2">
+                  <strong>Trois options</strong> : SMS <strong>TunisieSMS</strong>, <strong>e-mail avec PDF</strong>, ou <strong>PDF</strong>.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'TUNISIE_SMS'"
+                          (click)="setModeEnvoi('TUNISIE_SMS')">
+                    <i class="fas fa-sms"></i> TunisieSMS
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_CODE'"
+                          (click)="setModeEnvoi('PDF_CODE')">
+                    <i class="fas fa-envelope"></i> E-mail + PDF
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_ONLY'"
+                          (click)="setModeEnvoi('PDF_ONLY')">
+                    <i class="fas fa-file-pdf"></i> PDF
+                  </button>
+                </div>
+                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
+                  Mot de passe envoyé par SMS sur le numéro saisi à l’étape 2.
+                </p>
+                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  Un PDF (téléphone + mot de passe) est joint à l’e-mail ; après création : <strong>Voir le PDF</strong> / <strong>Télécharger</strong> en haut de page.
+                </p>
+                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'">
+                  Aucun e-mail : le PDF sera disponible en haut de page après création.
+                </p>
+                <div class="form-check mt-2 pt-2 border-top">
+                  <input type="checkbox" class="form-check-input" id="profilInvitationMinimalChk" [(ngModel)]="nouveauPersonnel.profilInvitationMinimal" name="profilInvitationMinimal">
+                  <label class="form-check-label" for="profilInvitationMinimalChk">Invitation avec profil minimal (données réduites dans le message, si pris en charge par la clinique)</label>
+                </div>
+              </div>
+
+              <div class="detail-section" *ngIf="modalStep === 3">
+                <h6 class="section-title">
+                  <i class="fas fa-lock"></i> Sécurité du compte
+                </h6>
+                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
+                  <i class="fas fa-sms"></i>
+                  <strong>TunisieSMS</strong> : le mot de passe est envoyé par SMS sur le numéro de l’étape 2.
+                </div>
+                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  <i class="fas fa-file-pdf"></i>
+                  <strong>E-mail + PDF</strong> : pièce jointe avec téléphone et mot de passe. Boutons <strong>Voir le PDF</strong> et <strong>Télécharger</strong> en haut de page après création.
+                </div>
+                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'">
+                  <i class="fas fa-file-pdf"></i>
+                  <strong>PDF</strong> : aucun e-mail. Utilisez <strong>Voir le PDF</strong> ou <strong>Télécharger</strong> en haut de page.
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="fermerModal()" [disabled]="isLoading">
+                Annuler
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="wizardPrecedent()" [disabled]="isLoading || modalStep === 1">
+                <i class="fas fa-arrow-left"></i> Précédent
+              </button>
+              <button type="button" class="btn btn-primary" (click)="wizardSuivant()" *ngIf="modalStep < 3" [disabled]="isLoading">
+                Suivant <i class="fas fa-arrow-right"></i>
+              </button>
+              <button type="button" class="btn btn-primary" (click)="ajouterPersonnel()" *ngIf="modalStep === 3" [disabled]="isLoading">
+                <i class="fas" [ngClass]="isLoading ? 'fa-spinner fa-spin' : 'fa-check-circle'"></i>
+                {{isLoading ? 'Création...' : 'Créer le compte'}}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedPersonnel" style="display: block; background: rgba(0,0,0,0.5);" role="dialog" aria-modal="true" aria-labelledby="modalDetailsPersonnelTitle">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalDetailsPersonnelTitle">
+              <i class="fas fa-user-circle"></i> Détails du personnel
+            </h5>
+            <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-id-card"></i> Informations personnelles
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nom complet</label>
+                    <p>{{ selectedPersonnel.nom }} {{ selectedPersonnel.prenom }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Rôle</label>
+                    <p *ngIf="getSelectedRole()">
+                      <span class="badge-luna badge-primary">
+                        {{ getRoleDisplay(getSelectedRole()) }}
+                      </span>
+                    </p>
+                    <p *ngIf="!getSelectedRole()">
+                      <span class="text-muted">Non renseigné</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Téléphone</label>
+                    <p>{{ selectedPersonnel.telephone || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>E-mail</label>
+                    <p>{{ selectedPersonnel.email || 'Non renseigné' }}</p>
+                  </div>
+                </div>
+
+                <div *ngIf="selectedPersonnel.specialite" class="col-md-6">
+                  <div class="detail-item">
+                    <label>Spécialité</label>
+                    <p>{{ selectedPersonnel.specialite }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date de création</label>
+                    <p>{{ selectedPersonnel.dateCreation | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section" *ngIf="!isSuperAdmin">
+              <h6 class="section-title">
+                <i class="fas fa-hospital"></i> Affectation
+              </h6>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="detail-item">
+                    <label>Clinique assignée</label>
+                    <p>{{ selectedPersonnel.clinique?.nom || 'Non assigné' }}</p>
+                    <small class="text-muted">{{ selectedPersonnel.clinique?.adresse || '' }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-chart-line"></i> Statut du compte
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Statut</label>
+                    <p>
+                      <span class="status-pill" [ngClass]="selectedPersonnel.actif ? 'badge-success' : 'badge-warning'">
+                        {{ selectedPersonnel.actif ? 'Actif' : 'En attente' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Dernière connexion</label>
+                    <p>{{ getSelectedLastLogin() }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

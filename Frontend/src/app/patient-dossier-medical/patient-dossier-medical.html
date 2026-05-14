@@ -1,0 +1,17 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/patient"><i class="bi bi-arrow-left"></i> Mon espace santé</a></nav>
+  <h1>Mon dossier médical</h1>
+
+  <div *ngIf="loading" class="text-muted">Chargement…</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel" *ngIf="dossier && !loading">
+    <p><strong>Date de création du dossier :</strong> {{ dossier.dateCreation | date:'medium' }}</p>
+    <p><strong>Antécédents :</strong> {{ dossier.antecedents || '—' }}</p>
+    <p><strong>Allergies :</strong>
+      <span *ngIf="dossier.allergies?.length">{{ (dossier.allergies ?? []).join(', ') }}</span>
+      <span *ngIf="!dossier.allergies?.length">—</span>
+    </p>
+    <p class="hint text-muted small">Les consultations détaillées sont visibles par votre équipe soignante. Pour vos ordonnances et analyses, utilisez les tuiles dédiées.</p>
+  </div>
+</div>

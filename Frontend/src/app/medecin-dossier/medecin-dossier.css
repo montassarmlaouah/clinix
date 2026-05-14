@@ -1,0 +1,14 @@
+.page-wrap { max-width: 720px; margin: 0 auto; padding: 1rem 1.25rem 2rem; }
+.back-nav { margin-bottom: 1rem; }
+.back-nav a { text-decoration: none; color: #0d6efd; }
+.lead { color: #64748b; margin-bottom: 1rem; }
+.panel {
+  padding: 1rem;
+  border: 1px solid #e8ecf1;
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+.dossier-detail h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+.mt-2 { margin-top: 0.5rem; }
+.hint { margin-top: 1rem; }

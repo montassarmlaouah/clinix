@@ -1,0 +1,251 @@
+<div class="dm-page">
+
+  <!-- Alerts -->
+  <div class="dm-alert dm-alert-success" *ngIf="success">
+    <i class="bi bi-check-circle-fill"></i> {{ success }}
+  </div>
+  <div class="dm-alert dm-alert-danger" *ngIf="error">
+    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+  </div>
+
+  <!-- Header -->
+  <div class="dm-header dm-header-with-action">
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+      <div class="dm-header-icon"><i class="bi bi-capsule"></i></div>
+      <div>
+        <h2 class="dm-title">{{ isPharmacien ? 'Pharmacie — Demandes en attente' : 'Demandes de Médicaments' }}</h2>
+        <p class="dm-subtitle">
+          {{ isPharmacien
+            ? 'Traitez les demandes de médicaments reçues de l\'équipe médicale.'
+            : 'Envoyez une demande de médicaments à la pharmacie pour un patient.' }}
+        </p>
+        <p class="dm-subtitle dm-highlight" *ngIf="isInfirmier">
+          Mode infirmier: demande simple avec sélection obligatoire de chambre.
+        </p>
+      </div>
+    </div>
+    <button type="button" class="dm-btn dm-btn-primary" (click)="ouvrirNouvelleDemande()" *ngIf="peutCreer">
+      <i class="bi bi-plus-lg"></i>
+      Nouvelle demande
+    </button>
+  </div>
+
+  <!-- Formulaire modal -->
+  <ng-template #formNouvelleDemande>
+    <div class="dm-modal-backdrop" *ngIf="showFormModal" (click)="fermerFormulaire()">
+      <div class="dm-modal" (click)="$event.stopPropagation()">
+        <div class="dm-modal-header">
+          <div>
+            <h3 class="dm-card-title dm-modal-title">
+              <i class="bi bi-plus-circle"></i>
+              Nouvelle demande
+            </h3>
+            <p class="dm-modal-subtitle">Envoyez une demande de médicaments à la pharmacie.</p>
+          </div>
+          <button type="button" class="dm-modal-close" (click)="fermerFormulaire()" [disabled]="loading" aria-label="Fermer">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <div class="dm-modal-body">
+          <div class="dm-form-grid">
+      <div class="dm-field">
+        <label>Patient *</label>
+        <select [(ngModel)]="patientId" class="dm-select">
+          <option value="">-- Sélectionner un patient --</option>
+          <option *ngFor="let p of patients" [value]="p.id">
+            {{ patientNom(p) }} — {{ p.numeroPatient }}
+          </option>
+        </select>
+      </div>
+
+      <div class="dm-field" *ngIf="isInfirmier">
+        <label>Chambre *</label>
+        <select [(ngModel)]="chambreId" class="dm-select">
+          <option value="">-- Sélectionner une chambre --</option>
+          <option *ngFor="let c of chambres" [value]="c.id">
+            Chambre {{ c.numero }}{{ c.service?.nom ? (' — ' + c.service?.nom) : '' }}
+          </option>
+        </select>
+      </div>
+
+      <div class="dm-field dm-field-full">
+        <label>Notes (optionnel)</label>
+        <input type="text" [(ngModel)]="notes" placeholder="Instructions générales, urgence…" class="dm-input" />
+      </div>
+
+      <!-- Recherche médicament -->
+      <div class="dm-field dm-field-full">
+        <label>Ajouter un médicament {{ isInfirmier ? '(1 seul)' : '' }}</label>
+        <div class="dm-quick-add">
+          <select [(ngModel)]="selectedMedicamentId" class="dm-select">
+            <option value="">-- Choisir un médicament --</option>
+            <option *ngFor="let m of tousMedicaments" [value]="m.id">
+              {{ m.nom }}{{ m.forme ? (' - ' + m.forme) : '' }}{{ m.dosage ? (' ' + m.dosage) : '' }}
+            </option>
+          </select>
+          <input
+            type="number"
+            [(ngModel)]="selectedQuantite"
+            min="1"
+            max="100"
+            class="dm-input dm-qty-add"
+            placeholder="Qté"
+          />
+          <button type="button" class="dm-btn dm-btn-primary" (click)="ajouterMedicamentDepuisSelect()">
+            <i class="bi bi-plus-lg"></i> Ajouter
+          </button>
+        </div>
+        <small class="dm-help">Vous pouvez aussi chercher rapidement ci-dessous.</small>
+        <div class="dm-search-wrap">
+          <input
+            type="text"
+            [(ngModel)]="searchMed"
+            (input)="rechercherMedicament()"
+            placeholder="Rechercher par nom ou code…"
+            class="dm-input"
+          />
+          <div class="dm-suggestions" *ngIf="medicamentsSuggestions.length">
+            <div
+              class="dm-suggestion-item"
+              *ngFor="let m of medicamentsSuggestions"
+              (click)="ajouterMedicament(m, selectedQuantite)">
+              <span class="dm-med-nom">{{ m.nom }}</span>
+              <span class="dm-med-meta">{{ m.forme }} {{ m.dosage }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items ajoutés -->
+    <div class="dm-items-list" *ngIf="items.length">
+      <h4 class="dm-items-title">Médicaments sélectionnés</h4>
+      <div class="dm-item" *ngFor="let item of items; let i = index">
+        <div class="dm-item-name">
+          <i class="bi bi-capsule-pill"></i> {{ item.medicamentNom }}
+        </div>
+        <div class="dm-item-controls">
+          <label>Qté</label>
+          <input type="number" [(ngModel)]="item.quantite" min="1" max="100" class="dm-qty" />
+          <input type="text" [(ngModel)]="item.instructions" placeholder="Instructions…" class="dm-instructions" />
+          <button class="dm-btn-remove" (click)="retirerItem(i)" title="Retirer">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+        <small class="dm-help" *ngIf="isInfirmier">En mode infirmier, un seul médicament par demande.</small>
+      </div>
+    </div>
+
+    <button
+      class="dm-btn dm-btn-primary"
+      (click)="creerDemande()"
+      [disabled]="loading || !patientId || !items.length || (isInfirmier && !chambreId)">
+      <i class="bi bi-send" *ngIf="!loading"></i>
+      <i class="bi bi-hourglass-split" *ngIf="loading"></i>
+      {{ loading ? 'Envoi…' : 'Envoyer à la pharmacie' }}
+    </button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-container *ngTemplateOutlet="formNouvelleDemande"></ng-container>
+
+  <!-- Liste demandes -->
+  <div class="dm-card">
+    <div class="dm-list-header">
+      <h3 class="dm-card-title">
+        <i class="bi bi-list-check"></i>
+        {{ isPharmacien ? 'Demandes reçues' : 'Mes demandes envoyées' }}
+      </h3>
+      <select [(ngModel)]="filtreStatut" class="dm-select dm-select-sm" *ngIf="!isPharmacien">
+        <option *ngFor="let s of statuts" [value]="s.value">{{ s.label }}</option>
+      </select>
+    </div>
+
+    <div class="dm-loader" *ngIf="loadingList">
+      <i class="bi bi-hourglass-split"></i> Chargement…
+    </div>
+
+    <div class="dm-empty" *ngIf="!loadingList && !demandesFiltrees.length">
+      <i class="bi bi-inbox"></i>
+      <p>{{ isPharmacien ? 'Aucune demande en attente.' : 'Aucune demande.' }}</p>
+    </div>
+
+    <!-- Vue pharmacien : cartes -->
+    <div class="dm-demandes-grid" *ngIf="isPharmacien && !loadingList && demandesFiltrees.length">
+      <div class="dm-demande-card" *ngFor="let d of demandesFiltrees">
+        <div class="dm-demande-card-header">
+          <div>
+            <div class="dm-demande-patient">{{ patientNom(d.patient) }}</div>
+            <div class="dm-demande-meta">
+              {{ d.patient.numeroPatient }} • Demandé par {{ d.demandeur.nom }} {{ d.demandeur.prenom }}
+            </div>
+          </div>
+          <span class="dm-badge" [ngClass]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span>
+        </div>
+        <div class="dm-demande-items">
+          <div class="dm-demande-item" *ngFor="let item of d.items">
+            <i class="bi bi-capsule-pill"></i>
+            <span>{{ item.medicament.nom }}</span>
+            <span class="dm-qty-badge">x{{ item.quantite }}</span>
+            <span class="dm-instr" *ngIf="item.instructions">— {{ item.instructions }}</span>
+          </div>
+        </div>
+        <div class="dm-demande-notes" *ngIf="d.notes">
+          <i class="bi bi-sticky"></i> {{ d.notes }}
+        </div>
+        <div class="dm-demande-notes dm-demande-chambre" *ngIf="$any(d).chambre?.numero">
+          <i class="bi bi-door-open"></i> Chambre {{ $any(d).chambre?.numero }}
+        </div>
+        <div class="dm-demande-actions">
+          <button class="dm-btn-action dm-btn-deliver" (click)="changerStatut(d.id, 'DELIVREE')">
+            <i class="bi bi-check-lg"></i> Délivrer
+          </button>
+          <button class="dm-btn-action dm-btn-partial" (click)="changerStatut(d.id, 'PARTIELLE')">
+            <i class="bi bi-dash-circle"></i> Partielle
+          </button>
+          <button class="dm-btn-action dm-btn-refuse" (click)="changerStatut(d.id, 'REFUSEE')">
+            <i class="bi bi-x-lg"></i> Refuser
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vue médecin / secrétaire : table -->
+    <div class="dm-table-wrap" *ngIf="!isPharmacien && !loadingList && demandesFiltrees.length">
+      <table class="dm-table">
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Médicaments</th>
+            <th>Chambre</th>
+            <th>Notes</th>
+            <th>Statut</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of demandesFiltrees">
+            <td>
+              <div class="dm-patient-name">{{ patientNom(d.patient) }}</div>
+              <div class="dm-patient-num">{{ d.patient.numeroPatient }}</div>
+            </td>
+            <td>
+              <div class="dm-items-preview">
+                <span class="dm-item-tag" *ngFor="let item of d.items">
+                  {{ item.medicament.nom }} ×{{ item.quantite }}
+                </span>
+              </div>
+            </td>
+            <td>{{ chambreLabel($any(d).chambre) }}</td>
+            <td>{{ d.notes || '—' }}</td>
+            <td><span class="dm-badge" [ngClass]="statutClass(d.statut)">{{ statutLabel(d.statut) }}</span></td>
+            <td>{{ formatDate(d.dateCreation) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

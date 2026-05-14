@@ -1,0 +1,125 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">SMS TunisieSMS</h1>
+        <p class="page-subtitle">
+          <ng-container *ngIf="isSuperAdmin">
+            Vue globale des cliniques, tests API MyStudents (sans saisie de clé par clinique — réservée aux administrateurs clinique).
+          </ng-container>
+          <ng-container *ngIf="!isSuperAdmin">
+            Configurez l’expéditeur et la clé API pour l’envoi des SMS (offre avec SMS inclus via la page Abonnement).
+          </ng-container>
+        </p>
+      </div>
+    </header>
+
+    <section class="form-card luna-glass vue-sms-table" *ngIf="isSuperAdmin">
+      <h2 class="section-title">Vue globale — cliniques &amp; SMS</h2>
+      <p class="hint-text">
+        SOAP serveur : <code>AuthHeader/KEY</code> + <code>Send(sender, mobile, sms)</code>.
+        REST : <code>POST /api/sms</code>. Utilisez la clé du menu correspondant sur MyStudents.
+      </p>
+      <div class="loader-wrap" *ngIf="loadingVue">
+        <p class="loader-text"><i class="fas fa-spinner fa-spin"></i> Chargement du tableau…</p>
+      </div>
+      <div class="table-wrap" *ngIf="!loadingVue && vueSmsOverview.length">
+        <table class="sms-overview-table">
+          <thead>
+            <tr>
+              <th>Clinique</th>
+              <th>Active</th>
+              <th>Offre SMS</th>
+              <th>Clé API</th>
+              <th>Expéditeur</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of vueSmsOverview">
+              <td>{{ r.nomClinique }}</td>
+              <td><span class="badge" [class.badge-ok]="r.actif">{{ r.actif ? 'Oui' : 'Non' }}</span></td>
+              <td><span class="badge" [class.badge-ok]="r.abonnementSmsGratuits">{{ r.abonnementSmsGratuits ? 'Oui' : 'Non' }}</span></td>
+              <td><span class="badge" [class.badge-ok]="r.cleApiConfiguree">{{ r.cleApiConfiguree ? 'Oui' : 'Non' }}</span> {{ r.cleMasquee }}</td>
+              <td>{{ r.tunisiesmsSender || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+    </section>
+
+    <section class="alert alert-luna-danger" *ngIf="isSuperAdmin && !cliniques.length && !loadingVue">
+      <i class="fas fa-info-circle"></i> Aucune clinique dans le système. Créez d’abord une clinique.
+    </section>
+
+
+
+
+    <!-- Admin clinique : formulaire expéditeur + clé API -->
+    <ng-container *ngIf="!isSuperAdmin && cliniqueIdSelectionnee">
+      <div class="loader-wrap" *ngIf="isLoading">
+        <p class="loader-text"><i class="fas fa-spinner fa-spin"></i> Chargement…</p>
+      </div>
+      <ng-container *ngIf="!isLoading">
+
+        <section class="form-card luna-glass" *ngIf="config">
+
+          <!-- Clinique associée -->
+          <div class="clinique-info-row" *ngIf="nomClinique">
+            <i class="fas fa-hospital-alt"></i>
+            <div>
+              <span class="clinique-info-value">Clinique associée</span>
+              <span class="clinique-info-value">{{ nomClinique }}</span>
+            </div>
+          </div>
+
+          <div class="form-row status-row">
+            <span class="status-label">Clé API enregistrée</span>
+            <span class="badge" [class.badge-ok]="config.cleConfiguree" [class.badge-off]="!config.cleConfiguree">
+              {{ config.cleConfiguree ? 'Oui' : 'Non' }}
+            </span>
+            <span class="cle-masquee" *ngIf="config.cleMasquee">{{ config.cleMasquee }}</span>
+          </div>
+
+          <div class="form-row">
+            <label class="luna-label">Clé API TunisieSMS</label>
+            <input
+              type="password"
+              class="form-control luna-input"
+              [(ngModel)]="nouvelleCle"
+              name="apiKey"
+              autocomplete="new-password"
+              placeholder="Saisir la clé API TunisieSMS" />
+            <p class="hint-text">
+              Une offre avec SMS inclus doit être active pour enregistrer une clé.
+            </p>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" (click)="enregistrer()" [disabled]="isSaving">
+              <i class="fas fa-save" *ngIf="!isSaving"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+              Enregistrer la clé
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="effacerCle()"
+              [disabled]="isSaving || !config.cleConfiguree">
+              <i class="fas fa-trash-alt"></i>
+              Effacer la clé
+            </button>
+          </div>
+        </section>
+      </ng-container>
+    </ng-container>
+  </div>
+</div>

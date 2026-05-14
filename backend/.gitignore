@@ -1,0 +1,4 @@
+# Secrets Stripe locaux (copie de stripe-local.properties.example)
+src/main/resources/stripe-local.properties
+# Secrets e-mail locaux (optionnel ; préférer variables d'environnement SPRING_MAIL_*)
+mail-local.properties

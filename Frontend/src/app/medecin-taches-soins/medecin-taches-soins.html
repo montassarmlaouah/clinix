@@ -1,0 +1,265 @@
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Tâches infirmiers</h1>
+      <p class="page-subtitle">Prescription de soins, suivi des administrations et validation du travail réalisé.</p>
+    </div>
+    <div class="header-actions" *ngIf="medecinId">
+      <button type="button" class="btn btn-luna-primary btn-open-demande" (click)="ouvrirModalDemande()">
+        <i class="bi bi-plus-lg"></i>
+        Nouvelle demande de soins
+      </button>
+    </div>
+  </header>
+
+  <div class="messages-section">
+    <div class="alert alert-luna-success" *ngIf="success">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>{{ success }}</span>
+    </div>
+    <div class="alert alert-luna-danger" *ngIf="error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ error }}</span>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card card-pending">
+      <i class="bi bi-hourglass-split stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statAFaire }}</span>
+        <span class="stat-label">À réaliser (infirmier)</span>
+      </div>
+    </div>
+    <div class="stat-card card-warning">
+      <i class="bi bi-clipboard-pulse stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statAValiderMedecin }}</span>
+        <span class="stat-label">À valider (médecin)</span>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <i class="bi bi-patch-check stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTraites }}</span>
+        <span class="stat-label">Traités (validé / refusé)</span>
+      </div>
+    </div>
+    <div class="stat-card card-total">
+      <i class="bi bi-list-task stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTotal }}</span>
+        <span class="stat-label">Total des tâches</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="filters-section" aria-label="Filtres">
+    <div class="filter-field">
+      <label for="search-taches">Rechercher dans le suivi</label>
+      <div class="input-with-icon">
+        <i class="bi bi-search"></i>
+        <input
+          id="search-taches"
+          type="search"
+          class="luna-input"
+          [(ngModel)]="searchText"
+          placeholder="Patient, infirmier, médicament, type de soin…"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal : nouvelle demande de soins -->
+  <div class="demande-modal-backdrop" *ngIf="showDemandeModal" (click)="fermerModalDemande()">
+    <div
+      class="demande-modal-panel luna-shadow"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="demande-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="demande-card-head demande-modal-head">
+        <h2 id="demande-modal-title" class="demande-card-title">Nouvelle demande de soins</h2>
+        <button type="button" class="demande-modal-close" (click)="fermerModalDemande()" aria-label="Fermer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="demande-card-body">
+        <div class="form-section">
+          <h3 class="form-section-title">
+            <i class="bi bi-people"></i>
+            Patient et infirmier
+          </h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="field-label">Patient <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="bi bi-person-heart"></i>
+                <select class="luna-input luna-select" [(ngModel)]="form.patientId">
+                  <option value="">Sélectionnez un patient</option>
+                  <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Infirmier <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="bi bi-heart-pulse"></i>
+                <select class="luna-input luna-select" [(ngModel)]="form.infirmierId">
+                  <option value="">Sélectionnez un infirmier</option>
+                  <option *ngFor="let i of infirmiers" [value]="i.id">{{ i.prenom }} {{ i.nom }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <p class="form-hint" *ngIf="infirmiers.length === 0">
+            Aucun infirmier listé pour votre clinique : vérifiez votre rattachement clinique.
+          </p>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title">
+            <i class="bi bi-capsule"></i>
+            Prescription
+          </h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="field-label">Type de soin <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="bi bi-tag"></i>
+                <input class="luna-input" [(ngModel)]="form.typeTraitement" placeholder="Ex. Soin / surveillance" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Prévu le</label>
+              <div class="input-with-icon">
+                <i class="bi bi-calendar-event"></i>
+                <input type="datetime-local" class="luna-input" [(ngModel)]="form.heureAdministration" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Médicament / acte</label>
+              <div class="input-with-icon">
+                <i class="bi bi-droplet-half"></i>
+                <input class="luna-input" [(ngModel)]="form.nomMedicament" placeholder="Ex. Paracétamol ou pansement" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Dosage / détail</label>
+              <div class="input-with-icon">
+                <i class="bi bi-prescription2"></i>
+                <input class="luna-input" [(ngModel)]="form.dosage" placeholder="Optionnel" />
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label">Voie</label>
+              <div class="input-with-icon">
+                <i class="bi bi-arrow-return-right"></i>
+                <select class="luna-input luna-select" [(ngModel)]="form.voieAdministration">
+                  <option value="PO">PO</option>
+                  <option value="IV">IV</option>
+                  <option value="IM">IM</option>
+                  <option value="SC">SC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demande-actions">
+          <button type="button" class="btn btn-luna-outline" (click)="fermerModalDemande()">
+            <i class="bi bi-x-lg"></i>
+            Annuler
+          </button>
+          <button type="button" class="btn btn-luna-outline" (click)="resetForm()">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Réinitialiser
+          </button>
+          <button type="button" class="btn btn-luna-primary" (click)="creerTache()">
+            <i class="bi bi-send-check"></i>
+            Envoyer la demande
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="suivi-block" aria-labelledby="suivi-heading">
+    <div class="suivi-header">
+      <h2 id="suivi-heading" class="suivi-title">Suivi des administrations</h2>
+    </div>
+
+    <div class="table-container luna-shadow" *ngIf="filteredSuivi.length">
+      <div class="table-scroll">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Prévu</th>
+              <th>Patient</th>
+              <th>Infirmier</th>
+              <th>Acte</th>
+              <th>Réalisé</th>
+              <th>Statut</th>
+              <th class="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="luna-row" *ngFor="let r of filteredSuivi">
+              <td class="date-cell">{{ r.heureAdministration | date : 'short' }}</td>
+              <td>
+                <div class="cell-primary">{{ nomPatient(r) }}</div>
+              </td>
+              <td>
+                <div class="cell-primary">{{ nomInfirmier(r) }}</div>
+              </td>
+              <td>
+                <div class="cell-primary">{{ r.nomMedicament }}</div>
+                <div class="cell-muted">{{ r.typeTraitement }}</div>
+              </td>
+              <td>
+                <span class="status-pill" [class.badge-done]="r.administre" [class.badge-todo]="!r.administre">
+                  <i class="bi" [class.bi-check2-circle]="r.administre" [class.bi-circle]="!r.administre"></i>
+                  {{ r.administre ? 'Oui' : 'Non' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="validationPillClass(r)">
+                  {{ libelleValidation(r) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group" *ngIf="r.administre && r.validationSoinsMedecin === 'EN_ATTENTE'">
+                  <button type="button" class="btn btn-luna-success btn-compact" (click)="valider(r, true)">Valider</button>
+                  <button type="button" class="btn btn-luna-danger-outline btn-compact" (click)="valider(r, false)">Refuser</button>
+                </div>
+                <span class="cell-muted" *ngIf="!(r.administre && r.validationSoinsMedecin === 'EN_ATTENTE')">—</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-container">
+        <p class="pagination-info">
+          Affichage de {{ filteredSuivi.length }} sur {{ suivi.length }} tâche{{ suivi.length > 1 ? 's' : '' }}
+          <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="suivi.length && !filteredSuivi.length">
+      <i class="bi bi-search"></i>
+      <p>Aucun résultat pour « {{ searchText }} ».</p>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!suivi.length">
+      <i class="bi bi-inbox"></i>
+      <p>Aucune tâche pour vos patients pour l’instant.</p>
+    </div>
+  </section>
+</div>

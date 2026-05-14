@@ -1,0 +1,539 @@
+<div class="main-card">
+  <div class="abo-container">
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="success">
+        <i class="fas fa-check-circle"></i> {{ success }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <div class="loader-luna" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin"></i> Chargement des offres…
+    </div>
+
+    <!-- ========== Super Admin ========== -->
+    <ng-container *ngIf="isSuperAdmin && !loading">
+      <div class="logistics-header sa-header-row">
+        <div>
+          <h2><i class="fas fa-crown"></i> Abonnements — Super administrateur</h2>
+          <p class="header-sub">
+            Gestion des offres, configuration Stripe (modales) et vues globales : abonnements au statut
+            <strong>Actif</strong> par clinique, et abonnements avec <strong>montant payé &gt; 0</strong> (corrigé côté API).
+            Clés test : variables d’environnement ou formulaire Stripe (chiffrement
+            <code>stripe.field-encryption-secret</code> en local).
+          </p>
+        </div>
+        <div class="sa-header-actions">
+          <button type="button" class="btn btn-outline-luna" (click)="ouvrirModalStripe()">
+            <i class="fab fa-stripe-s"></i> Configuration Stripe
+          </button>
+          <button type="button" class="btn btn-primary-luna" (click)="ouvrirModalNouvelleOffre()">
+            <i class="fas fa-plus"></i> Nouvelle offre
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card card-total">
+          <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ offres.length }}</span>
+            <span class="stat-label">Total offres</span>
+          </div>
+        </div>
+        <div class="stat-card card-available">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ offresActivesCount }}</span>
+            <span class="stat-label">Offres actives</span>
+          </div>
+        </div>
+        <div class="stat-card card-subs-active">
+          <div class="stat-icon"><i class="fas fa-hospital"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ abonnementsActifs.length }}</span>
+            <span class="stat-label">Abonnements actifs (cliniques)</span>
+          </div>
+        </div>
+        <div class="stat-card card-paid">
+          <div class="stat-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ abonnementsPayes.length }}</span>
+            <span class="stat-label">Abonnements payés</span>
+          </div>
+        </div>
+      </div>
+
+      <section class="sa-section">
+        <div class="sa-section-head">
+          <div>
+            <h3 class="sa-section-title"><i class="fas fa-heart-pulse"></i> Abonnements actifs (cliniques)</h3>
+            <p class="sa-section-sub">
+              Toutes les cliniques — lignes au statut <strong>Actif</strong> (y compris simulation ou Stripe confirmé).
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm-refresh" (click)="rafraichirAbonnementsSuperAdmin()">
+            <i class="fas fa-rotate"></i> Actualiser
+          </button>
+        </div>
+
+        <div class="table-container luna-shadow" *ngIf="abonnementsActifs.length">
+          <div class="table-scroll">
+            <table class="licences-table">
+              <thead>
+                <tr>
+                  <th>Clinique</th>
+                  <th>Offre</th>
+                  <th>Montant payé</th>
+                  <th>Période</th>
+                  <th>Statut</th>
+                  <th>Date début</th>
+                  <th>Date fin</th>
+                  <th>Stripe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of abonnementsActifs" class="luna-row">
+                  <td>
+                    <div class="cell-primary">{{ a.cliniqueNom || '—' }}</div>
+                    <div class="cell-sub mono" *ngIf="a.cliniqueId">ID {{ tronquerId(a.cliniqueId, 12) }}</div>
+                  </td>
+                  <td>
+                    <div class="cell-primary">{{ a.offreNom || '—' }}</div>
+                    <div class="cell-sub" *ngIf="a.offreCategorie">{{ a.offreCategorie }}</div>
+                  </td>
+                  <td><span class="price-badge">{{ a.montantPaye | number : '1.2-2' }} DT</span></td>
+                  <td>{{ a.periodeFacturation === 'YEARLY' ? 'Annuelle' : 'Mensuelle' }}</td>
+                  <td>
+                    <span class="status-pill" [ngClass]="statutAbonnementPillClass(a.statut)">
+                      <i class="fas fa-circle-check" *ngIf="(a.statut || '').toUpperCase() === 'ACTIF'"></i>
+                      {{ libelleStatutAbonnement(a.statut) }}
+                    </span>
+                  </td>
+                  <td class="date-cell">{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+                  <td class="date-cell">{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
+                  <td>
+                    <div class="cell-sub mono" [title]="a.stripeSubscriptionId || ''">
+                      {{ tronquerId(a.stripeSubscriptionId, 18) }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-container">
+            <p class="pagination-info">
+              {{ abonnementsActifs.length }} abonnement{{ abonnementsActifs.length > 1 ? 's' : '' }} actif{{
+                abonnementsActifs.length > 1 ? 's' : ''
+              }}
+              (toutes cliniques)
+            </p>
+          </div>
+        </div>
+
+        <div class="empty-state sa-empty" *ngIf="!abonnementsActifs.length">
+          <i class="fas fa-hospital"></i>
+          <p>Aucun abonnement au statut Actif pour l’instant.</p>
+        </div>
+      </section>
+
+      <section class="sa-section">
+        <div class="sa-section-head">
+          <div>
+            <h3 class="sa-section-title"><i class="fas fa-receipt"></i> Abonnements payés</h3>
+            <p class="sa-section-sub">
+              Toutes les cliniques — enregistrements avec <strong>montant payé &gt; 0</strong> (Stripe, simulation ou autre
+              encaissement enregistré).
+            </p>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm-refresh" (click)="rafraichirAbonnementsSuperAdmin()">
+            <i class="fas fa-rotate"></i> Actualiser
+          </button>
+        </div>
+
+        <div class="table-container luna-shadow" *ngIf="abonnementsPayes.length">
+          <div class="table-scroll">
+            <table class="licences-table">
+              <thead>
+                <tr>
+                  <th>Clinique</th>
+                  <th>Offre</th>
+                  <th>Montant payé</th>
+                  <th>Période</th>
+                  <th>Statut</th>
+                  <th>Date début</th>
+                  <th>Date fin</th>
+                  <th>Stripe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of abonnementsPayes" class="luna-row">
+                  <td>
+                    <div class="cell-primary">{{ a.cliniqueNom || '—' }}</div>
+                    <div class="cell-sub mono" *ngIf="a.cliniqueId">ID {{ tronquerId(a.cliniqueId, 12) }}</div>
+                  </td>
+                  <td>
+                    <div class="cell-primary">{{ a.offreNom || '—' }}</div>
+                    <div class="cell-sub" *ngIf="a.offreCategorie">{{ a.offreCategorie }}</div>
+                  </td>
+                  <td><span class="price-badge">{{ a.montantPaye | number : '1.2-2' }} DT</span></td>
+                  <td>{{ a.periodeFacturation === 'YEARLY' ? 'Annuelle' : 'Mensuelle' }}</td>
+                  <td>
+                    <span class="status-pill" [ngClass]="statutAbonnementPillClass(a.statut)">
+                      <i class="fas fa-circle-check" *ngIf="(a.statut || '').toUpperCase() === 'ACTIF'"></i>
+                      {{ libelleStatutAbonnement(a.statut) }}
+                    </span>
+                  </td>
+                  <td class="date-cell">{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+                  <td class="date-cell">{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
+                  <td>
+                    <div class="cell-sub mono" [title]="a.stripeSubscriptionId || ''">
+                      {{ tronquerId(a.stripeSubscriptionId, 18) }}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-container">
+            <p class="pagination-info">
+              Affichage de {{ abonnementsPayes.length }} abonnement{{ abonnementsPayes.length > 1 ? 's' : '' }} avec paiement
+            </p>
+          </div>
+        </div>
+
+        <div class="empty-state sa-empty" *ngIf="!abonnementsPayes.length">
+          <i class="fas fa-credit-card"></i>
+          <p>Aucun abonnement payé enregistré pour l’instant.</p>
+        </div>
+      </section>
+
+      <div class="table-container luna-shadow" *ngIf="offres.length">
+        <table class="offres-table">
+          <thead>
+            <tr>
+              <th>Offre</th>
+              <th>Mensuel</th>
+              <th>Annuel</th>
+              <th>Stripe</th>
+              <th>SMS</th>
+              <th>Durée</th>
+              <th>Active</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of offres" class="luna-row">
+              <td>
+                <div class="offre-info">
+                  <div class="offre-icon"><i class="fas fa-box-open"></i></div>
+                  <div class="offre-details">
+                    <div class="offre-name">{{ o.nom }}</div>
+                    <div class="offre-meta">{{ o.categorie }} — ID {{ o.id }}</div>
+                    <div class="offre-limits">
+                      <span class="limit-chip" *ngFor="let limit of resumeLimites(o)">{{ limit }}</span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="price-badge">{{ o.prixMensuel | number : '1.2-2' }} DT</span></td>
+              <td><span class="price-badge muted-annuel">{{ o.prixAnnuel | number : '1.2-2' }} DT</span></td>
+              <td>
+                <span class="badge-luna" [ngClass]="o.stripeSynchronise ? 'badge-success' : 'badge-warn'">
+                  <i class="fas" [ngClass]="o.stripeSynchronise ? 'fa-check' : 'fa-exclamation-triangle'"></i>
+                  {{ o.stripeSynchronise ? 'OK' : 'À sync' }}
+                </span>
+              </td>
+              <td><span class="badge-luna badge-info">{{ o.smsGratuitsInclus }} SMS</span></td>
+              <td>
+                <input
+                  type="number"
+                  min="1"
+                  max="36"
+                  class="luna-input sm"
+                  [value]="o.dureeMois ?? 1"
+                  (blur)="majDureeOffre(o, $any($event.target).value)"
+                />
+              </td>
+              <td>
+                <button type="button" class="status-toggle" [class.active]="o.actif" (click)="basculerActif(o)">
+                  <i class="fas" [ngClass]="o.actif ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+                  {{ o.actif ? 'Oui' : 'Non' }}
+                </button>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button type="button" class="btn-action btn-edit" title="Modifier" (click)="modifierOffre(o)">
+                    <i class="fas fa-pen"></i>
+                  </button>
+                  <button type="button" class="btn-action btn-stripe" title="Sync Stripe" (click)="synchroniserOffreStripe(o)">
+                    <i class="fab fa-stripe-s"></i>
+                  </button>
+                  <button type="button" class="btn-action btn-delete" title="Supprimer" (click)="supprimerOffre(o)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" *ngIf="!offres.length">
+        <i class="fas fa-inbox"></i>
+        <p>Aucune offre. Utilisez « Nouvelle offre » pour en créer une.</p>
+      </div>
+
+      <!-- Modal Configuration Stripe (super admin) -->
+      <div class="abo-modal-backdrop" *ngIf="showModalStripe" (click)="fermerModalStripe()">
+        <div class="abo-modal-panel" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="abo-modal-stripe-title">
+          <div class="abo-modal-head">
+            <h3 id="abo-modal-stripe-title" class="abo-modal-title"><i class="fab fa-stripe-s"></i> Configuration Stripe</h3>
+            <button type="button" class="abo-modal-close" (click)="fermerModalStripe()" aria-label="Fermer"><i class="fas fa-times"></i></button>
+          </div>
+          <ng-container *ngIf="stripeCfg as cfg">
+            <div class="abo-modal-body">
+              <p class="stripe-hint muted">{{ cfg.securiteCle }}</p>
+              <p class="stripe-hint muted">{{ cfg.remarqueStripeTest }}</p>
+              <ul class="stripe-status-list">
+                <li>
+                  <i class="fas fa-key text-primary"></i>
+                  Clé secrète utilisée : <strong>{{ cfg.stripeSecretConfigured ? 'oui' : 'non' }}</strong> (env:
+                  {{ cfg.secretResolvedFromEnvironment ? 'oui' : 'non' }})
+                </li>
+                <li>
+                  <i class="fas fa-plug text-primary"></i>
+                  Webhook : <strong>{{ cfg.webhookConfigured ? 'configuré' : 'non configuré' }}</strong> (env:
+                  {{ cfg.webhookFromEnvironment ? 'oui' : 'non' }})
+                </li>
+                <li>
+                  <i class="fas fa-lock text-primary"></i>
+                  Chiffrement stockage clés : <strong>{{ cfg.fieldCipherEnabled ? 'activé' : 'désactivé' }}</strong>
+                </li>
+                <li *ngIf="cfg.publishableKeyMasked">
+                  <i class="fas fa-eye-slash text-primary"></i>
+                  Publishable (masquée) : <code>{{ cfg.publishableKeyMasked }}</code>
+                </li>
+              </ul>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label"><i class="fas fa-toggle-on"></i> Mode</label>
+                  <select class="luna-input" [(ngModel)]="cfgMode">
+                    <option value="TEST">Test</option>
+                    <option value="LIVE">Live</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label"><i class="fas fa-globe"></i> Clé publique Stripe</label>
+                  <input type="text" class="luna-input" [(ngModel)]="cfgPublishable" placeholder="pk_test_… ou pk_live_…" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label"><i class="fas fa-user-secret"></i> Clé secrète</label>
+                  <input type="password" class="luna-input" [(ngModel)]="cfgSecret" placeholder="sk_test_… — vide = inchangé" autocomplete="off" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label"><i class="fas fa-signature"></i> Secret webhook</label>
+                  <input type="password" class="luna-input" [(ngModel)]="cfgWebhook" placeholder="whsec_…" autocomplete="off" />
+                </div>
+              </div>
+              <p class="stripe-endpoint-hint">
+                Webhook : <code>POST …/api/webhooks/stripe</code> (URL publique en production).
+              </p>
+              <div class="form-actions modal-footer-actions">
+                <button type="button" class="btn btn-outline-secondary" (click)="fermerModalStripe()">Fermer</button>
+                <button type="button" class="btn btn-primary" (click)="enregistrerStripeConfig()" [disabled]="savingStripeCfg">
+                  <i class="fas fa-save"></i>
+                  {{ savingStripeCfg ? 'Enregistrement…' : 'Enregistrer Stripe' }}
+                </button>
+              </div>
+            </div>
+          </ng-container>
+          <div class="abo-modal-body abo-modal-loading" *ngIf="!stripeCfg">
+            <p class="mb-0"><i class="fas fa-spinner fa-spin"></i> Chargement de la configuration Stripe…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Nouvelle offre / Modifier offre -->
+      <div class="abo-modal-backdrop" *ngIf="showModalOffre" (click)="fermerModalOffre()">
+        <div class="abo-modal-panel abo-modal-panel-wide" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="abo-modal-offre-title">
+          <div class="abo-modal-head">
+            <h3 id="abo-modal-offre-title" class="abo-modal-title">
+              <i class="fas" [ngClass]="editingOffreId ? 'fa-pen-to-square' : 'fa-plus-circle'"></i>
+              {{ editingOffreId ? 'Modifier une offre' : 'Nouvelle offre' }}
+            </h3>
+            <button type="button" class="abo-modal-close" (click)="fermerModalOffre()" aria-label="Fermer"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="abo-modal-body">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-tag"></i> Nom</label>
+                <input type="text" class="luna-input" [(ngModel)]="nouvelleNom" placeholder="Ex. Standard clinique" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-align-left"></i> Description</label>
+                <textarea class="luna-input textarea-input" [(ngModel)]="nouvelleDescription" placeholder="Description de l’offre"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-layer-group"></i> Catégorie</label>
+                <select class="luna-input" [(ngModel)]="nouvelleCategorie">
+                  <option value="CLINIQUE">Clinique</option>
+                  <option value="CABINET_MEDICAL">Cabinet médical</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-coins"></i> Prix mensuel (DT)</label>
+                <input type="number" min="0" step="0.01" class="luna-input" [(ngModel)]="nouvellePrix" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-calendar-alt"></i> Prix annuel (DT)</label>
+                <input type="number" min="0" step="0.01" class="luna-input" [(ngModel)]="nouvellePrixAnnuel" placeholder="12 × mensuel si vide" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-sms"></i> SMS gratuits inclus</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvelleSms" />
+              </div>
+              <div class="form-group" *ngIf="isCategorieClinique">
+                <label class="form-label"><i class="fas fa-bed"></i> Nombre max de chambres</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvelleChambres" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-users"></i> Nombre max de personnel</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvellePersonnel" />
+              </div>
+              <div class="form-group" *ngIf="!isCategorieClinique">
+                <label class="form-label"><i class="fas fa-hospital-user"></i> Nombre max de patients</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvellePatients" />
+              </div>
+              <div class="form-group" *ngIf="!isCategorieClinique">
+                <label class="form-label"><i class="fas fa-calendar-check"></i> Nombre max de RDV</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvelleRendezVous" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-hourglass-start"></i> Période d’essai (jours)</label>
+                <input type="number" min="0" class="luna-input" [(ngModel)]="nouvelleEssai" />
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fas fa-calendar-alt"></i> Durée d’engagement (mois)</label>
+                <input type="number" min="1" max="36" class="luna-input" [(ngModel)]="nouvelleDuree" />
+              </div>
+            </div>
+            <div class="form-actions modal-footer-actions">
+              <button type="button" class="btn btn-outline-secondary" (click)="annulerEditionOffre()">
+                <i class="fas fa-xmark"></i> Annuler
+              </button>
+              <button type="button" class="btn btn-primary" (click)="creerOffreRapide()" [disabled]="savingOffre">
+                <i class="fas fa-save"></i>
+                {{ savingOffre ? 'Enregistrement…' : (editingOffreId ? 'Enregistrer' : 'Créer l’offre') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ========== Admin clinique ========== -->
+    <ng-container *ngIf="!isSuperAdmin && !loading">
+      <div class="logistics-header">
+        <h2><i class="fas fa-credit-card"></i> Mon abonnement — Clinique</h2>
+        <p class="header-sub">
+          Les forfaits sont créés par le super administrateur. Choisissez un plan sur la page dédiée, puis saisissez une
+          carte de test sur Stripe (ex. 4242 4242 4242 4242).
+        </p>
+      </div>
+
+      <div class="stripe-success-banner" *ngIf="checkoutSuccesStripe">
+        <div class="stripe-success-icon"><i class="fab fa-stripe-s"></i></div>
+        <div>
+          <h3>Retour depuis Stripe (test)</h3>
+          <p *ngIf="abonnementCourant">
+            Forfait <strong>{{ abonnementCourant.offreNom || '—' }}</strong> — statut
+            <strong>{{ libelleStatutAbonnement(abonnementCourant.statut) }}</strong>.
+            <span *ngIf="abonnementCourant.stripeSubscriptionId" class="mono">
+              Abonnement Stripe : {{ abonnementCourant.stripeSubscriptionId }}
+            </span>
+          </p>
+          <p *ngIf="!abonnementCourant">Les données sont en cours de mise à jour (webhook). Utilisez « Rafraîchir ».</p>
+        </div>
+      </div>
+
+      <div class="cta-strip">
+        <div class="cta-strip-text">
+          <h3><i class="fas fa-layer-group"></i> Choisir un forfait</h3>
+          <p>Grille des offres (mensuel / annuel), puis page récapitulative et redirection vers Stripe Checkout.</p>
+        </div>
+        <a routerLink="/tarifs-abonnement" class="btn btn-cta-tarifs">
+          <i class="fas fa-arrow-right"></i> Voir les forfaits et payer
+        </a>
+      </div>
+
+      <div class="form-card" *ngIf="abonnementCourant">
+        <h3 class="form-title"><i class="fas fa-receipt"></i> Abonnement actuel</h3>
+        <div class="form-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Offre</label>
+              <div class="luna-input readonly">{{ abonnementCourant.offreNom || 'Non renseignée' }}</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Statut</label>
+              <div class="luna-input readonly">{{ libelleStatutAbonnement(abonnementCourant.statut) }}</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Période</label>
+              <div class="luna-input readonly">{{ abonnementCourant.periodeFacturation === 'YEARLY' ? 'Annuelle' : 'Mensuelle' }}</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Montant payé</label>
+              <div class="luna-input readonly">{{ abonnementCourant.montantPaye | number : '1.2-2' }} DT</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Début</label>
+              <div class="luna-input readonly">{{ abonnementCourant.dateDebut | date : 'dd/MM/yyyy' }}</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fin</label>
+              <div class="luna-input readonly">{{ abonnementCourant.dateFin | date : 'dd/MM/yyyy' }}</div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary" (click)="rafraichirAbonnement()">
+              <i class="fas fa-rotate"></i> Rafraîchir l'état
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card muted-card" *ngIf="!abonnementCourant && !checkoutSuccesStripe">
+        <p class="mb-0">Aucun abonnement actif pour le moment. Ouvrez les forfaits pour souscrire.</p>
+      </div>
+
+      <div class="table-container" *ngIf="historiqueAbonnements.length">
+        <h3 class="form-title mb-3"><i class="fas fa-history"></i> Historique</h3>
+        <table class="offres-table">
+          <thead>
+            <tr>
+              <th>Offre</th>
+              <th>Statut</th>
+              <th>Période</th>
+              <th>Début</th>
+              <th>Fin</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of historiqueAbonnements" class="luna-row">
+              <td>{{ a.offreNom || '—' }}</td>
+              <td>{{ libelleStatutAbonnement(a.statut) }}</td>
+              <td>{{ a.periodeFacturation === 'YEARLY' ? 'Annuelle' : 'Mensuelle' }}</td>
+              <td>{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+              <td>{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
+              <td>{{ a.montantPaye | number : '1.2-2' }} DT</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </div>
+</div>

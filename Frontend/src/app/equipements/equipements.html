@@ -1,0 +1,1266 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+
+      </div>
+    </header>
+
+    <!-- Header TECHNICIEN MAINTENANCE -->
+    <div class="logistics-header" *ngIf="authService.isTechnicienMaintenance()">
+      <h2 class="luna-dark-text">
+      </h2>
+    </div>
+
+    <!-- Messages d'alerte -->
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- Interface gestion équipements -->
+    <!-- ========================================================== -->
+    <section class="logistics-section" *ngIf="authService.isAdminClinique()">
+      <div class="logistics-header">
+        <h2 class="luna-dark-text">
+          <i class="fas fa-clipboard-list"></i> Tableau de Bord - Équipements
+        </h2>
+      </div>
+
+      <!-- Statistiques équipements -->
+      <div class="stats-grid logistics-stats">
+        <div class="stat-card card-total">
+          <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalEquipements }}</span>
+            <span class="stat-label">Total équipements</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-warning">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalPannes }}</span>
+            <span class="stat-label">Équipements en panne</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-maintenance">
+          <div class="stat-icon"><i class="fas fa-tools"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalMaintenances }}</span>
+            <span class="stat-label">En maintenance</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-low">
+          <div class="stat-icon"><i class="fas fa-bed"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ EquipementUtiliseQuantite }}</span>
+            <span class="stat-label">Équipement utilisé en chambres</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="logistics-header">
+        <h2 class="luna-dark-text">
+          <i class="fas fa-wrench"></i> Liste des Pannes Signalées
+        </h2>
+      </div>
+
+      <!-- Liste des Pannes -->
+      <div class="pannes-container luna-shadow" *ngIf="totalPannes > 0">
+        <table class="pannes-table">
+          <thead>
+            <tr>
+              <th>Équipement</th>
+              <th>Catégorie</th>
+              <th>Localisation</th>
+              <th>État</th>
+              <th>Notes</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let panne of equipementsEnPanne" class="panne-row">
+              <td>
+                <div class="equipement-cell">
+                  <i class="fas fa-cogs"></i>
+                  <strong>{{ panne.nom }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge-luna badge-info">
+                  {{ getCategorieLabel(panne.categorie) }}
+                </span>
+              </td>
+              <td>
+                <span class="localisation-badge">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ panne.localisation || 'Non définie' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge status-panne">
+                  <i class="fas fa-times-circle"></i>
+                  En panne
+                </span>
+              </td>
+              <td>
+                <span class="notes-text" [title]="panne.notes">
+                  {{ (panne.notes || '-') | slice:0:50 }}{{ panne.notes && panne.notes.length > 50 ? '...' : '' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-action btn-repair" title="Planifier réparation" (click)="openMaintenanceModal(panne)">
+                    <i class="fas fa-hammer"></i>
+                  </button>
+                  <button class="btn-action btn-details" title="Voir détails" (click)="viewEquipement(panne)">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-sync" title="Modifier" (click)="editerEquipement(panne)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bouton Ajouter -->
+      <div class="d-flex justify-content-end mb-3" *ngIf="canDoCrudEquipement()">
+        <button class="btn btn-primary" (click)="showAddModal = true">
+          <i class="fas fa-plus"></i> Ajouter un équipement
+        </button>
+      </div>
+
+      <!-- Message si pas de pannes -->
+      <div class="no-pannes-message" *ngIf="totalPannes === 0">
+        <i class="fas fa-check-circle"></i>
+        <p>Aucune panne signalée. Tous les équipements fonctionnent normalement.</p>
+      </div>
+
+      <!-- Liste des Équipements en Maintenance -->
+      <div class="maintenance-container luna-shadow" *ngIf="totalMaintenances > 0">
+        <h3 class="maintenance-title">
+          <i class="fas fa-wrench"></i> Équipements en Maintenance
+        </h3>
+        <table class="maintenance-table">
+          <thead>
+            <tr>
+              <th>Équipement</th>
+              <th>Catégorie</th>
+              <th>Localisation</th>
+              <th>État</th>
+              <th>Prochaine maintenance</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let maint of equipementsEnMaintenance" class="maintenance-row">
+              <td>
+                <div class="equipement-cell">
+                  <i class="fas fa-cogs"></i>
+                  <strong>{{ maint.nom }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge-luna badge-info">
+                  {{ getCategorieLabel(maint.categorie) }}
+                </span>
+              </td>
+              <td>
+                <span class="localisation-badge">
+                  <i class="fas fa-map-marker-alt"></i>
+                  {{ maint.localisation || 'Non définie' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge status-maintenance">
+                  <i class="fas fa-spinner"></i>
+                  En maintenance
+                </span>
+              </td>
+              <td>
+                <span class="date-badge">
+                  <i class="fas fa-calendar-alt"></i>
+                  {{ maint.dateMaintenanceProchaine ? (maint.dateMaintenanceProchaine | date:'dd/MM/yyyy') : 'Non planifiée' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-action btn-complete" title="Marquer complète" (click)="completerMaintenance(maint)">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button class="btn-action btn-details" title="Voir détails" (click)="viewEquipement(maint)">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-sync" title="Modifier" (click)="editerEquipement(maint)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tableau général des équipements -->
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Équipement</th>
+              <th>Catégorie</th>
+              <th>Quantité</th>
+              <th>Statut stock</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let eq of filteredEquipements" class="luna-row">
+              <td>
+                <div class="equipement-info">
+                  <div class="equipement-icon">
+                    <i class="fas fa-cogs"></i>
+                  </div>
+                  <div class="equipement-details">
+                    <div class="equipement-name">{{ eq.nom }}</div>
+                    <div class="equipement-meta">Code: {{ eq.code || 'N/A' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge-luna badge-info">
+                  {{ getCategorieLabel(eq.categorie) }}
+                </span>
+              </td>
+              <td>
+                <div class="quantite-display">
+                  <span class="quantite-value">{{ eq.quantite }}</span>
+                  <span class="quantite-unit">unités</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="getStockStatusClass(eq.quantite)">
+                  <i class="fas" [ngClass]="getStockStatusIcon(eq.quantite)"></i>
+                  {{ getStockStatusText(eq.quantite) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-action btn-view" title="Voir détails" (click)="viewEquipement(eq)">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-warning" title="Signaler panne" (click)="openPanneModal(eq)" *ngIf="canSignalerPanne()">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </button>
+                  <button class="btn-action btn-maint" title="Planifier maintenance" (click)="openMaintenanceModal(eq)">
+                    <i class="fas fa-tools"></i>
+                  </button>
+                  <button class="btn-action btn-sync" title="Modifier" (click)="editerEquipement(eq)" *ngIf="canDoCrudEquipement()">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-action btn-delete" title="Supprimer" (click)="openDeleteModal(eq.id, eq.nom)" *ngIf="canDoCrudEquipement()">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedEquipements.length === 0">
+              <td colspan="5" class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>Aucun équipement trouvé</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="filteredEquipements.length > 0">
+        <span class="pagination-info">
+          Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredEquipements.length }} équipements
+        </span>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <ng-container *ngFor="let page of totalPagesArray">
+            <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- Interface TECHNICIEN MAINTENANCE                            -->
+    <!-- ========================================================== -->
+    <section class="technician-section" *ngIf="authService.isTechnicienMaintenance()">
+      <div class="technician-header">
+        <h2 class="luna-dark-text">
+          <i class="fas fa-wrench"></i> Interface Technicien Maintenance
+        </h2>
+        <span class="technician-badge">
+          <i class="fas fa-user-cog"></i> Mode Technicien Actif
+        </span>
+      </div>
+
+      <!-- Statistiques Technicien -->
+      <div class="stats-grid technician-stats">
+        <div class="stat-card card-panne-urgent">
+          <div class="stat-icon"><i class="fas fa-fire"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalPannes }}</span>
+            <span class="stat-label">Pannes à traiter</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-maintenance-todo">
+          <div class="stat-icon"><i class="fas fa-list-check"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalMaintenances }}</span>
+            <span class="stat-label">À valider</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-ready">
+          <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ equipementsFonctionnels }}</span>
+            <span class="stat-label">En marche</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-critical">
+          <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ equipementsCritiques }}</span>
+            <span class="stat-label">Critiques</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglets Technicien -->
+      <div class="technician-tabs">
+        <button class="tab-button"
+                [class.active]="technicianTabActive === 'pannes'"
+                (click)="technicianTabActive = 'pannes'">
+          <i class="fas fa-exclamation-circle"></i>
+          Pannes à réparer ({{ totalPannes }})
+        </button>
+        <button class="tab-button"
+                [class.active]="technicianTabActive === 'maintenance'"
+                (click)="technicianTabActive = 'maintenance'">
+          <i class="fas fa-tools"></i>
+          Maintenances ({{ totalMaintenances }})
+        </button>
+      </div>
+
+      <!-- TAB 1 : PANNES -->
+      <div class="tab-content" *ngIf="technicianTabActive === 'pannes'">
+        <div class="pannes-repair-interface">
+          <div class="pannes-list-panel">
+            <div class="pannes-repair-container luna-shadow" *ngIf="totalPannes > 0">
+              <h3 class="tab-title">
+                <i class="fas fa-tools"></i> Équipements en Panne - Demande de Réparation
+              </h3>
+              <div class="table-container">
+                <table class="pannes-table">
+                  <thead>
+                    <tr>
+                      <th>Équipement</th>
+                      <th>Code</th>
+                      <th>Localisation</th>
+                      <th>Signalé le</th>
+                      <th class="text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let panne of equipementsEnPanne" class="panne-row">
+                      <td>
+                        <div class="equipement-cell">
+                          <i class="fas fa-cogs text-danger"></i>
+                          <strong>{{ panne.nom }}</strong>
+                        </div>
+                      </td>
+                      <td>{{ panne.code || 'N/A' }}</td>
+                      <td>{{ panne.localisation || 'Magasin' }}</td>
+                      <td>{{ panne.dateMaintenance | date:'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="text-center">
+                        <div class="action-group">
+                          <button class="btn-action btn-details" title="Traiter la panne" (click)="openRepairModal(panne)">
+                            <i class="fas fa-eye"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="no-issues-message" *ngIf="totalPannes === 0">
+              <i class="fas fa-check-circle"></i>
+              <p>Aucune panne signalée. Tous les équipements sont fonctionnels!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2 : MAINTENANCES À VALIDER -->
+      <div class="tab-content" *ngIf="technicianTabActive === 'maintenance'">
+        <div class="maintenance-validation-container luna-shadow" *ngIf="totalMaintenances > 0">
+          <h3 class="tab-title">
+            <i class="fas fa-wrench"></i> Maintenances Programmées - Validation
+          </h3>
+          <table class="technician-table">
+            <thead>
+              <tr>
+                <th>Équipement</th>
+                <th>Catégorie</th>
+                <th>Localisation</th>
+                <th>Date Programmée</th>
+                <th>État</th>
+                <th>Observations</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let maint of equipementsEnMaintenance" class="maintenance-row-tech">
+                <td>
+                  <div class="equipement-cell">
+                    <i class="fas fa-cogs text-warning"></i>
+                    <strong>{{ maint.nom }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge-luna badge-info">
+                    {{ getCategorieLabel(maint.categorie) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="localisation-badge">
+                    <i class="fas fa-location-dot"></i>
+                    {{ maint.localisation || 'Magasin' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="date-badge">
+                    <i class="fas fa-calendar"></i>
+                    {{ maint.dateMaintenanceProchaine ? (maint.dateMaintenanceProchaine | date:'dd/MM/yyyy') : 'Non définie' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge status-maintenance-tech">
+                    <i class="fas fa-spinner"></i>
+                    En maintenance
+                  </span>
+                </td>
+                <td>
+                  <span class="notes-badge">
+                    {{ (maint.notes || 'Aucune observation') | slice:0:35 }}{{ maint.notes && maint.notes.length > 35 ? '...' : '' }}
+                  </span>
+                </td>
+                <!-- ============================================ -->
+                <!-- BOUTONS TECHNICIEN : Valider + À maintenir  -->
+                <!-- ============================================ -->
+                <td>
+                  <div class="action-group">
+                    <!-- Valider la maintenance et remettre en service -->
+                    <button class="btn btn-success btn-sm"
+                            title="Valider & Remettre en service"
+                            (click)="openValidateMaintenanceModal(maint)">
+                      <i class="fas fa-check-circle"></i> Valider
+                    </button>
+                    <!-- Marquer l'équipement comme nécessitant une nouvelle maintenance -->
+                    <button class="btn btn-warning btn-sm"
+                            title="Marquer à maintenir à nouveau"
+                            (click)="openMarquerAMaintenirModal(maint)">
+                      <i class="fas fa-wrench"></i> À maintenir
+                    </button>
+                    <!-- Voir les détails -->
+                    <button class="btn-action btn-view"
+                            title="Voir détails"
+                            (click)="viewEquipement(maint)">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="no-issues-message" *ngIf="totalMaintenances === 0">
+          <i class="fas fa-check-circle"></i>
+          <p>Aucune maintenance programmée en attente de validation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- Interface ADMIN CLINIQUE / SUPER ADMIN                      -->
+    <!-- ========================================================== -->
+    <section *ngIf="!authService.isAdminClinique()">
+      <!-- Filtres et recherche -->
+      <section class="filters-section luna-glass">
+        <div class="filter-group">
+          <label class="luna-label">Rechercher un équipement</label>
+          <div class="input-with-icon">
+            <input
+              type="text"
+              class="form-control luna-input"
+              [(ngModel)]="searchTerm"
+              (input)="onSearchChange()"
+              placeholder="Nom ou description...">
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="luna-label">Filtrer par stock</label>
+          <select class="form-control luna-input" [(ngModel)]="stockFilter" (change)="onStockFilterChange()">
+            <option value="all">Tous les stocks</option>
+            <option value="low">Stock faible (&lt; 5)</option>
+            <option value="medium">Stock moyen (5-20)</option>
+            <option value="high">Stock élevé (&gt; 20)</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Statistiques Admin -->
+      <section class="stats-grid" *ngIf="canManageStockFull()">
+        <div class="stat-card card-total">
+          <div class="stat-icon"><i class="fas fa-boxes"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalEquipements }}</span>
+            <span class="stat-label">Total équipements</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-available">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ totalQuantite }}</span>
+            <span class="stat-label">Quantité totale</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-low">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ lowStockCount }}</span>
+            <span class="stat-label">Stock faible</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-low">
+          <div class="stat-icon"><i class="fas fa-bed"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ EquipementUtiliseQuantite }}</span>
+            <span class="stat-label">Équipement utilisé en chambres</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-categories">
+          <div class="stat-icon"><i class="fas fa-tags"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ uniqueCategories }}</span>
+            <span class="stat-label">Catégories</span>
+          </div>
+        </div>
+
+        <div class="stat-card card-available">
+          <div class="stat-icon"><i class="fas fa-warehouse"></i></div>
+          <div class="stat-info">
+            <span class="stat-value">{{ magasinDisponibleQuantite }}</span>
+            <span class="stat-label">Magasin disponible</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tableau des équipements Admin -->
+      <div class="table-container luna-shadow">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Équipement</th>
+              <th>Catégorie</th>
+              <th>Quantité</th>
+              <th>Statut stock</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let eq of paginatedEquipements" class="luna-row">
+              <td>
+                <div class="equipement-info">
+                  <div class="equipement-icon">
+                    <i class="fas fa-cogs"></i>
+                  </div>
+                  <div class="equipement-details">
+                    <div class="equipement-name">{{ eq.nom }}</div>
+                    <div class="equipement-meta">Code: {{ eq.code || 'N/A' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge-luna badge-info">
+                  {{ getCategorieLabel(eq.categorie) }}
+                </span>
+              </td>
+              <td>
+                <div class="quantite-display">
+                  <span class="quantite-value">{{ eq.quantite }}</span>
+                  <span class="quantite-unit">unités</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-pill" [ngClass]="getStockStatusClass(eq.quantite)">
+                  <i class="fas" [ngClass]="getStockStatusIcon(eq.quantite)"></i>
+                  {{ getStockStatusText(eq.quantite) }}
+                </span>
+              </td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-action btn-view" title="Voir détails" (click)="viewEquipement(eq)">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn-action btn-sync" title="Modifier" (click)="editerEquipement(eq)" *ngIf="canDoCrudEquipement()">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn-action btn-delete" title="Supprimer" (click)="openDeleteModal(eq.id, eq.nom)" *ngIf="canDoCrudEquipement()">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="paginatedEquipements.length === 0">
+              <td colspan="5" class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>Aucun équipement trouvé</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Admin -->
+      <div class="pagination-container" *ngIf="filteredEquipements.length > 0">
+        <span class="pagination-info">
+          Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredEquipements.length }} équipements
+        </span>
+        <div class="pagination-controls">
+          <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <ng-container *ngFor="let page of totalPagesArray">
+            <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================== -->
+    <!-- MODALS COMMUNS                                              -->
+    <!-- ========================================================== -->
+
+    <!-- Modal Ajouter / Modifier équipement -->
+    <div class="modal fade show" *ngIf="showAddModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-plus"></i> {{ editionId ? 'Modifier' : 'Ajouter' }} un équipement
+            </h5>
+            <button type="button" class="btn-close" (click)="annulerEdition()">X</button>
+          </div>
+          <div class="modal-body">
+            <form #equipementForm="ngForm" (ngSubmit)="editionId ? enregistrerEdition() : ajouterEquipement()" class="form-grid">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-tag"></i> Nom de l'équipement <span class="text-danger">*</span>
+                </label>
+                <input type="text"
+                       class="form-control luna-input"
+                       [(ngModel)]="nouvelEquipement.nom"
+                       name="nom"
+                       required
+                       placeholder="Ex: Stéthoscope">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-list-alt"></i> Catégorie <span class="text-danger">*</span>
+                </label>
+                <select class="form-control luna-input"
+                        [(ngModel)]="nouvelEquipement.categorie"
+                        name="categorie"
+                        required>
+                  <option [ngValue]="null">Sélectionner une catégorie</option>
+                  <option [ngValue]="CategorieEquipement.LITS_MOBILIER">Lits &amp; Mobilier</option>
+                  <option [ngValue]="CategorieEquipement.DIAGNOSTIC">Diagnostic &amp; Monitoring</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-box"></i> Quantité <span class="text-danger">*</span>
+                </label>
+                <input type="number"
+                       class="form-control luna-input"
+                       [(ngModel)]="nouvelEquipement.quantite"
+                       name="quantite"
+                       min="0"
+                       required
+                       placeholder="0">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-tools"></i> État technique
+                </label>
+                <select class="form-control luna-input"
+                        [(ngModel)]="nouvelEquipement.etatTechnique"
+                        name="etatTechnique">
+                  <option [ngValue]="EtatTechnique.FONCTIONNEL">Fonctionnel</option>
+                  <option [ngValue]="EtatTechnique.EN_PANNE">En panne</option>
+                  <option [ngValue]="EtatTechnique.EN_MAINTENANCE">En maintenance</option>
+                  <option [ngValue]="EtatTechnique.HORS_SERVICE">Hors service</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-info-circle"></i> Statut
+                </label>
+                <select class="form-control luna-input"
+                        [(ngModel)]="nouvelEquipement.statut"
+                        name="statut">
+                  <option [ngValue]="StatutEquipement.DISPONIBLE">Disponible</option>
+                  <option [ngValue]="StatutEquipement.UTILISE">Utilisé</option>
+                  <option [ngValue]="StatutEquipement.RESERVE">Réservé</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="fas fa-exclamation-triangle"></i> Criticité
+                </label>
+                <select class="form-control luna-input"
+                        [(ngModel)]="nouvelEquipement.criticite"
+                        name="criticite">
+                  <option [ngValue]="CriticiteEquipement.FAIBLE">Faible</option>
+                  <option [ngValue]="CriticiteEquipement.MOYENNE">Moyenne</option>
+                  <option [ngValue]="CriticiteEquipement.HAUTE">Haute</option>
+                </select>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label">
+                  <i class="fas fa-sticky-note"></i> Notes
+                </label>
+                <textarea
+                       class="form-control luna-input"
+                       [(ngModel)]="nouvelEquipement.notes"
+                       name="notes"
+                       rows="3"
+                       placeholder="Notes supplémentaires (optionnel)"></textarea>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="annulerEdition()">
+                  <i class="fas fa-times"></i> Annuler
+                </button>
+                <button type="submit" class="btn btn-primary" [disabled]="equipementForm.invalid">
+                  <i class="fas" [ngClass]="editionId ? 'fa-save' : 'fa-plus'"></i>
+                  {{ editionId ? 'Enregistrer' : 'Ajouter' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Suppression -->
+    <div class="modal fade show" *ngIf="showDeleteModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">Confirmer la suppression</h5>
+            <button type="button" class="btn-close" (click)="closeDeleteModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="warning-message">
+              <i class="fas fa-trash-alt fa-2x text-danger mb-3"></i>
+              <h6>Êtes-vous sûr de vouloir supprimer cet équipement ?</h6>
+              <p class="text-muted">Équipement : <strong>{{ selectedEquipementName }}</strong></p>
+              <p class="text-danger">Cette action est irréversible.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">Annuler</button>
+            <button type="button" class="btn btn-danger" (click)="supprimerEquipement()">
+              <i class="fas fa-trash"></i> Supprimer définitivement
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedEquipement" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-info-circle"></i> Détails de l'équipement
+            </h5>
+            <button type="button" class="btn-close" (click)="closeDetailsModal()"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-cogs"></i> Informations générales
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nom</label>
+                    <p>{{ selectedEquipement.nom }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Référence</label>
+                    <p>{{ selectedEquipement.code || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Catégorie</label>
+                    <p>
+                      <span class="badge-luna badge-info">
+                        {{ getCategorieLabel(selectedEquipement.categorie) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Quantité en stock</label>
+                    <p class="amount-highlight">{{ selectedEquipement.quantite }} unités</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>État technique</label>
+                    <p>
+                      <span class="badge-luna" [ngClass]="{
+                        'badge-success': selectedEquipement.etatTechnique === 'FONCTIONNEL',
+                        'badge-warning': selectedEquipement.etatTechnique === 'EN_MAINTENANCE',
+                        'badge-danger': selectedEquipement.etatTechnique === 'EN_PANNE' || selectedEquipement.etatTechnique === 'HORS_SERVICE'
+                      }">
+                        {{ equipementService.obtenirNomEtatTechnique(selectedEquipement.etatTechnique) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Statut</label>
+                    <p>
+                      <span class="badge-luna" [ngClass]="{
+                        'badge-success': selectedEquipement.statut === 'DISPONIBLE',
+                        'badge-info': selectedEquipement.statut === 'UTILISE',
+                        'badge-warning': selectedEquipement.statut === 'RESERVE'
+                      }">
+                        {{ equipementService.obtenirNomStatut(selectedEquipement.statut) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Localisation</label>
+                    <p>
+                      <span *ngIf="selectedEquipement.typeLocalisation" class="badge-luna badge-info">
+                        {{ getTypeLocalisationLabel(selectedEquipement.typeLocalisation) }}
+                      </span>
+                      <span *ngIf="selectedEquipement.localisation"> - {{ selectedEquipement.localisation }}</span>
+                      <span *ngIf="!selectedEquipement.typeLocalisation && !selectedEquipement.localisation">N/A</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Criticité</label>
+                    <p>
+                      <span class="badge-luna" [ngClass]="{
+                        'badge-success': selectedEquipement.criticite === 'FAIBLE',
+                        'badge-warning': selectedEquipement.criticite === 'MOYENNE',
+                        'badge-danger': selectedEquipement.criticite === 'HAUTE'
+                      }">
+                        {{ getCriticiteLabel(selectedEquipement.criticite) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-sticky-note"></i> Notes
+              </h6>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="notes-content">
+                    <p>{{ selectedEquipement.notes || 'Aucune note' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section Maintenance pour Technicien -->
+            <div class="detail-section" *ngIf="authService.isTechnicienMaintenance()">
+              <h6 class="section-title">
+                <i class="fas fa-tools"></i> Informations de Maintenance
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>État technique actuel</label>
+                    <p>
+                      <span class="badge-luna" [ngClass]="{
+                        'badge-success': selectedEquipement.etatTechnique === 'FONCTIONNEL',
+                        'badge-warning': selectedEquipement.etatTechnique === 'EN_MAINTENANCE',
+                        'badge-danger': selectedEquipement.etatTechnique === 'EN_PANNE' || selectedEquipement.etatTechnique === 'HORS_SERVICE'
+                      }">
+                        {{ equipementService.obtenirNomEtatTechnique(selectedEquipement.etatTechnique) }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date de maintenance prochaine</label>
+                    <p>
+                      <span class="date-info">
+                        {{ selectedEquipement.dateMaintenanceProchaine ? (selectedEquipement.dateMaintenanceProchaine | date:'dd/MM/yyyy HH:mm') : 'Non définie' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-rouge" (click)="closeDetailsModal()">
+              Fermer
+            </button>
+            <button type="button" class="btn btn-primary" (click)="editerEquipement(selectedEquipement)"
+                    *ngIf="canDoCrudEquipement()">
+              <i class="fas fa-edit"></i> Modifier
+            </button>
+            <button type="button" class="btn btn-warning" (click)="openPanneModal(selectedEquipement)"
+                    *ngIf="canSignalerPanne()">
+              <i class="fas fa-exclamation-triangle"></i> Signaler panne
+            </button>
+            <button type="button" class="btn btn-primary" (click)="openMaintenanceModal(selectedEquipement)"
+                    *ngIf="canManageEquipementOps()">
+              <i class="fas fa-tools"></i> Planifier maintenance
+            </button>
+            <!-- Boutons Technicien dans le modal Détails -->
+            <button type="button" class="btn btn-success"
+                    (click)="openValidateMaintenanceModal(selectedEquipement)"
+                    *ngIf="authService.isTechnicienMaintenance() && selectedEquipement.etatTechnique === 'EN_MAINTENANCE'">
+              <i class="fas fa-check-circle"></i> Valider maintenance
+            </button>
+            <button type="button" class="btn btn-warning"
+                    (click)="openMarquerAMaintenirModal(selectedEquipement)"
+                    *ngIf="authService.isTechnicienMaintenance() && selectedEquipement.etatTechnique === 'EN_MAINTENANCE'">
+              <i class="fas fa-wrench"></i> À maintenir
+            </button>
+            <button type="button" class="btn btn-danger"
+                    (click)="openRepairModal(selectedEquipement)"
+                    *ngIf="authService.isTechnicienMaintenance() && selectedEquipement.etatTechnique === 'EN_PANNE'">
+              <i class="fas fa-wrench"></i> Traiter panne
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Signaler panne -->
+    <div class="modal fade show" *ngIf="showPanneModal && selectedEquipement" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-exclamation-triangle"></i> Signaler une panne
+            </h5>
+            <button type="button" class="btn-close" (click)="closePanneModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-cogs"></i> Équipement</label>
+              <div class="luna-input" style="background:#f8fafc">{{ selectedEquipement.nom }} ({{ selectedEquipement.code || 'N/A' }})</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-bed"></i> Chambre</label>
+              <select class="form-control luna-input" [(ngModel)]="selectedChambreIdForPanne">
+                <option value="">Sélectionner une chambre</option>
+                <option *ngFor="let ch of chambres" [value]="ch.id">{{ ch.numero }} ({{ ch.type }})</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-clock"></i> Heure du signalement</label>
+              <input type="time" class="form-control luna-input" [(ngModel)]="panneTime">
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-sticky-note"></i> Détails (optionnel)</label>
+              <textarea class="form-control luna-input" rows="3" [(ngModel)]="panneNotes" placeholder="Décrire la panne..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closePanneModal()">Annuler</button>
+            <button type="button" class="btn btn-danger" (click)="confirmerPanne()">
+              <i class="fas fa-check"></i> Confirmer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Planifier maintenance -->
+    <div class="modal fade show" *ngIf="showMaintenanceModal && selectedEquipement" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-tools"></i> Planifier maintenance
+            </h5>
+            <button type="button" class="btn-close" (click)="closeMaintenanceModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-cogs"></i> Équipement</label>
+              <div class="luna-input" style="background:#f8fafc">{{ selectedEquipement.nom }} ({{ selectedEquipement.code || 'N/A' }})</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-calendar"></i> Date de maintenance (prochaine)</label>
+              <input type="date" class="form-control luna-input" [(ngModel)]="maintenanceDateProchaine">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeMaintenanceModal()">Annuler</button>
+            <button type="button" class="btn btn-primary" (click)="confirmerMaintenance()">
+              <i class="fas fa-check"></i> Planifier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Valider Maintenance -->
+    <div class="modal fade show" *ngIf="showValidateMaintenanceModal && selectedEquipementForMaintenanceValidation" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-check-circle"></i> Valider la Maintenance
+            </h5>
+            <button type="button" class="btn-close" (click)="closeValidateMaintenanceModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-cogs"></i> Équipement</label>
+              <div class="luna-input" style="background:#f8fafc; padding: 8px 12px; border-radius: 4px;">
+                {{ selectedEquipementForMaintenanceValidation.nom }}
+                <span class="badge badge-info" style="margin-left: 8px;">{{ selectedEquipementForMaintenanceValidation.code }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-sticky-note"></i> Observations de maintenance</label>
+              <textarea
+                class="form-control luna-input"
+                rows="4"
+                [(ngModel)]="maintenanceValidationNotes"
+                placeholder="Décrire les travaux effectués, pièces remplacées, tests effectués..."></textarea>
+              <small class="form-text text-muted">Optionnel - Permet de documenter les actions effectuées.</small>
+            </div>
+            <div class="alert alert-info" style="margin-top: 12px;">
+              <i class="fas fa-info-circle"></i>
+              <strong>À savoir :</strong> Une fois validée, l'équipement sera considéré comme fonctionnel et remis en service.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeValidateMaintenanceModal()">
+              <i class="fas fa-times"></i> Annuler
+            </button>
+            <button type="button" class="btn btn-success" (click)="validerMaintenanceEtMettreEnService(selectedEquipementForMaintenanceValidation)">
+              <i class="fas fa-check-circle"></i> Valider &amp; Mettre en Service
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Modal À MAINTENIR (nouveau)                                  -->
+    <!-- ============================================================ -->
+    <div class="modal fade show" *ngIf="showMarquerAMaintenirModal && selectedEquipementForMaintenir" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-wrench"></i> Marquer comme "À Maintenir"
+            </h5>
+            <button type="button" class="btn-close" (click)="closeMarquerAMaintenirModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-cogs"></i> Équipement</label>
+              <div class="luna-input" style="background:#f8fafc; padding: 8px 12px; border-radius: 4px;">
+                {{ selectedEquipementForMaintenir.nom }}
+                <span class="badge badge-info" style="margin-left: 8px;">{{ selectedEquipementForMaintenir.code }}</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="fas fa-calendar"></i> Nouvelle date de maintenance prochaine
+              </label>
+              <input type="date"
+                     class="form-control luna-input"
+                     [(ngModel)]="marquerAMaintenirDate">
+              <small class="form-text text-muted">Optionnel - Laisser vide pour conserver l'ancienne date.</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label"><i class="fas fa-sticky-note"></i> Motif / Observations</label>
+              <textarea
+                class="form-control luna-input"
+                rows="3"
+                [(ngModel)]="marquerAMaintenirNotes"
+                placeholder="Décrire la raison pour laquelle une nouvelle maintenance est nécessaire..."></textarea>
+            </div>
+            <div class="alert alert-warning" style="margin-top: 12px;">
+              <i class="fas fa-exclamation-triangle"></i>
+              <strong>Attention :</strong> L'équipement restera en état "En maintenance" et sera visible dans la liste des maintenances à valider.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeMarquerAMaintenirModal()">
+              <i class="fas fa-times"></i> Annuler
+            </button>
+            <button type="button" class="btn btn-warning" (click)="confirmerMarquerAMaintenir()">
+              <i class="fas fa-wrench"></i> Confirmer — À Maintenir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Traitement panne (technicien) -->
+    <div class="modal fade show" *ngIf="showRepairModal && selectedEquipementForRepair" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-wrench"></i> Traitement de la Panne
+            </h5>
+            <button type="button" class="btn-close" (click)="closeRepairModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="repair-equipment-info">
+              <div class="info-block">
+                <div class="info-block-label">Équipement</div>
+                <div class="info-block-value">{{ selectedEquipementForRepair.nom }}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">Code</div>
+                <div class="info-block-value">{{ selectedEquipementForRepair.code || 'N/A' }}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">Catégorie</div>
+                <div class="info-block-value">{{ getCategorieLabel(selectedEquipementForRepair.categorie) }}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">Localisation</div>
+                <div class="info-block-value">{{ selectedEquipementForRepair.localisation || 'Non définie' }}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">Criticité</div>
+                <div class="info-block-value">{{ getCriticiteLabel(selectedEquipementForRepair.criticite) }}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">État technique</div>
+                <div class="info-block-value">
+                  <span class="badge-luna badge-danger">
+                    {{ equipementService.obtenirNomEtatTechnique(selectedEquipementForRepair.etatTechnique) }}
+                  </span>
+                </div>
+              </div>
+              <div class="info-block" *ngIf="selectedEquipementForRepair.dateMaintenance">
+                <div class="info-block-label">Date du signalement</div>
+                <div class="info-block-value">{{ selectedEquipementForRepair.dateMaintenance | date:'dd/MM/yyyy HH:mm' }}</div>
+              </div>
+              <div class="info-block" *ngIf="selectedEquipementForRepair.notes">
+                <div class="info-block-label">Observations de la panne</div>
+                <div class="info-block-value">{{ selectedEquipementForRepair.notes }}</div>
+              </div>
+            </div>
+
+            <div class="form-divider"></div>
+            <p class="section-subtitle">
+              <i class="fas fa-info-circle"></i> Cliquez sur "Réparation Complète" pour terminer et remettre l'équipement en service.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeRepairModal()">
+              <i class="fas fa-times"></i> Annuler
+            </button>
+            <button class="btn btn-success btn-lg"
+                    (click)="completarRepairAndStartEquipment(selectedEquipementForRepair)">
+              <i class="fas fa-power-off"></i> Réparation Complète &amp; Mettre en Marche
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Succès -->
+    <div class="modal fade show" *ngIf="showSuccessModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-body text-center">
+            <div class="mb-3">
+              <i class="fas fa-check-circle" style="font-size: 3rem; color: #4BB543;"></i>
+            </div>
+            <h4>Succès</h4>
+            <p>{{ successMessage }}</p>
+            <button class="btn btn-primary mt-3" (click)="closeSuccessModal()">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

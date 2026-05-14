@@ -1,0 +1,24 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/patient"><i class="bi bi-arrow-left"></i> Mon espace santé</a></nav>
+  <h1>Résultats d’analyses</h1>
+
+  <div *ngIf="loading">Chargement…</div>
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel" *ngFor="let a of analyses">
+    <div class="row-line">
+      <strong>{{ a.type }}</strong>
+      <span class="badge bg-light text-dark">{{ a.statut || '—' }}</span>
+    </div>
+    <p class="small text-muted mb-1">{{ a.date | date:'medium' }}</p>
+    <ul *ngIf="a.resultats?.length" class="res-list">
+      <li *ngFor="let r of a.resultats">
+        {{ r.parametre }} : <strong>{{ r.valeur }}</strong> {{ r.unite || '' }}
+        <span *ngIf="r.anormal" class="text-warning"> (attention)</span>
+      </li>
+    </ul>
+    <p *ngIf="a.fichierPDF" class="small"><a [href]="a.fichierPDF" target="_blank" rel="noopener">Télécharger le PDF</a></p>
+  </div>
+
+  <p *ngIf="!loading && !analyses.length && !error" class="text-muted">Aucun résultat d’analyse dans votre dossier pour l’instant.</p>
+</div>

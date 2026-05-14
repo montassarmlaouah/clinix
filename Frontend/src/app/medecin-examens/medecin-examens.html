@@ -1,0 +1,51 @@
+<div class="page-wrap">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+  <h1>Examens (imagerie)</h1>
+
+  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+
+  <div class="panel">
+    <h2>Nouvelle demande</h2>
+    <label>Patient</label>
+    <select class="form-control" [(ngModel)]="patientId">
+      <option value="">— Choisir —</option>
+      <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+    </select>
+    <label class="mt-2">Type</label>
+    <input class="form-control" [(ngModel)]="form.type" placeholder="Ex. RADIO, SCANNER, IRM" />
+    <label class="mt-2">Motif clinique</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="form.motif"></textarea>
+    <label class="mt-2">Indications cliniques</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="form.indicationsCliniques" placeholder="Contexte, antécédents utiles…"></textarea>
+    <label class="mt-2">Questions / objectifs pour le radiologue</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="form.questionsMedecin" placeholder="Ex. recherche de fracture, suspicion AVC…"></textarea>
+    <label class="mt-2">Documents joints (références)</label>
+    <textarea class="form-control" rows="2" [(ngModel)]="form.piecesJointes" placeholder="Noms de fichiers, chemins ou liens"></textarea>
+    <label class="mt-2">Niveau d'urgence</label>
+    <select class="form-control" [(ngModel)]="form.niveauUrgence">
+      <option value="BASSE">Basse</option>
+      <option value="NORMALE">Normale</option>
+      <option value="HAUTE">Haute</option>
+      <option value="URGENTE">Urgente</option>
+    </select>
+    <button class="btn btn-primary mt-2" (click)="demander()" [disabled]="!medecinId">Envoyer la demande</button>
+  </div>
+
+  <div class="panel">
+    <h2>Mes demandes</h2>
+    <div *ngIf="loading">Chargement…</div>
+    <table class="table table-sm" *ngIf="!loading && liste.length">
+      <thead><tr><th>Date</th><th>Patient</th><th>Type</th><th>Urgence</th><th>Statut</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let e of liste">
+          <td>{{ e.date | date:'shortDate' }}</td>
+          <td>{{ e.patient?.prenom }} {{ e.patient?.nom }}</td>
+          <td>{{ e.type }}</td>
+          <td>{{ e.niveauUrgence || '—' }}</td>
+          <td>{{ e.statut || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="!loading && !liste.length" class="text-muted">Aucune demande.</p>
+  </div>
+</div>

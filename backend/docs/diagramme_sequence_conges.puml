@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Demande conge
+
+autonumber
+
+actor Employe
+actor Responsable
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control ServiceConge as "Service Conge"
+database DB as "Base de donnees"
+
+Employe -> Frontend: Soumettre demande de conge
+Frontend -> API: POST /conges (dateDebut, dateFin, motif)
+API -> ServiceConge: verifierSoldeEtConflits()
+ServiceConge -> DB: Lire solde et absences equipe
+DB --> ServiceConge: Solde + conflits
+
+alt Demande recevable
+  ServiceConge -> DB: Inserer demande statut=EN_ATTENTE
+  DB --> ServiceConge: idDemande
+  ServiceConge --> API: Demande creee
+  API --> Frontend: 201 Created
+  Frontend --> Employe: Afficher en attente
+  Responsable -> Frontend: Valider demande
+  Frontend -> API: PUT /conges/{id}/valider
+  API -> DB: Mettre statut=APPROUVE
+  DB --> API: OK
+  API --> Frontend: 200 OK
+else Demande rejetee automatiquement
+  ServiceConge --> API: Refus regle metier
+  API --> Frontend: 422 Unprocessable Entity
+  Frontend --> Employe: Afficher raison
+end
+
+@enduml

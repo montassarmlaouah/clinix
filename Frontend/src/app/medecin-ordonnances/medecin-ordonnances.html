@@ -1,0 +1,52 @@
+<div class="licences-container">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Ordonnances</h1>
+      <p class="page-subtitle">Historique, signature numérique et export PDF.</p>
+    </div>
+  </header>
+
+  <div class="messages-section">
+    <div class="alert alert-luna-danger" *ngIf="error"><i class="bi bi-exclamation-triangle me-2"></i>{{ error }}</div>
+  </div>
+
+  <div class="luna-card loading-card" *ngIf="loading">
+    <p class="mb-0 text-muted"><i class="bi bi-hourglass-split me-2"></i>Chargement…</p>
+  </div>
+
+  <div class="luna-card empty-state" *ngIf="!loading && liste.length === 0 && !error">
+    <p class="mb-0 text-muted">Aucune ordonnance enregistrée pour le moment.</p>
+  </div>
+
+  <div class="luna-card p-0 overflow-hidden" *ngIf="!loading && liste.length">
+    <div class="table-responsive table-luna-wrap">
+      <table class="luna-table mb-0">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Signée</th>
+            <th>Validée pharmacie</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of liste">
+            <td>{{ o.date | date:'mediumDate' }}</td>
+            <td>
+              <span class="status-pill" [class.pill-ok]="o.signee" [class.pill-wait]="!o.signee">{{ o.signee ? 'Oui' : 'Non' }}</span>
+            </td>
+            <td>
+              <span class="status-pill" [class.pill-ok]="o.validee" [class.pill-wait]="!o.validee">{{ o.validee ? 'Oui' : 'En attente' }}</span>
+            </td>
+            <td class="text-end text-nowrap">
+              <button type="button" class="btn btn-sm btn-primary me-2" *ngIf="!o.signee" (click)="signer(o.id)">Signer</button>
+              <a class="btn btn-sm btn-outline-luna" *ngIf="o.id" [href]="pdfUrl(o.id)" target="_blank" rel="noopener">PDF</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

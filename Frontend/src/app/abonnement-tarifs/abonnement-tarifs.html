@@ -1,0 +1,82 @@
+<div class="tarifs-page">
+  <header class="tarifs-hero">
+    <a routerLink="/mon-abonnement" class="back-link"><i class="fas fa-arrow-left"></i> Mon abonnement</a>
+    <h1>Forfaits clinique</h1>
+    <p class="lead">
+      Forfaits définis par le super administrateur. Choisissez la facturation, puis continuez vers une page sécurisée
+      <strong>Stripe (mode test)</strong> pour saisir une carte (ex. 4242 4242 4242 4242).
+    </p>
+
+    <div class="billing-toggle" role="group" aria-label="Type de facturation">
+      <button
+        type="button"
+        class="toggle-btn"
+        [class.active]="intervalSelection === 'MONTHLY'"
+        (click)="setInterval('MONTHLY')"
+      >
+        Mensuel
+      </button>
+      <button
+        type="button"
+        class="toggle-btn"
+        [class.active]="intervalSelection === 'YEARLY'"
+        (click)="setInterval('YEARLY')"
+      >
+        Annuel
+      </button>
+    </div>
+  </header>
+
+  <section class="messages-section">
+    <div class="alert alert-danger" *ngIf="error">
+      <i class="fas fa-circle-exclamation"></i> {{ error }}
+    </div>
+    <div class="alert alert-success" *ngIf="simSuccess">
+      <i class="fas fa-check-circle"></i> {{ simSuccess }}
+      <a routerLink="/mon-abonnement" class="inline-link">Voir mon abonnement</a>
+    </div>
+  </section>
+
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i> Chargement des offres…
+  </div>
+
+  <div class="pricing-row" *ngIf="!loading && !error">
+    <article class="price-card" *ngFor="let o of offres" [class.popular]="o.popular">
+      <span class="badge-limited" *ngIf="o.popular">Recommandé</span>
+      <h2 class="card-title">{{ o.nom }}</h2>
+      <p class="card-desc">{{ o.description || 'Forfait clinique Clinix' }}</p>
+      <div class="card-price">
+        <span class="amount">{{ prix(o) | number : '1.2-2' }}</span>
+        <span class="currency">DT / {{ intervalSelection === 'YEARLY' ? 'an' : 'mois' }}</span>
+      </div>
+      <p class="save-line" *ngIf="intervalSelection === 'YEARLY' && economie(o) > 0">
+        <i class="fas fa-piggy-bank"></i> Économie estimée ~{{ economie(o) | number : '1.0-0' }} DT / an
+      </p>
+      <ul class="features">
+        <li *ngFor="let line of resumeLimites(o)"><i class="fas fa-check"></i> {{ line }}</li>
+        <li *ngIf="(o.periodeEssaiJours ?? 0) > 0">
+          <i class="fas fa-gift"></i> Essai {{ o.periodeEssaiJours }} jours (Stripe)
+        </li>
+        <li><i class="fas fa-shield-halved"></i> Paiement sécurisé Stripe</li>
+      </ul>
+      <button type="button" class="btn-cta" [class.btn-cta-accent]="o.popular" (click)="choisirForfait(o)">
+        Choisir ce forfait
+      </button>
+      <button
+        type="button"
+        class="btn-sim"
+        (click)="simulerSansStripe(o, $event)"
+        [disabled]="simulatingId === o.id"
+      >
+        <span *ngIf="simulatingId !== o.id"><i class="fas fa-flask"></i> Simuler sans Stripe</span>
+        <span *ngIf="simulatingId === o.id"><i class="fas fa-spinner fa-spin"></i> …</span>
+      </button>
+    </article>
+  </div>
+
+  <div class="empty" *ngIf="!loading && !offres.length && !error">
+    <p>Aucun forfait clinique actif pour le moment.</p>
+    <a routerLink="/mon-abonnement" class="back-link">Retour</a>
+  </div>
+</div>

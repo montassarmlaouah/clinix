@@ -1,0 +1,501 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Services Médicaux</h1>
+        <p class="page-subtitle">Gestion des services et chambres de la clinique</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="ouvrirModalAjout()">
+          <i class="fas fa-plus"></i> Ajouter service
+        </button>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-success" *ngIf="successMessage">
+        <i class="fas fa-check-circle"></i> {{ successMessage }}
+      </div>
+      <div class="alert alert-luna-danger" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+      </div>
+    </section>
+
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Rechercher un service</label>
+        <div class="input-with-icon">
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="rechercheNom"
+            (ngModelChange)="appliquerFiltres()"
+            placeholder="Nom du service...">
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="luna-label">Statut</label>
+        <select class="form-control luna-input" [(ngModel)]="filtreStatut" (ngModelChange)="appliquerFiltres()">
+          <option value="TOUS">Tous les statuts</option>
+          <option value="ACTIF">Actifs</option>
+          <option value="INACTIF">Inactifs</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card card-active">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ servicesActifs }}</span>
+          <span class="stat-label">Actifs</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-inactive">
+        <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ servicesInactifs }}</span>
+          <span class="stat-label">Inactifs</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-rooms">
+        <div class="stat-icon"><i class="fas fa-door-closed"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalChambres }}</span>
+          <span class="stat-label">Chambres</span>
+        </div>
+      </div>
+
+      <div class="stat-card card-beds">
+        <div class="stat-icon"><i class="fas fa-bed"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalLits }}</span>
+          <span class="stat-label">Lits total</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="table-container luna-shadow">
+      <table class="licences-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Description</th>
+            <th>Chambres</th>
+            <th>Lits</th>
+            <th>Statut</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let service of paginatedServices" class="luna-row">
+            <td>
+              <div class="service-info">
+                <div class="service-icon">
+                  <i class="fas fa-hospital-alt"></i>
+                </div>
+                <div class="service-details">
+                  <div class="service-name">{{ service.nom }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="description-cell">
+              {{ service.description || 'Aucune description' }}
+            </td>
+            <td>
+              <span class="room-count">
+                <i class="fas fa-door-closed"></i> {{ service.nombreChambres ?? (service.chambres?.length || 0) }}
+              </span>
+            </td>
+            <td>
+              <span class="bed-count">
+                <i class="fas fa-bed"></i> {{ calculerLitsService(service) }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="service.actif ? 'badge-success' : 'badge-danger'">
+                <i class="fas" [ngClass]="service.actif ? 'fa-check-circle' : 'fa-times-circle'"></i>
+                {{ service.actif ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td>
+              <div class="action-group">
+                <button class="btn-action btn-view" (click)="ouvrirDetails(service)" title="Voir détails">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-action btn-sync" (click)="ouvrirModalEdition(service)" title="Modifier">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-action btn-delete"
+                  (click)="ouvrirModalSuppression(service)"
+                        [disabled]="!service.id"
+                        title="Supprimer">
+                  <i class="fas fa-trash"></i>
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="paginatedServices.length === 0">
+            <td colspan="6" class="empty-state">
+              <i class="fas fa-hospital-alt"></i>
+              <p>Aucun service trouvé</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="filteredServices.length > 0">
+      <span class="pagination-info">
+        Affichage de {{ startIndex }} à {{ endIndex }} sur {{ filteredServices.length }} services
+      </span>
+      <div class="pagination-controls">
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let page of totalPagesArray">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="goToPage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Détails du Service -->
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedService" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="section-title">
+              <i class="fas fa-info-circle"></i> Détails du Service
+            </h5>
+            <button type="button" class="btn-close"  (click)="fermerDetails()"></button>
+          </div>
+          <div class="modal-body">
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-hospital-alt"></i> Informations générales
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nom du service</label>
+                    <p>{{ selectedService.nom }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Statut</label>
+                    <p>
+                      <span class="status-pill" [ngClass]="selectedService.actif ? 'badge-success' : 'badge-danger'">
+                        {{ selectedService.actif ? 'Actif' : 'Inactif' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Date de création</label>
+                    <p>{{ selectedService.dateCreation | date:'dd/MM/yyyy' }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+
+                </div>
+                <div class="col-12">
+                  <div class="detail-item">
+                    <label>Description</label>
+                    <div class="description-content">
+                      {{ selectedService.description || 'Aucune description' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-door-closed"></i> Chambres ({{ selectedService.nombreChambres ?? (selectedService.chambres?.length || 0) }})
+              </h6>
+              <ng-container *ngIf="selectedService.chambres && selectedService.chambres.length > 0; else noChambres">
+                <div class="rooms-grid">
+                  <div class="room-item" *ngFor="let chambre of selectedService.chambres">
+                    <div class="room-icon">
+                      <i class="fas fa-door-closed"></i>
+                    </div>
+                    <div class="room-info">
+                      <div class="room-number">Chambre {{ chambre.numero }}</div>
+                      <div class="room-details">
+                        <span class="badge-luna badge-info">
+                          <i class="fas fa-bed"></i> {{ chambre.nombreLits || 0 }} lits
+                        </span>
+                        <span class="badge-luna badge-primary" *ngIf="chambre.type">
+                          {{ chambre.type }}
+                        </span>
+                      </div>
+                      <div *ngIf="chambre.equipements && chambre.equipements.length > 0" class="room-equipments">
+                        <small class="text-muted">
+                          <i class="fas fa-tools"></i> Équipements: {{ chambre.equipements.join(', ') }}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noChambres>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Aucune chambre pour ce service
+                </div>
+              </ng-template>
+            </div>
+
+            <div class="detail-section">
+              <h6 class="section-title">
+                <i class="fas fa-chart-bar"></i> Statistiques
+              </h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nombre total de chambres</label>
+                    <p class="stat-value">{{ selectedService.nombreChambres ?? (selectedService.chambres?.length || 0) }}</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="detail-item">
+                    <label>Nombre total de lits</label>
+                    <p class="stat-value">{{ calculerLitsService(selectedService) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="fermerDetails()">
+              Fermer
+            </button>
+            <button type="button" class="btn btn-primary" (click)="ouvrirModalEdition(selectedService)">
+              <i class="fas fa-edit"></i> Modifier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ajout de Service -->
+    <div class="modal fade show" *ngIf="showAddModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-plus-circle"></i> Ajouter un nouveau service
+            </h5>
+            <button type="button" class="btn-close" (click)="fermerModalAjout()"></button>
+          </div>
+          <form #addForm="ngForm" (ngSubmit)="ajouterService()">
+            <div class="modal-body">
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-info-circle"></i> Informations du service
+                </h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Nom du service <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="nouveauService.nom"
+                             name="nom"
+                             required
+                             placeholder="Ex: Cardiologie">
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Description</label>
+                      <textarea class="form-control luna-input"
+                                [(ngModel)]="nouveauService.description"
+                                name="description"
+                                rows="3"
+                                placeholder="Description du service..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="fermerModalAjout()">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="addForm.invalid">
+                <i class="fas fa-check-circle"></i> Créer le service
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Édition de Service -->
+    <div class="modal fade show" *ngIf="showEditModal && serviceEnEdition" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="fas fa-edit"></i> Modifier le service
+            </h5>
+            <button type="button" class="btn-close" (click)="fermerModalEdition()"></button>
+          </div>
+          <form #editForm="ngForm" (ngSubmit)="modifierService()">
+            <div class="modal-body">
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-info-circle"></i> Informations du service
+                </h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Nom du service <span class="text-danger">*</span></label>
+                      <input type="text"
+                             class="form-control luna-input"
+                             [(ngModel)]="serviceEnEdition.nom"
+                             name="nom"
+                             required>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="detail-item">
+                      <label>Statut</label>
+                      <select class="form-control luna-input" [(ngModel)]="serviceEnEdition.actif" name="actif">
+                        <option [ngValue]="true">Actif</option>
+                        <option [ngValue]="false">Inactif</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <div class="detail-item">
+                      <label>Description</label>
+                      <textarea class="form-control luna-input"
+                                [(ngModel)]="serviceEnEdition.description"
+                                name="description"
+                                rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <h6 class="section-title">
+                  <i class="fas fa-door-closed"></i> Gestion des chambres
+                </h6>
+                <div class="chambres-section">
+                  <ng-container *ngIf="chambresEdition.length > 0; else noChambresEdit">
+                    <div class="chambres-list">
+                      <div class="chambre-item" *ngFor="let chambre of chambresEdition; let i = index">
+                        <div class="chambre-header">
+                          <h6>{{ chambre.id ? 'Chambre ' + chambre.numero : 'Nouvelle chambre' }}</h6>
+                          <button type="button" class="btn-action btn-delete" (click)="supprimerChambreEdition(i)">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                        <div class="row">
+                          <div class="col-md-4">
+                            <div class="detail-item">
+                              <label>Numéro de chambre</label>
+                              <input type="text"
+                                     class="form-control luna-input"
+                                     [(ngModel)]="chambre.numero"
+                                     name="numero{{i}}"
+                                     required>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="detail-item">
+                              <label>Nombre de lits</label>
+                              <input type="number"
+                                     class="form-control luna-input"
+                                     [(ngModel)]="chambre.nombreLits"
+                                     name="lits{{i}}"
+                                     min="1"
+                                     required>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="equipements-section">
+                          <label>Équipements de la chambre</label>
+                          <div class="equipements-input-group">
+                            <input type="text"
+                                   class="form-control luna-input"
+                                   [(ngModel)]="chambre.nouvelEquipement"
+                                   placeholder="Ajouter un équipement...">
+                            <button type="button" class="btn btn-primary" (click)="ajouterEquipementEdition(i)">
+                              <i class="fas fa-plus"></i> Ajouter
+                            </button>
+                          </div>
+                          <div class="equipements-tags" *ngIf="chambre.equipements.length > 0">
+                            <span class="equipement-tag" *ngFor="let equip of chambre.equipements; let j = index">
+                              {{ equip }}
+                              <i class="fas fa-times" (click)="supprimerEquipementEdition(i, j)"></i>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </ng-container>
+                  <ng-template #noChambresEdit>
+                    <div class="alert alert-info">
+                      <i class="fas fa-info-circle"></i> Aucune chambre pour ce service
+                    </div>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" (click)="fermerModalEdition()">
+                Annuler
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">
+                <i class="fas fa-save"></i> Enregistrer les modifications
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Confirmation Suppression -->
+    <div class="modal fade show" *ngIf="showDeleteModal" style="display: block; background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content luna-glass">
+          <div class="modal-header">
+            <h5 class="modal-title">
+           Confirmer la suppression
+            </h5>
+            <button type="button" class="btn-close" (click)="fermerModalSuppression()"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-0">
+              Voulez-vous vraiment désactiver le service
+              <strong>{{ serviceToDelete?.nom || 'sélectionné' }}</strong> ?
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="fermerModalSuppression()">
+              Annuler
+            </button>
+            <button type="button" class="btn btn-primary" (click)="confirmerSuppression()">
+              <i class="fas fa-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

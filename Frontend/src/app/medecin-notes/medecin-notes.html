@@ -1,0 +1,94 @@
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
+
+  <header class="page-header page-header-notes">
+    <div class="header-title">
+      <h1><i class="bi bi-shield-lock header-icon"></i> Notes confidentielles</h1>
+      <p class="page-subtitle">
+        Rédigez des observations réservées au personnel médical : elles ne sont pas visibles par le patient.
+      </p>
+    </div>
+  </header>
+
+  <div class="confidential-banner" role="note">
+    <div class="confidential-banner-icon" aria-hidden="true">
+      <i class="bi bi-eye-slash"></i>
+    </div>
+    <div class="confidential-banner-text">
+      <strong>Usage interne</strong>
+      <span>Ces notes restent dans le dossier médical avec un accès restreint ; ne les partagez qu’avec les professionnels habilités.</span>
+    </div>
+  </div>
+
+  <div class="messages-section">
+    <div class="alert alert-luna-success" *ngIf="success">
+      <i class="bi bi-check-circle me-2"></i>{{ success }}
+    </div>
+    <div class="alert alert-luna-danger" *ngIf="error">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+    </div>
+  </div>
+
+  <div class="notes-layout">
+    <section class="luna-card luna-card-main">
+      <h2 class="card-title"><i class="bi bi-person-lines-fill me-2"></i>Sélection et rédaction</h2>
+      <p class="card-hint">Choisissez un patient, puis saisissez ou mettez à jour les notes confidentielles de son dossier.</p>
+
+      <label class="luna-label" for="notes-patient-select">Patient</label>
+      <select
+        id="notes-patient-select"
+        class="luna-input mb-3"
+        [(ngModel)]="patientId"
+        (ngModelChange)="charger()"
+      >
+        <option value="">— Choisir un patient —</option>
+        <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+      </select>
+
+      <div class="loading-block" *ngIf="patientId && loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p>Chargement du dossier et des notes…</p>
+      </div>
+
+      <div class="editor-block" *ngIf="dossier && !loading">
+        <div class="editor-head">
+          <label class="luna-label mb-0" for="notes-textarea">Notes (personnel médical)</label>
+          <span class="char-hint">{{ notes.length }} caractères</span>
+        </div>
+        <textarea
+          id="notes-textarea"
+          class="luna-input notes-textarea"
+          rows="12"
+          [(ngModel)]="notes"
+          placeholder="Observations cliniques, hypothèses de travail, éléments sensibles, consignes internes…"
+        ></textarea>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" (click)="enregistrer()" [disabled]="saving">
+            <span *ngIf="saving" class="loading-spinner loading-spinner-sm" aria-hidden="true"></span>
+            <i class="bi bi-cloud-check me-2" *ngIf="!saving"></i>
+            {{ saving ? 'Enregistrement…' : 'Enregistrer les notes' }}
+          </button>
+        </div>
+      </div>
+
+      <p class="empty-hint" *ngIf="!patientId">
+        <i class="bi bi-info-circle me-2"></i>Sélectionnez un patient pour afficher et modifier ses notes confidentielles.
+      </p>
+    </section>
+
+    <aside class="luna-card luna-card-aside">
+      <h2 class="card-title card-title-aside"><i class="bi bi-lightbulb me-2"></i>Bonnes pratiques</h2>
+      <ul class="tips-list">
+        <li>Soyez factuel et daté si nécessaire ; évitez les jugements non médicaux.</li>
+        <li>Ne dupliquez pas ici ce qui doit figurer dans le compte-rendu visible au patient.</li>
+        <li>En cas de doute sur le partage d’une information, respectez la politique de votre établissement.</li>
+      </ul>
+      <div class="aside-foot">
+        <i class="bi bi-shield-check"></i>
+        <span>Données de santé — traitement conforme aux règles internes de la clinique.</span>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+<div class="licences-container">
+  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Consultations</h1>
+      <p class="page-subtitle">Patients clinique &amp; cabinet, consultations et rendez-vous.</p>
+    </div>
+  </header>
+
+  <div class="messages-section">
+    <div class="alert alert-luna-success" *ngIf="success"><i class="bi bi-check-circle me-2"></i>{{ success }}</div>
+    <div class="alert alert-luna-danger" *ngIf="error"><i class="bi bi-exclamation-triangle me-2"></i>{{ error }}</div>
+  </div>
+
+  <div class="workspace-grid">
+    <section class="luna-card">
+      <h2 class="card-title"><i class="bi bi-people me-2"></i>Patients</h2>
+      <p class="card-hint">Liste des patients de la clinique et de votre cabinet privé.</p>
+
+      <label class="luna-label">Patient pour la consultation</label>
+      <select class="luna-input mb-3" [(ngModel)]="patientId" (ngModelChange)="chargerListe()">
+        <option value="">— Choisir un patient —</option>
+        <optgroup label="Clinique" *ngIf="patientsClinique.length">
+          <option *ngFor="let p of patientsClinique" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+        </optgroup>
+        <optgroup label="Cabinet" *ngIf="patientsCabinet.length">
+          <option *ngFor="let p of patientsCabinet" [value]="p.id">{{ p.prenom }} {{ p.nom }} (cabinet)</option>
+        </optgroup>
+      </select>
+
+      <div *ngIf="patientId">
+        <h3 class="h6 section-inner-title">Nouvelle consultation</h3>
+        <textarea class="luna-input mb-2" rows="3" [(ngModel)]="form.motif" placeholder="Motif de consultation"></textarea>
+        <button type="button" class="btn btn-primary" (click)="creer()" [disabled]="!medecinId">
+          <i class="bi bi-plus-lg me-1"></i>Créer
+        </button>
+        <p class="small text-muted mt-2 mb-0" *ngIf="!medecinId">Identifiant médecin manquant dans le jeton de session.</p>
+      </div>
+
+      <div *ngIf="patientId && liste.length" class="mt-4 pt-3 border-top-luna">
+        <h3 class="h6 section-inner-title">Historique</h3>
+        <div class="table-responsive table-luna-wrap">
+          <table class="luna-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Motif</th>
+                <th>Diagnostic</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of liste">
+                <td>{{ c.date | date:'short' }}</td>
+                <td>{{ c.motif }}</td>
+                <td>{{ c.diagnostic || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="h6 section-inner-title mt-3">Compléter le diagnostic</h3>
+        <select class="luna-input mb-2" [(ngModel)]="selectedConsultationId">
+          <option value="">— Choisir une consultation —</option>
+          <option *ngFor="let c of liste" [value]="c.id">{{ c.motif }} ({{ c.date | date:'short' }})</option>
+        </select>
+        <textarea class="luna-input mb-2" [(ngModel)]="diagForm.diagnostic" placeholder="Diagnostic"></textarea>
+        <textarea class="luna-input mb-2" [(ngModel)]="diagForm.observations" placeholder="Observations"></textarea>
+        <button type="button" class="btn btn-outline-luna" (click)="enregistrerDiagnostic()">Enregistrer le diagnostic</button>
+      </div>
+    </section>
+
+    <aside class="luna-card">
+      <h2 class="card-title"><i class="bi bi-person-plus me-2"></i>Patient cabinet</h2>
+      <p class="card-hint">Ajouter un patient suivi hors file active clinique (lié à votre cabinet).</p>
+      <div class="form-grid-2">
+        <div>
+          <label class="luna-label">Nom</label>
+          <input class="luna-input" [(ngModel)]="cabinetForm.nom" />
+        </div>
+        <div>
+          <label class="luna-label">Prénom</label>
+          <input class="luna-input" [(ngModel)]="cabinetForm.prenom" />
+        </div>
+        <div>
+          <label class="luna-label">Téléphone</label>
+          <input class="luna-input" [(ngModel)]="cabinetForm.telephone" />
+        </div>
+        <div>
+          <label class="luna-label">Date de naissance</label>
+          <input type="date" class="luna-input" [(ngModel)]="cabinetForm.dateNaissance" />
+        </div>
+        <div>
+          <label class="luna-label">Sexe (optionnel)</label>
+          <input class="luna-input" [(ngModel)]="cabinetForm.sexe" placeholder="M / F" />
+        </div>
+        <div>
+          <label class="luna-label">Adresse (optionnel)</label>
+          <input class="luna-input" [(ngModel)]="cabinetForm.adresse" />
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary mt-3" (click)="ajouterPatientCabinet()" [disabled]="!medecinId">
+        Enregistrer le patient cabinet
+      </button>
+
+      <h2 class="card-title mt-4 pt-3 border-top-luna"><i class="bi bi-calendar-plus me-2"></i>Rendez-vous cabinet</h2>
+      <label class="luna-label">Patient</label>
+      <select class="luna-input mb-2" [(ngModel)]="rdvCabForm.patientId">
+        <option value="">— Patient cabinet —</option>
+        <option *ngFor="let p of patientsCabinet" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+      </select>
+      <label class="luna-label">Date et heure</label>
+      <input type="datetime-local" class="luna-input mb-2" [(ngModel)]="rdvCabForm.dateHeureLocal" />
+      <label class="luna-label">Motif</label>
+      <input class="luna-input mb-2" [(ngModel)]="rdvCabForm.motif" />
+      <button type="button" class="btn btn-primary" (click)="creerRdvCabinet()" [disabled]="!medecinId">Créer le RDV</button>
+    </aside>
+  </div>
+
+  <section class="luna-card mt-3" *ngIf="cliniqueId">
+    <h2 class="card-title"><i class="bi bi-hospital me-2"></i>Rendez-vous clinique</h2>
+    <p class="card-hint">Patients de l'établissement : validez les demandes encore au statut « planifié ».</p>
+    <div class="table-responsive table-luna-wrap" *ngIf="rdvClinique.length; else noRdvClin">
+      <table class="luna-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Patient</th>
+            <th>Motif</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of rdvClinique">
+            <td>{{ r.dateHeure | date:'short' }}</td>
+            <td>{{ nomPatient(r) }}</td>
+            <td>{{ r.motif }}</td>
+            <td><span class="status-pill" [ngClass]="{'pill-ok': r.statut === 'CONFIRME', 'pill-wait': r.statut === 'PLANIFIE'}">{{ r.statut }}</span></td>
+            <td>
+              <button type="button" class="btn btn-sm btn-primary" *ngIf="peutConfirmerClinique(r)" (click)="confirmerRdvClinique(r)">Valider</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noRdvClin><p class="text-muted mb-0">Aucun rendez-vous clinique à afficher.</p></ng-template>
+  </section>
+
+  <section class="luna-card mt-3">
+    <h2 class="card-title"><i class="bi bi-calendar-week me-2"></i>Rendez-vous cabinet (liste)</h2>
+    <div class="table-responsive table-luna-wrap" *ngIf="rdvCabinet.length; else noRdvCab">
+      <table class="luna-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Patient</th>
+            <th>Motif</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of rdvCabinet">
+            <td>{{ r.dateHeure | date:'short' }}</td>
+            <td>{{ nomPatient(r) }}</td>
+            <td>{{ r.motif }}</td>
+            <td><span class="status-pill" [ngClass]="{'pill-ok': r.statut === 'CONFIRME', 'pill-wait': r.statut === 'PLANIFIE'}">{{ r.statut }}</span></td>
+            <td>
+              <button type="button" class="btn btn-sm btn-primary" *ngIf="peutConfirmerClinique(r)" (click)="confirmerRdvClinique(r)">Valider</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #noRdvCab><p class="text-muted mb-0">Aucun rendez-vous cabinet.</p></ng-template>
+  </section>
+</div>

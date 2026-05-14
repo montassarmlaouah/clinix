@@ -1,0 +1,8 @@
+# Copier ce fichier vers : src/main/resources/stripe-local.properties
+# (stripe-local.properties est ignoré par Git — ne committez jamais de vraie clé.)
+#
+# Clés mode TEST : https://dashboard.stripe.com/test/apikeys
+
+STRIPE_SECRET_KEY=sk_test_REMPLACEZ_PAR_VOTRE_CLE
+# STRIPE_PUBLISHABLE_KEY=pk_test_...
+# STRIPE_WEBHOOK_SECRET=whsec_...

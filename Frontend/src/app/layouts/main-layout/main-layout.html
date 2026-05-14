@@ -1,0 +1,17 @@
+@if(!isSuperAdmin()) {
+<app-header></app-header>
+<main class="standard-layout">
+  <router-outlet></router-outlet>
+</main>
+<app-footer></app-footer>
+} @else {
+<div class="super-admin-layout">
+  <app-header (sidebarToggled)="onSidebarToggle($event)"></app-header>
+  <div class="super-admin-content" [class.content-collapsed]="isSidebarCollapsed">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+}
+
+<!-- Chatbot disponible sur toutes les pages -->
+<app-chatbot></app-chatbot>

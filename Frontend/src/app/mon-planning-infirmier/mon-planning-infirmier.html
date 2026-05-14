@@ -1,0 +1,71 @@
+<div class="main-card">
+  <div class="licences-container">
+    <header class="page-header">
+      <div class="header-title">
+        <h1 class="luna-dark-text">Mon planning</h1>
+        <p class="page-subtitle">Consultation du planning hebdomadaire</p>
+      </div>
+    </header>
+
+    <section class="messages-section">
+      <div class="alert alert-luna-danger" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+      </div>
+    </section>
+
+    <section class="filters-section luna-glass">
+      <div class="filter-group">
+        <label class="luna-label">Semaine (début)</label>
+        <div class="input-with-icon">
+          <input type="date" class="form-control luna-input" [(ngModel)]="weekStart" (ngModelChange)="onWeekStartChange()">
+          <button type="button" class="btn btn-secondary" (click)="telechargerPdf()" [disabled]="!weekStart || weekDays.length === 0">
+            <i class="fas fa-file-pdf"></i> PDF
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="table-container luna-shadow planning-summary">
+      <div class="summary-header">
+        <h2>Planning (Jour × Shift)</h2>
+        <span *ngIf="isLoading">Chargement...</span>
+        <span *ngIf="!isLoading">{{ weekDays.length }} jours</span>
+      </div>
+
+      <table class="licences-table planning-table">
+        <thead>
+          <tr>
+            <th>Jour</th>
+            <th>07:00 → 13:00 Matin</th>
+            <th>13:00 → 19:00 Soir</th>
+            <th>19:00 → 07:00 Garde</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let d of getPlanningByDayAndShift()" class="luna-row">
+            <td><strong>{{ d.label }}</strong><br><small>{{ d.date }}</small></td>
+            <td>
+              <div *ngIf="d.matin.length; else emptyMatin">
+                <div *ngFor="let n of d.matin">{{ n }}</div>
+              </div>
+              <ng-template #emptyMatin>—</ng-template>
+            </td>
+            <td>
+              <div *ngIf="d.apresMidi.length; else emptyApres">
+                <div *ngFor="let n of d.apresMidi">{{ n }}</div>
+              </div>
+              <ng-template #emptyApres>—</ng-template>
+            </td>
+            <td>
+              <div *ngIf="d.nuit.length; else emptyNuit">
+                <div *ngFor="let n of d.nuit">{{ n }}</div>
+              </div>
+              <ng-template #emptyNuit>—</ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
