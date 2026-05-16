@@ -1,7 +1,6 @@
 package com.pfe.pfe.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.springframework.http.HttpStatus;
@@ -17,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.util.StringUtils;
 
+import com.pfe.pfe.dto.TraitementPanneDTO;
 import com.pfe.pfe.model.Equipement;
 import com.pfe.pfe.security.services.CustomUserDetails;
 import com.pfe.pfe.service.EquipementService;
@@ -25,8 +26,8 @@ import com.pfe.pfe.service.EquipementService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Espace technicien maintenance : lecture des équipements de la clinique du JWT, pannes,
- * renvoi des alertes (notifications + e-mails si SMTP configuré).
+ * Espace technicien maintenance : lecture des équipements de la clinique du JWT et traitement des pannes.
+ * Le renvoi des e-mails d'alerte est réservé à l'admin clinique ({@code POST /api/equipements/{id}/alerte-email}).
  */
 @RestController
 @RequestMapping("/api/technicien-maintenance")
@@ -60,20 +61,30 @@ public class TechnicienMaintenanceWorkspaceController {
     }
 
     /**
-     * Renvoie notifications in-app + e-mails d'alerte (admins clinique + techniciens de la clinique).
-     * Corps JSON optionnel : <code>{"note":"texte libre"}</code>
+     * Clôture une panne (ou hors service) : rapport + remise en fonctionnel, e-mail aux admins clinique.
      */
-    @PostMapping("/equipements/{id}/alerte-email")
-    public ResponseEntity<Void> renvoyerAlerteEmail(
+    @PostMapping("/equipements/{id}/traiter-panne")
+    public ResponseEntity<Equipement> traiterPanne(
             @PathVariable String id,
-            @RequestBody(required = false) Map<String, String> body) {
+            @RequestBody TraitementPanneDTO body) {
         String cid = cliniqueTechnicien();
-        String note = body != null ? body.get("note") : null;
-        exec(() -> {
-            equipementService.renvoyerAlertesPanne(id, cid, note);
-            return null;
-        });
-        return ResponseEntity.noContent().build();
+        Equipement e = exec(() -> equipementService.obtenirEquipementParId(id));
+        String ecid = e.getCliniqueId() != null ? e.getCliniqueId().trim() : "";
+        if (!StringUtils.hasText(ecid) || !ecid.equals(cid)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet équipement n'appartient pas à votre clinique.");
+        }
+        Equipement.EtatTechnique et = e.getEtatTechnique();
+        if (et != Equipement.EtatTechnique.EN_PANNE && et != Equipement.EtatTechnique.HORS_SERVICE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Seuls les équipements en panne ou hors service peuvent être traités par ce flux.");
+        }
+        Equipement maj = exec(() -> equipementService.traiterPanne(
+                id,
+                body.getRepairType(),
+                body.getRepairNotes(),
+                body.getRepairHours(),
+                body.getRepairMinutes()));
+        return ResponseEntity.ok(maj);
     }
 
     private static String cliniqueTechnicien() {

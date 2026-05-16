@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { NotificationService, Notification } from '../service/notification.service';
 import { AuthService } from '../service/auth-service';
 
@@ -14,7 +15,7 @@ export interface RoleNotificationGuide {
 
 @Component({
   selector: 'app-notifaction',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './notifaction.html',
   styleUrl: './notifaction.css',
 })
@@ -35,6 +36,28 @@ export class Notifaction implements OnInit {
   ngOnInit(): void {
     this.loadTodayNotifications();
     this.loadUnreadCount();
+  }
+
+  /** Nombre de notifications du jour encore non lues (liste affichée). */
+  get unreadToday(): number {
+    return this.todayNotifications.filter((n) => !n.lu).length;
+  }
+
+  trackByNotifId(_index: number, n: Notification): number {
+    return n.id;
+  }
+
+  libelleType(type: string | undefined): string {
+    switch ((type || '').toUpperCase()) {
+      case 'SUCCESS':
+        return 'Succès';
+      case 'WARNING':
+        return 'Attention';
+      case 'ERROR':
+        return 'Erreur';
+      default:
+        return 'Information';
+    }
   }
 
   loadTodayNotifications(): void {
@@ -70,6 +93,7 @@ export class Notifaction implements OnInit {
         next: () => {
           notification.lu = true;
           this.loadUnreadCount();
+          this.notificationService.requestCountRefresh();
         },
         error: (err) => {
           console.error('Erreur lors du marquage comme lu:', err);
@@ -96,6 +120,7 @@ export class Notifaction implements OnInit {
         next: () => {
           this.todayNotifications = this.todayNotifications.filter(n => n.id !== id);
           this.loadUnreadCount();
+          this.notificationService.requestCountRefresh();
         },
         error: (err) => {
           console.error('Erreur lors de la suppression:', err);
@@ -153,5 +178,10 @@ export class Notifaction implements OnInit {
 
   toggleRoleAccordion(index: number): void {
     this.expandedRoleIndex = this.expandedRoleIndex === index ? null : index;
+  }
+
+  /** Indique si le lien « Ouvrir » peut être affiché pour le rôle courant (aligné sur RoleGuard). */
+  lienNotificationAutorise(n: Notification): boolean {
+    return this.auth.peutAccederNotificationLien(n.actionUrl);
   }
 }

@@ -126,15 +126,15 @@
 }
 
 .card-active {
-    border-bottom-color: #10b981;
+    border-bottom-color: var(--luna-primary);
 }
 
 .card-pending {
-    border-bottom-color: #f59e0b;
+    border-bottom-color: var(--luna-deep);
 }
 
 .card-suspended {
-    border-bottom-color: #ef4444;
+    border-bottom-color: var(--luna-dark);
 }
 
 .card-total {
@@ -146,16 +146,10 @@
     color: var(--luna-deep);
 }
 
-.card-active .stat-icon {
-    color: #10b981;
-}
-
-.card-pending .stat-icon {
-    color: #f59e0b;
-}
-
+.card-active .stat-icon,
+.card-pending .stat-icon,
 .card-suspended .stat-icon {
-    color: #ef4444;
+    color: var(--luna-deep);
 }
 
 .stat-info {

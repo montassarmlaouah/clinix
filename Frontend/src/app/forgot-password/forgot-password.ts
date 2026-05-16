@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 
+export type RecoveryChannel = 'sms' | 'email';
+
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
@@ -12,22 +14,22 @@ import { AuthService } from '../service/auth-service';
   styleUrl: './forgot-password.css',
 })
 export class ForgotPassword implements OnInit, OnDestroy {
-  // Navigation entre étapes
   currentStep = 1;
 
-  // Étape 1: Téléphone
-  telephone = '';
-  phoneError = '';
+  recoveryChannel: RecoveryChannel = 'sms';
 
-  // Étape 2: Code de vérification
+  telephone = '';
+  email = '';
+  phoneError = '';
+  emailError = '';
+
   verificationCode = '';
   codeError = '';
   countdown = 60;
   canResend = false;
-  private countdownInterval: any;
-  private resetToken = ''; // Token reçu après vérification du code
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
+  private resetToken = '';
 
-  // Étape 3: Nouveau mot de passe
   newPassword = '';
   confirmPassword = '';
   passwordError = '';
@@ -35,7 +37,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
   showPassword = false;
   showConfirmPassword = false;
 
-  // Indicateurs de force du mot de passe
   passwordStrength = 0;
   passwordStrengthLabel = '';
   hasMinLength = false;
@@ -43,7 +44,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
   hasLowercase = false;
   hasNumber = false;
 
-  // Messages
   errorMessage = '';
   successMessage = '';
   isLoading = false;
@@ -55,10 +55,14 @@ export class ForgotPassword implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    // Écouter les changements de mot de passe
     const prefilledPhone = this.route.snapshot.queryParamMap.get('telephone');
     if (prefilledPhone) {
       this.telephone = prefilledPhone.replace(/\s/g, '');
+    }
+    const prefilledEmail = this.route.snapshot.queryParamMap.get('email');
+    if (prefilledEmail) {
+      this.email = prefilledEmail.trim();
+      this.recoveryChannel = 'email';
     }
   }
 
@@ -66,7 +70,13 @@ export class ForgotPassword implements OnInit, OnDestroy {
     this.clearCountdown();
   }
 
-  // Masque le numéro de téléphone pour l'affichage
+  setChannel(ch: RecoveryChannel): void {
+    this.recoveryChannel = ch;
+    this.clearMessages();
+    this.phoneError = '';
+    this.emailError = '';
+  }
+
   get maskedPhone(): string {
     if (!this.telephone) return '';
     const phone = this.telephone.replace(/\s/g, '');
@@ -74,7 +84,22 @@ export class ForgotPassword implements OnInit, OnDestroy {
     return phone.slice(0, 4) + '****' + phone.slice(-2);
   }
 
-  // Validation du téléphone
+  get maskedEmail(): string {
+    const e = (this.email || '').trim();
+    if (!e.includes('@')) return e || '***';
+    const [local, domain] = e.split('@');
+    if (local.length <= 2) return '*@' + domain;
+    return local.slice(0, 2) + '***@' + domain;
+  }
+
+  get maskedContact(): string {
+    return this.recoveryChannel === 'sms' ? this.maskedPhone : this.maskedEmail;
+  }
+
+  get step1Label(): string {
+    return this.recoveryChannel === 'sms' ? 'Téléphone' : 'E-mail';
+  }
+
   validatePhone(): boolean {
     this.phoneError = '';
     const phone = this.telephone.replace(/\s/g, '');
@@ -84,7 +109,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
       return false;
     }
 
-    // Format tunisien: 216 suivi de 8 chiffres, +216 suivi de 8 chiffres, ou juste 8 chiffres
     const phoneRegex = /^(\+?216)?[0-9]{8}$/;
     if (!phoneRegex.test(phone)) {
       this.phoneError = 'Format invalide. Ex: 21612345678 ou 12345678';
@@ -94,25 +118,54 @@ export class ForgotPassword implements OnInit, OnDestroy {
     return true;
   }
 
-  // Étape 1: Soumettre le numéro de téléphone
-  submitPhone(): void {
-    this.clearMessages();
+  validateEmail(): boolean {
+    this.emailError = '';
+    const e = (this.email || '').trim();
+    if (!e) {
+      this.emailError = 'L\'adresse e-mail est requise';
+      return false;
+    }
+    const re = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    if (!re.test(e)) {
+      this.emailError = 'Format d\'e-mail invalide';
+      return false;
+    }
+    return true;
+  }
 
-    if (!this.validatePhone()) return;
-
-    this.isLoading = true;
-
-    // Normaliser le téléphone au format 216XXXXXXXX
+  private normalizePhone(): string {
     let normalizedPhone = this.telephone.replace(/\s/g, '').replace(/^\+/, '');
     if (!normalizedPhone.startsWith('216')) {
       normalizedPhone = '216' + normalizedPhone;
     }
-    this.telephone = normalizedPhone;
+    return normalizedPhone;
+  }
 
-    this.authService.sendVerificationCode(this.telephone).subscribe({
-      next: (response: any) => {
+  sendCode(): void {
+    this.clearMessages();
+
+    if (this.recoveryChannel === 'sms') {
+      if (!this.validatePhone()) return;
+      this.telephone = this.normalizePhone();
+    } else {
+      if (!this.validateEmail()) return;
+      this.email = this.email.trim().toLowerCase();
+    }
+
+    this.isLoading = true;
+    const payload =
+      this.recoveryChannel === 'sms'
+        ? { telephone: this.telephone }
+        : { email: this.email };
+
+    this.authService.sendForgotPasswordCode(payload).subscribe({
+      next: (response: { message?: string; emailSent?: boolean }) => {
         this.isLoading = false;
         this.successMessage = response.message || 'Code de vérification envoyé';
+        if (this.recoveryChannel === 'email' && response.emailSent === false) {
+          this.successMessage +=
+            ' Si vous ne recevez pas d\'e-mail, contactez l\'administrateur (configuration e-mail du serveur).';
+        }
         this.currentStep = 2;
         this.startCountdown();
       },
@@ -123,7 +176,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
     });
   }
 
-  // Gestion du countdown pour renvoyer le code
   startCountdown(): void {
     this.countdown = 60;
     this.canResend = false;
@@ -145,13 +197,17 @@ export class ForgotPassword implements OnInit, OnDestroy {
     }
   }
 
-  // Renvoyer le code
   resendCode(): void {
     this.clearMessages();
     this.isLoading = true;
 
-    this.authService.sendVerificationCode(this.telephone).subscribe({
-      next: (response: any) => {
+    const payload =
+      this.recoveryChannel === 'sms'
+        ? { telephone: this.telephone }
+        : { email: this.email };
+
+    this.authService.sendForgotPasswordCode(payload).subscribe({
+      next: () => {
         this.isLoading = false;
         this.successMessage = 'Nouveau code envoyé';
         this.startCountdown();
@@ -163,18 +219,15 @@ export class ForgotPassword implements OnInit, OnDestroy {
     });
   }
 
-  // Gestion de la saisie du code de vérification
   onCodeInput(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
     const value = input.value;
 
-    // Ne garder que les chiffres
     if (!/^\d*$/.test(value)) {
       input.value = '';
       return;
     }
 
-    // Passer au champ suivant
     if (value && index < 5) {
       const nextInput = document.getElementById('code-' + (index + 1)) as HTMLInputElement;
       if (nextInput) nextInput.focus();
@@ -186,7 +239,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
   onCodeKeydown(event: KeyboardEvent, index: number): void {
     const input = event.target as HTMLInputElement;
 
-    // Retour arrière
     if (event.key === 'Backspace' && !input.value && index > 0) {
       const prevInput = document.getElementById('code-' + (index - 1)) as HTMLInputElement;
       if (prevInput) {
@@ -202,9 +254,9 @@ export class ForgotPassword implements OnInit, OnDestroy {
     const digits = pastedData.replace(/\D/g, '').slice(0, 6);
 
     for (let i = 0; i < 6; i++) {
-      const input = document.getElementById('code-' + i) as HTMLInputElement;
-      if (input) {
-        input.value = digits[i] || '';
+      const inp = document.getElementById('code-' + i) as HTMLInputElement;
+      if (inp) {
+        inp.value = digits[i] || '';
       }
     }
 
@@ -214,13 +266,12 @@ export class ForgotPassword implements OnInit, OnDestroy {
   updateVerificationCode(): void {
     let code = '';
     for (let i = 0; i < 6; i++) {
-      const input = document.getElementById('code-' + i) as HTMLInputElement;
-      if (input) code += input.value;
+      const inp = document.getElementById('code-' + i) as HTMLInputElement;
+      if (inp) code += inp.value;
     }
     this.verificationCode = code;
   }
 
-  // Étape 2: Vérifier le code
   submitCode(): void {
     this.clearMessages();
     this.codeError = '';
@@ -232,11 +283,16 @@ export class ForgotPassword implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    this.authService.verifyCode(this.telephone, this.verificationCode).subscribe({
-      next: (response: any) => {
+    const payload =
+      this.recoveryChannel === 'sms'
+        ? { telephone: this.telephone, code: this.verificationCode }
+        : { email: this.email, code: this.verificationCode };
+
+    this.authService.verifyForgotPasswordCode(payload).subscribe({
+      next: (response: { resetToken?: string; message?: string }) => {
         this.isLoading = false;
         this.resetToken = response.resetToken || '';
-        this.successMessage = 'Code vérifié avec succès';
+        this.successMessage = response.message || 'Code vérifié avec succès';
         this.currentStep = 3;
         this.clearCountdown();
       },
@@ -247,7 +303,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
     });
   }
 
-  // Validation du mot de passe
   checkPasswordStrength(): void {
     const password = this.newPassword;
     this.hasMinLength = password.length >= 8;
@@ -293,7 +348,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
-  // Étape 3: Soumettre le nouveau mot de passe
   submitNewPassword(): void {
     this.clearMessages();
     this.passwordError = '';
@@ -313,8 +367,13 @@ export class ForgotPassword implements OnInit, OnDestroy {
 
     this.isLoading = true;
 
-    this.authService.resetPassword(this.telephone, this.newPassword, this.resetToken).subscribe({
-      next: (response: any) => {
+    const payload =
+      this.recoveryChannel === 'sms'
+        ? { telephone: this.telephone, newPassword: this.newPassword, resetToken: this.resetToken }
+        : { email: this.email, newPassword: this.newPassword, resetToken: this.resetToken };
+
+    this.authService.resetForgotPassword(payload).subscribe({
+      next: () => {
         this.isLoading = false;
         this.currentStep = 4;
       },
@@ -325,7 +384,6 @@ export class ForgotPassword implements OnInit, OnDestroy {
     });
   }
 
-  // Retour à l'étape précédente
   goBack(): void {
     this.clearMessages();
     if (this.currentStep > 1) {

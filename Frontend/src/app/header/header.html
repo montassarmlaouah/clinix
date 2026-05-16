@@ -111,21 +111,13 @@
         <span *ngIf="!isSidebarCollapsed">Demandes d’opération</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-capsule"></i>
-        <span *ngIf="!isSidebarCollapsed">Demandes médicaments</span>
-        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
-      </a>
+      
       <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
         <i class="bi bi-credit-card-2-front"></i>
-        <span *ngIf="!isSidebarCollapsed">Facturation — abonnement</span>
+        <span *ngIf="!isSidebarCollapsed">Facturation  patient</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/tarifs-abonnement" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-grid-3x3-gap"></i>
-        <span *ngIf="!isSidebarCollapsed">Forfaits &amp; paiement</span>
-        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
-      </a>
+      
     </div>
     <div class="menu-section" *ngIf="hasAnyRole(['ROLE_MEDECIN'])">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
@@ -309,9 +301,9 @@
         <span *ngIf="!isSidebarCollapsed">Dashboard</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/technicien-equipements" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-exclamation-triangle"></i>
-        <span *ngIf="!isSidebarCollapsed">Équipements en panne</span>
+      <a routerLink="/equipements" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-tools"></i>
+        <span *ngIf="!isSidebarCollapsed">Équipements</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
 
@@ -385,14 +377,24 @@
         </div>
       </div>
       <div class="header-actions">
+        <a *ngIf="auth.isTechnicienMaintenance()" routerLink="/equipements" routerLinkActive="active"
+          class="btn btn-sm btn-outline-primary text-nowrap me-2 d-none d-sm-inline-flex align-items-center gap-1"
+          title="Gestion des équipements de la clinique">
+          <i class="bi bi-tools"></i>
+          <span>Équipements</span>
+        </a>
         <div class="search-box">
           <i class="bi bi-search"></i>
           <input type="text" placeholder="Rechercher..." spellcheck="false" />
         </div>
-        <div class="notif" routerLink="/notifications" style="cursor: pointer;">
-          <i class="bi bi-bell"></i>
-          <span class="badge" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount }}</span>
-        </div>
+        <a
+          routerLink="/notifications"
+          class="notif"
+          title="Notifications"
+          aria-label="Ouvrir la page des notifications">
+          <i class="bi bi-bell" aria-hidden="true"></i>
+          <span class="notif-badge" *ngIf="unreadNotificationsCount > 0">{{ unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount }}</span>
+        </a>
       </div>
     </div>
   </header>

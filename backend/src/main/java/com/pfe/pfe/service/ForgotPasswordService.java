@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +24,7 @@ import com.pfe.pfe.model.Patient;
 import com.pfe.pfe.model.Pharmacien;
 import com.pfe.pfe.model.Radiologue;
 import com.pfe.pfe.model.Secretaire;
+import com.pfe.pfe.model.SuperAdministrateur;
 import com.pfe.pfe.model.TechnicienMaintenance;
 import com.pfe.pfe.model.User;
 import com.pfe.pfe.repository.AdministrateurCliniqueRepository;
@@ -33,6 +36,7 @@ import com.pfe.pfe.repository.PharmacienRepository;
 import com.pfe.pfe.repository.RadiologueRepository;
 import com.pfe.pfe.repository.SecretaireRepository;
 import com.pfe.pfe.repository.TechnicienMaintenanceRepository;
+import com.pfe.pfe.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +52,8 @@ public class ForgotPasswordService {
     private final OtpSmsService otpSmsService;
     private final TunisieSmsService tunisieSmsService;
     private final PasswordEncoder passwordEncoder;
+    private final PersonnelEmailService personnelEmailService;
+    private final UserRepository userRepository;
     
     // Repositories pour tous les types d'utilisateurs
     private final PatientRepository patientRepository;
@@ -62,19 +68,23 @@ public class ForgotPasswordService {
 
     // Stockage des tokens de réinitialisation (en production, utiliser Redis)
     private final Map<String, ResetTokenData> resetTokenStorage = new ConcurrentHashMap<>();
-    
+
+    /** OTP e-mail (clé = e-mail normalisé minuscule) */
+    private final Map<String, EmailOtpData> emailOtpStorage = new ConcurrentHashMap<>();
+
     // Durée de validité du token (15 minutes)
     private static final int TOKEN_VALIDITY_MINUTES = 15;
 
+    private static final int EMAIL_OTP_VALIDITY_MINUTES = 5;
+
     /**
-     * Étape 1: Envoyer un code de vérification
+     * Étape 1: Envoyer un code de vérification par SMS
      */
     public Map<String, Object> sendVerificationCode(String telephone) {
         Map<String, Object> response = new HashMap<>();
-        
-        // Vérifier si le numéro existe dans la base
+
         UserInfo userInfo = findUserByTelephone(telephone);
-        
+
         if (userInfo == null) {
             log.warn("Tentative de réinitialisation pour un téléphone non enregistré: {}", telephone);
             response.put("success", false);
@@ -82,7 +92,6 @@ public class ForgotPasswordService {
             return response;
         }
 
-        // Envoyer le code OTP
         var otpResult = otpSmsService.envoyerCodeOtp(telephone);
         if (!otpResult.smsEnvoyeParApi()) {
             log.warn("OTP généré mais envoi TunisieSMS non confirmé pour {} — détail côté logs [OTP]", telephone);
@@ -90,90 +99,177 @@ public class ForgotPasswordService {
 
         log.info("Code de vérification pour la réinitialisation de mot de passe: {} (type: {})",
                 telephone, userInfo.userType);
-        
+
         response.put("success", true);
         response.put("message", "Code de vérification envoyé par SMS");
+        response.put("channel", "SMS");
         response.put("userType", userInfo.userType);
-        
+
         return response;
     }
 
     /**
-     * Étape 2: Vérifier le code et générer un token de réinitialisation
+     * Étape 1 (e-mail): envoyer un code OTP par e-mail
+     */
+    public Map<String, Object> sendVerificationCodeByEmail(String email) {
+        Map<String, Object> response = new HashMap<>();
+        String emailKey = normalizeEmail(email);
+
+        UserInfo userInfo = findUserByEmail(emailKey);
+        if (userInfo == null) {
+            log.warn("Tentative de réinitialisation pour un e-mail non enregistré: {}", emailKey);
+            response.put("success", false);
+            response.put("message", "Aucun compte associé à cette adresse e-mail");
+            return response;
+        }
+
+        String code = genererCodeOtpSixChiffres();
+        emailOtpStorage.put(emailKey, new EmailOtpData(code, LocalDateTime.now().plusMinutes(EMAIL_OTP_VALIDITY_MINUTES)));
+
+        boolean envoye = false;
+        if (personnelEmailService.isMailConfigured()) {
+            try {
+                personnelEmailService.sendTextEmail(
+                        userInfo.user.getEmail().trim(),
+                        "[Clinix] Réinitialisation du mot de passe",
+                        "Votre code de vérification : " + code + " (valide " + EMAIL_OTP_VALIDITY_MINUTES
+                                + " min). Ne le partagez avec personne.");
+                envoye = true;
+            } catch (Exception e) {
+                log.error("[OTP Email] Échec envoi vers {} : {}", emailKey, e.getMessage());
+            }
+        } else {
+            log.warn("[OTP Email] spring.mail non configuré — code pour {} : {}", emailKey, code);
+        }
+
+        response.put("success", true);
+        response.put("channel", "EMAIL");
+        response.put("emailSent", envoye);
+        response.put("message", envoye
+                ? "Code de vérification envoyé par e-mail"
+                : "Code généré ; l'e-mail n'a pas pu être envoyé (vérifiez la configuration e-mail du serveur).");
+        response.put("userType", userInfo.userType);
+        return response;
+    }
+
+    /**
+     * Étape 2: Vérifier le code et générer un token de réinitialisation (SMS)
      */
     public Map<String, Object> verifyCode(String telephone, String code) {
         Map<String, Object> response = new HashMap<>();
-        
-        // Vérifier le code OTP
+
         boolean isValid = otpSmsService.verifierCodeOtp(telephone, code);
-        
+
         if (!isValid) {
             response.put("success", false);
             response.put("message", "Code invalide ou expiré");
             return response;
         }
 
-        // Générer un token de réinitialisation
         String resetToken = UUID.randomUUID().toString();
+        String subjectKey = tunisieSmsService.normalizeOtpStorageKey(telephone);
         ResetTokenData tokenData = new ResetTokenData(
-            telephone,
-            LocalDateTime.now().plusMinutes(TOKEN_VALIDITY_MINUTES)
-        );
+                subjectKey,
+                false,
+                LocalDateTime.now().plusMinutes(TOKEN_VALIDITY_MINUTES));
         resetTokenStorage.put(resetToken, tokenData);
 
-        log.info("Code vérifié avec succès. Token de réinitialisation généré pour: {}", telephone);
-        
+        log.info("Code vérifié avec succès. Token de réinitialisation généré pour (SMS): {}", telephone);
+
         response.put("success", true);
         response.put("message", "Code vérifié avec succès");
         response.put("resetToken", resetToken);
-        
+
         return response;
     }
 
     /**
-     * Étape 3: Réinitialiser le mot de passe
+     * Étape 2 (e-mail): vérifier le code OTP e-mail
+     */
+    public Map<String, Object> verifyCodeByEmail(String email, String code) {
+        Map<String, Object> response = new HashMap<>();
+        String emailKey = normalizeEmail(email);
+
+        EmailOtpData data = emailOtpStorage.get(emailKey);
+        if (data == null) {
+            response.put("success", false);
+            response.put("message", "Code invalide ou expiré");
+            return response;
+        }
+        if (LocalDateTime.now().isAfter(data.expiration())) {
+            emailOtpStorage.remove(emailKey);
+            response.put("success", false);
+            response.put("message", "Code invalide ou expiré");
+            return response;
+        }
+        if (!data.code().equals(code.trim())) {
+            response.put("success", false);
+            response.put("message", "Code invalide ou expiré");
+            return response;
+        }
+
+        emailOtpStorage.remove(emailKey);
+
+        String resetToken = UUID.randomUUID().toString();
+        ResetTokenData tokenData = new ResetTokenData(
+                emailKey,
+                true,
+                LocalDateTime.now().plusMinutes(TOKEN_VALIDITY_MINUTES));
+        resetTokenStorage.put(resetToken, tokenData);
+
+        log.info("Code e-mail vérifié avec succès. Token généré pour: {}", emailKey);
+
+        response.put("success", true);
+        response.put("message", "Code vérifié avec succès");
+        response.put("resetToken", resetToken);
+        return response;
+    }
+
+    /**
+     * Étape 3: Réinitialiser le mot de passe (téléphone ou e-mail selon le canal du token)
      */
     @Transactional
-    public Map<String, Object> resetPassword(String telephone, String newPassword, String resetToken) {
+    public Map<String, Object> resetPassword(String telephone, String email, String newPassword, String resetToken) {
         Map<String, Object> response = new HashMap<>();
 
-        // Vérifier le token de réinitialisation (si fourni)
+        boolean useEmail = email != null && !email.isBlank();
+        String subjectKey = useEmail ? normalizeEmail(email) : tunisieSmsService.normalizeOtpStorageKey(telephone);
+
         if (resetToken != null && !resetToken.isEmpty()) {
             ResetTokenData tokenData = resetTokenStorage.get(resetToken);
-            
+
             if (tokenData == null) {
                 response.put("success", false);
                 response.put("message", "Token de réinitialisation invalide");
                 return response;
             }
 
-            if (LocalDateTime.now().isAfter(tokenData.expiration)) {
+            if (LocalDateTime.now().isAfter(tokenData.expiration())) {
                 resetTokenStorage.remove(resetToken);
                 response.put("success", false);
                 response.put("message", "Token de réinitialisation expiré");
                 return response;
             }
 
-            if (!tokenData.telephone.equals(telephone)) {
+            if (tokenData.emailChannel() != useEmail || !tokenData.subjectKey().equals(subjectKey)) {
                 response.put("success", false);
-                response.put("message", "Token ne correspond pas au numéro de téléphone");
+                response.put("message", useEmail
+                        ? "Le token ne correspond pas à cette adresse e-mail"
+                        : "Le token ne correspond pas au numéro de téléphone");
                 return response;
             }
         }
 
-        // Trouver l'utilisateur et mettre à jour son mot de passe
-        UserInfo userInfo = findUserByTelephone(telephone);
-        
+        UserInfo userInfo = useEmail ? findUserByEmail(subjectKey) : findUserByTelephone(telephone);
+
         if (userInfo == null) {
             response.put("success", false);
             response.put("message", "Utilisateur non trouvé");
             return response;
         }
 
-        // Encoder le nouveau mot de passe
         String encodedPassword = passwordEncoder.encode(newPassword);
 
-        // Mettre à jour le mot de passe selon le type d'utilisateur
         boolean updated = updateUserPassword(userInfo, encodedPassword);
 
         if (!updated) {
@@ -182,17 +278,76 @@ public class ForgotPasswordService {
             return response;
         }
 
-        // Supprimer le token utilisé
         if (resetToken != null) {
             resetTokenStorage.remove(resetToken);
         }
 
-        log.info("Mot de passe réinitialisé avec succès pour: {} (type: {})", telephone, userInfo.userType);
-        
+        log.info("Mot de passe réinitialisé avec succès (canal {}) pour: {}",
+                useEmail ? "EMAIL" : "SMS", subjectKey);
+
         response.put("success", true);
         response.put("message", "Mot de passe réinitialisé avec succès");
-        
+
         return response;
+    }
+
+    private String genererCodeOtpSixChiffres() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null) {
+            return "";
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private UserInfo findUserByEmail(String emailNormalized) {
+        if (emailNormalized == null || emailNormalized.isBlank()) {
+            return null;
+        }
+        Optional<User> opt = userRepository.findByEmailIgnoreCase(emailNormalized);
+        return opt.map(this::mapUserToUserInfo).orElse(null);
+    }
+
+    private UserInfo mapUserToUserInfo(User user) {
+        if (user instanceof Patient p) {
+            return new UserInfo(p, "PATIENT");
+        }
+        if (user instanceof AdministrateurClinique a) {
+            return new UserInfo(a, "ADMIN_CLINIQUE");
+        }
+        if (user instanceof Medecin m) {
+            return new UserInfo(m, "MEDECIN");
+        }
+        if (user instanceof Infirmier i) {
+            return new UserInfo(i, "INFIRMIER");
+        }
+        if (user instanceof Pharmacien p) {
+            return new UserInfo(p, "PHARMACIEN");
+        }
+        if (user instanceof Radiologue r) {
+            return new UserInfo(r, "RADIOLOGUE");
+        }
+        if (user instanceof Secretaire s) {
+            return new UserInfo(s, "SECRETAIRE");
+        }
+        if (user instanceof ChefPersonnel c) {
+            return new UserInfo(c, "CHEF_PERSONNEL");
+        }
+        if (user instanceof TechnicienMaintenance t) {
+            return new UserInfo(t, "TECHNICIEN_MAINTENANCE");
+        }
+        if (user instanceof SuperAdministrateur sa) {
+            return new UserInfo(sa, "SUPER_ADMIN");
+        }
+        log.warn("Type utilisateur non géré pour réinitialisation mot de passe: {}", user.getClass().getName());
+        return null;
+    }
+
+    private record EmailOtpData(String code, LocalDateTime expiration) {
     }
 
     /**
@@ -314,6 +469,9 @@ public class ForgotPasswordService {
                 case "TECHNICIEN_MAINTENANCE":
                     technicienMaintenanceRepository.save((TechnicienMaintenance) user);
                     break;
+                case "SUPER_ADMIN":
+                    userRepository.save((SuperAdministrateur) user);
+                    break;
                 default:
                     return false;
             }
@@ -338,15 +496,8 @@ public class ForgotPasswordService {
     }
 
     /**
-     * Classe interne pour stocker les données du token de réinitialisation
+     * Données du token de réinitialisation (téléphone normalisé ou e-mail normalisé)
      */
-    private static class ResetTokenData {
-        final String telephone;
-        final LocalDateTime expiration;
-
-        ResetTokenData(String telephone, LocalDateTime expiration) {
-            this.telephone = telephone;
-            this.expiration = expiration;
-        }
+    private record ResetTokenData(String subjectKey, boolean emailChannel, LocalDateTime expiration) {
     }
 }

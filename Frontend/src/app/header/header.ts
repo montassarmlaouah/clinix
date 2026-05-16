@@ -32,13 +32,16 @@ export class Header implements OnInit {
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updatePageInfo();
+      this.loadUnreadNotificationsCount();
     });
     this.updatePageInfo();
 
-    // Charger le nombre de notifications non lues
     this.loadUnreadNotificationsCount();
 
-    // Actualiser le compteur toutes les 30 secondes
+    this.notificationService.onCountRefreshRequested().subscribe(() => {
+      this.loadUnreadNotificationsCount();
+    });
+
     interval(30000).subscribe(() => {
       this.loadUnreadNotificationsCount();
     });
@@ -92,7 +95,6 @@ export class Header implements OnInit {
       '/congie': { title: 'Demande Congé', subtitle: 'Gérer les demandes de congé' },
       '/infirmier-soins': { title: 'Soins Infirmiers', subtitle: 'Traitements, constantes, urgences et alertes critiques' },
       '/chambres': { title: 'Chambres', subtitle: 'Occupation, entrée et sortie des patients hospitalisés' },
-      '/technicien-equipements': { title: 'Équipements en panne', subtitle: 'Vue clinique, alertes e-mail et notifications' },
     };
 
     let info = pageInfo[url] || { title: 'Dashboard', subtitle: 'Vue d\'ensemble du système' };

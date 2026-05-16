@@ -33,7 +33,7 @@
 }
 
 .page-subtitle {
-    color: var(--luna-light);
+    color: var(--luna-deep);
     font-size: 1.1rem;
     margin-top: 0.5rem;
     font-weight: 500;
@@ -152,15 +152,15 @@
 }
 
 .card-active {
-    border-bottom-color: #10b981;
+    border-bottom-color: var(--luna-primary);
 }
 
 .card-pending {
-    border-bottom-color: #f59e0b;
+    border-bottom-color: var(--luna-dark);
 }
 
 .card-role {
-    border-bottom-color: #8b5cf6;
+    border-bottom-color: var(--luna-deep);
 }
 
 .stat-icon {
@@ -168,16 +168,10 @@
     color: var(--luna-deep);
 }
 
-.card-active .stat-icon {
-    color: #10b981;
-}
-
-.card-pending .stat-icon {
-    color: #f59e0b;
-}
-
+.card-active .stat-icon,
+.card-pending .stat-icon,
 .card-role .stat-icon {
-    color: #8b5cf6;
+    color: var(--luna-deep);
 }
 
 .stat-info {
@@ -411,6 +405,14 @@
 
 .btn-delete:hover {
     background: #dc2626;
+}
+
+.btn-deactivate {
+    background: #d97706;
+}
+
+.btn-deactivate:hover {
+    background: #b45309;
 }
 
 /* État vide */
@@ -767,4 +769,37 @@
 .page-btn[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Harmonisation roles - style admin */
+.stats-grid .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(1, 28, 64, 0.05);
+    border-bottom: 4px solid var(--luna-deep) !important;
+}
+
+.stats-grid .stat-icon {
+    color: var(--luna-deep) !important;
+    background: rgba(167, 235, 242, 0.3);
+    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action {
+    background: var(--luna-deep) !important;
+    color: #fff !important;
+}
+
+.btn-action:hover {
+    background: var(--luna-dark) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
+    color: #fff;
 }

@@ -547,25 +547,166 @@
     <!-- TECHNICIEN MAINTENANCE           -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isTechnicienMaintenance() && !loading">
-      <div class="row g-3 mb-3">
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 border-0 shadow-sm border-danger border-opacity-25">
-            <div class="card-body py-3">
-              <div class="text-muted small">Équipements en panne / hors service</div>
-              <div class="fs-3 fw-semibold text-danger">{{ technicienPannesCount }}</div>
-              <div class="small text-muted">Sur votre clinique (JWT)</div>
+      <div class="technicien-dash-intro mb-4">
+        <h4 class="mb-1 text-luna-deep">
+          <i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord maintenance
+        </h4>
+        <p class="text-muted mb-0 small">
+          Synthèse des équipements de votre clinique : part opérationnelle, interventions et pannes.
+        </p>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="technicien-stat-tile technicien-stat-total">
+            <div class="technicien-stat-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="technicien-stat-body">
+              <span class="technicien-stat-value">{{ technicienEquipementStats.total }}</span>
+              <span class="technicien-stat-label">Références inventaire</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="technicien-stat-tile technicien-stat-ok">
+            <div class="technicien-stat-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="technicien-stat-body">
+              <span class="technicien-stat-value">{{ technicienEquipementStats.fonctionnel }}</span>
+              <span class="technicien-stat-label">Opérationnels</span>
+              <span class="technicien-stat-pct">{{ technicienPctFonctionnel | number:'1.0-1' }}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="technicien-stat-tile technicien-stat-danger">
+            <div class="technicien-stat-icon"><i class="bi bi-exclamation-octagon"></i></div>
+            <div class="technicien-stat-body">
+              <span class="technicien-stat-value">{{ technicienEquipementStats.panneHors }}</span>
+              <span class="technicien-stat-label">Panne / hors service</span>
+              <span class="technicien-stat-pct">{{ technicienPctPanneHors | number:'1.0-1' }}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="technicien-stat-tile technicien-stat-warn">
+            <div class="technicien-stat-icon"><i class="bi bi-wrench-adjustable"></i></div>
+            <div class="technicien-stat-body">
+              <span class="technicien-stat-value">{{ technicienEquipementStats.maintenance }}</span>
+              <span class="technicien-stat-label">En maintenance</span>
+              <span class="technicien-stat-pct">{{ technicienPctMaintenance | number:'1.0-1' }}%</span>
             </div>
           </div>
         </div>
       </div>
+
+      <div class="row g-4 mb-4 align-items-stretch">
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm h-100 technicien-chart-card">
+            <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
+              <h6 class="mb-0 text-luna-deep fw-bold">
+                <i class="bi bi-pie-chart me-2 text-luna-teal"></i>Répartition par état
+              </h6>
+            </div>
+            <div class="card-body pt-2">
+              <div *ngIf="technicienEquipementStats.total > 0" class="technicien-progress-summary mb-3">
+                <div class="technicien-progress-row">
+                  <span class="technicien-progress-label"><i class="bi bi-check-circle-fill text-success me-1"></i>En marche</span>
+                  <span class="technicien-progress-value">{{ technicienPctFonctionnel | number:'1.0-1' }}%</span>
+                </div>
+                <div class="progress technicien-progress-bar">
+                  <div
+                    class="progress-bar bg-success"
+                    role="progressbar"
+                    [style.width]="technicienPctFonctionnel + '%'">
+                  </div>
+                </div>
+                <div class="technicien-progress-row mt-2">
+                  <span class="technicien-progress-label"><i class="bi bi-exclamation-octagon-fill text-danger me-1"></i>En panne</span>
+                  <span class="technicien-progress-value">{{ technicienPctPanneHors | number:'1.0-1' }}%</span>
+                </div>
+                <div class="progress technicien-progress-bar">
+                  <div
+                    class="progress-bar bg-danger"
+                    role="progressbar"
+                    [style.width]="technicienPctPanneHors + '%'">
+                  </div>
+                </div>
+                <div class="technicien-progress-row mt-2">
+                  <span class="technicien-progress-label"><i class="bi bi-wrench-adjustable text-warning me-1"></i>Maintenance</span>
+                  <span class="technicien-progress-value">{{ technicienPctMaintenance | number:'1.0-1' }}%</span>
+                </div>
+                <div class="progress technicien-progress-bar">
+                  <div
+                    class="progress-bar bg-warning"
+                    role="progressbar"
+                    [style.width]="technicienPctMaintenance + '%'">
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="technicienEquipementStats.total > 0" class="technicien-chart-wrap">
+                <canvas #technicienEquipementsChart></canvas>
+              </div>
+              <div *ngIf="technicienEquipementStats.total === 0" class="technicien-empty-state text-center py-5 text-muted">
+                <i class="bi bi-inboxes fs-1 d-block mb-2"></i>
+                Aucun équipement enregistré pour votre clinique.
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-7">
+          <div class="row g-3 h-100">
+            <div class="col-md-4">
+              <div class="technicien-ring-card technicien-ring-ok h-100">
+                <div class="technicien-ring"
+                  [style.--pct]="technicienPctFonctionnel"
+                  [attr.aria-label]="'Opérationnels ' + (technicienPctFonctionnel | number:'1.0-1') + ' pourcent'">
+                  <div class="technicien-ring-inner">
+                    <span class="technicien-ring-pct">{{ technicienPctFonctionnel | number:'1.0-0' }}%</span>
+                    <span class="technicien-ring-sub">OK</span>
+                  </div>
+                </div>
+                <p class="technicien-ring-caption mb-0">Part des équipements <strong>fonctionnels</strong></p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="technicien-ring-card technicien-ring-danger h-100">
+                <div class="technicien-ring technicien-ring--danger"
+                  [style.--pct]="technicienPctPanneHors"
+                  [attr.aria-label]="'Pannes ' + (technicienPctPanneHors | number:'1.0-1') + ' pourcent'">
+                  <div class="technicien-ring-inner">
+                    <span class="technicien-ring-pct">{{ technicienPctPanneHors | number:'1.0-0' }}%</span>
+                    <span class="technicien-ring-sub">Panne</span>
+                  </div>
+                </div>
+                <p class="technicien-ring-caption mb-0">Panne ou <strong>hors service</strong></p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="technicien-ring-card technicien-ring-warn h-100">
+                <div class="technicien-ring technicien-ring--warn"
+                  [style.--pct]="technicienPctMaintenance"
+                  [attr.aria-label]="'Maintenance ' + (technicienPctMaintenance | number:'1.0-1') + ' pourcent'">
+                  <div class="technicien-ring-inner">
+                    <span class="technicien-ring-pct">{{ technicienPctMaintenance | number:'1.0-0' }}%</span>
+                    <span class="technicien-ring-sub">Maint.</span>
+                  </div>
+                </div>
+                <p class="technicien-ring-caption mb-0">En cours de <strong>maintenance</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title"><i class="bi bi-tools me-2 text-warning"></i>Maintenance &amp; équipements</h5>
-          <p class="text-muted mb-3">
-            Consultez les pannes, renvoyez des alertes par e-mail aux administrateurs (SMTP requis sur le serveur).
-          </p>
-          <a routerLink="/technicien-equipements" class="btn btn-warning">Ouvrir la liste des équipements</a>
-          <a routerLink="/chambres" class="btn btn-outline-secondary ms-2">Chambres (lecture)</a>
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+          <div>
+            <h5 class="card-title mb-1"><i class="bi bi-tools me-2 text-warning"></i>Actions</h5>
+            <p class="text-muted mb-0 small">Ouvrir le module équipements pour traiter les pannes et suivre l’inventaire.</p>
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <a routerLink="/equipements" class="btn btn-warning"><i class="bi bi-box-seam me-1"></i>Équipements</a>
+            <a routerLink="/chambres" class="btn btn-outline-secondary"><i class="bi bi-door-open me-1"></i>Chambres</a>
+          </div>
         </div>
       </div>
     </ng-container>

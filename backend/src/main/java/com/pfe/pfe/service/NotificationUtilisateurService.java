@@ -84,27 +84,37 @@ public class NotificationUtilisateurService {
      * Récupère toutes les notifications d'un utilisateur
      */
     @Transactional(readOnly = true)
-    public List<NotificationUtilisateurDTO> getAllNotifications(Long userId) {
-        log.info("Récupération de toutes les notifications pour l'utilisateur {}", userId);
-        
-        List<NotificationUtilisateur> notifications = notificationRepository
-                .findByDestinataireIdOrderByDateCreationDesc(userId);
-        
+    public List<NotificationUtilisateurDTO> getAllNotifications(Long userId, String userIdStr) {
+        log.info("Récupération de toutes les notifications pour userId={}, userIdStr={}", userId, userIdStr);
+        if ((userIdStr == null || userIdStr.isBlank()) && userId == null) {
+            return List.of();
+        }
+        List<NotificationUtilisateur> notifications;
+        if (userIdStr != null && !userIdStr.isBlank()) {
+            notifications = notificationRepository.findByDestinataireIdOrStrOrderByDateCreationDesc(userId, userIdStr);
+        } else {
+            notifications = notificationRepository.findByDestinataireIdOrderByDateCreationDesc(userId);
+        }
         return notifications.stream()
                 .map(NotificationUtilisateurDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Récupère les notifications non lues d'un utilisateur
+     * Récupère les notifications non lues d'un utilisateur (ID numérique et/ou UUID).
      */
     @Transactional(readOnly = true)
-    public List<NotificationUtilisateurDTO> getUnreadNotifications(Long userId) {
-        log.info("Récupération des notifications non lues pour l'utilisateur {}", userId);
-        
-        List<NotificationUtilisateur> notifications = notificationRepository
-                .findByDestinataireIdAndLuFalseOrderByDateCreationDesc(userId);
-        
+    public List<NotificationUtilisateurDTO> getUnreadNotifications(Long userId, String userIdStr) {
+        log.info("Récupération des notifications non lues pour userId={}, userIdStr={}", userId, userIdStr);
+        if ((userIdStr == null || userIdStr.isBlank()) && userId == null) {
+            return List.of();
+        }
+        List<NotificationUtilisateur> notifications;
+        if (userIdStr != null && !userIdStr.isBlank()) {
+            notifications = notificationRepository.findUnreadByDestinataireIdOrStr(userId, userIdStr);
+        } else {
+            notifications = notificationRepository.findByDestinataireIdAndLuFalseOrderByDateCreationDesc(userId);
+        }
         return notifications.stream()
                 .map(NotificationUtilisateurDTO::fromEntity)
                 .collect(Collectors.toList());
@@ -123,13 +133,14 @@ public class NotificationUtilisateurService {
      */
     @Transactional(readOnly = true)
     public List<NotificationUtilisateurDTO> getTodayNotifications(Long userId, String userIdStr) {
+        if ((userIdStr == null || userIdStr.isBlank()) && userId == null) {
+            return List.of();
+        }
         List<NotificationUtilisateur> notifications;
         if (userIdStr != null && !userIdStr.isBlank()) {
             notifications = notificationRepository.findTodayNotificationsByDestinataireIdOrStr(userId, userIdStr);
-        } else if (userId != null) {
-            notifications = notificationRepository.findTodayNotificationsByDestinataire(userId);
         } else {
-            throw new IllegalArgumentException("userId ou userIdStr requis");
+            notifications = notificationRepository.findTodayNotificationsByDestinataire(userId);
         }
         return notifications.stream()
                 .map(NotificationUtilisateurDTO::fromEntity)
@@ -175,6 +186,9 @@ public class NotificationUtilisateurService {
 
     @Transactional
     public void markAllAsRead(Long userId, String userIdStr) {
+        if (userId == null && (userIdStr == null || userIdStr.isBlank())) {
+            return;
+        }
         LocalDateTime now = LocalDateTime.now();
         if (userId != null) {
             notificationRepository.markAllAsReadByDestinataire(userId, now);
@@ -220,13 +234,13 @@ public class NotificationUtilisateurService {
 
     @Transactional(readOnly = true)
     public Long getUnreadCount(Long userId, String userIdStr) {
+        if ((userIdStr == null || userIdStr.isBlank()) && userId == null) {
+            return 0L;
+        }
         if (userIdStr != null && !userIdStr.isBlank()) {
             return notificationRepository.countByDestinataireIdOrStrAndLuFalse(userId, userIdStr);
         }
-        if (userId != null) {
-            return notificationRepository.countByDestinataireIdAndLuFalse(userId);
-        }
-        throw new IllegalArgumentException("userId ou userIdStr requis");
+        return notificationRepository.countByDestinataireIdAndLuFalse(userId);
     }
 
     /**

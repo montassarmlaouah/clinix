@@ -1,10 +1,13 @@
 package com.pfe.pfe.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,9 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.pfe.pfe.dto.TraitementPanneDTO;
 import com.pfe.pfe.model.Equipement;
+import com.pfe.pfe.security.services.CustomUserDetails;
 import com.pfe.pfe.service.EquipementService;
 
 import lombok.RequiredArgsConstructor;
@@ -64,7 +69,7 @@ public class EquipementController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN_CLINIQUE')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE', 'TECHNICIEN_MAINTENANCE')")
     public ResponseEntity<Equipement> mettreAJourEquipement(
             @PathVariable String id,
             @RequestBody Equipement equipement) {
@@ -157,6 +162,41 @@ public class EquipementController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(null);
         }
+    }
+
+    /**
+     * Renvoie les notifications in-app et les e-mails d'alerte panne/maintenance (techniciens + admins de la clinique).
+     * Réservé à l'administrateur clinique.
+     */
+    @PostMapping("/{id}/alerte-email")
+    @PreAuthorize("hasRole('ADMIN_CLINIQUE')")
+    public ResponseEntity<Void> renvoyerAlerteEmail(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, String> body) {
+        try {
+            String cid = cliniqueAdminConnecte();
+            String note = body != null ? body.get("note") : null;
+            equipementService.renvoyerAlertesPanne(id, cid, note);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            String m = e.getMessage() != null ? e.getMessage() : "Erreur";
+            if (m.contains("Accès non autorisé")) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, m);
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, m);
+        }
+    }
+
+    private static String cliniqueAdminConnecte() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof CustomUserDetails cud)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Session invalide.");
+        }
+        String cid = cud.getCliniqueId();
+        if (cid == null || cid.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Aucune clinique associée à votre compte.");
+        }
+        return cid.trim();
     }
 
     @GetMapping("/clinique/{cliniqueId}")

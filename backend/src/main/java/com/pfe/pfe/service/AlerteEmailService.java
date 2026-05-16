@@ -22,14 +22,21 @@ public class AlerteEmailService {
     private final PersonnelEmailService personnelEmailService;
 
     public void envoyerAlerteSiPossible(String destinataireEmail, String sujet, String titre, String corpsTexte) {
-        if (!StringUtils.hasText(destinataireEmail) || !personnelEmailService.isMailConfigured()) {
+        if (!StringUtils.hasText(destinataireEmail)) {
+            return;
+        }
+        if (!personnelEmailService.isMailConfigured()) {
+            log.warn(
+                    "Alerte e-mail non expédiée (SMTP non configuré : spring.mail.host, username, password, app.mail.from). Sujet : {}",
+                    sujet);
             return;
         }
         try {
             String html = buildHtml(titre, corpsTexte);
             personnelEmailService.sendHtmlTextEmail(destinataireEmail.trim(), null, sujet, html, corpsTexte);
+            log.debug("Alerte e-mail expédiée. Sujet : {}", sujet);
         } catch (Exception e) {
-            log.warn("E-mail d'alerte non envoyé à {} : {}", destinataireEmail, e.getMessage());
+            log.error("Échec envoi alerte e-mail vers {} — sujet « {} » : {}", destinataireEmail, sujet, e.getMessage(), e);
         }
     }
 

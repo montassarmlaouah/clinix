@@ -803,6 +803,47 @@ export class Employes implements OnInit {
     });
   }
 
+  desactiverCompte(personnel: any): void {
+    const id = personnel?.id;
+    if (!id) {
+      this.error = 'Identifiant du personnel introuvable.';
+      setTimeout(() => (this.error = ''), 3000);
+      return;
+    }
+
+    const role = (personnel?.role || this.getRoleValue() || '').replace(/^ROLE_/, '');
+    let observable;
+
+    switch (role) {
+      case 'MEDECIN': observable = this.personnelService.supprimerMedecin(id); break;
+      case 'INFIRMIER': observable = this.personnelService.supprimerInfirmier(id); break;
+      case 'PHARMACIEN': observable = this.personnelService.supprimerPharmacien(id); break;
+      case 'SECRETAIRE': observable = this.personnelService.supprimerSecretaire(id); break;
+      case 'RADIOLOGUE': observable = this.personnelService.supprimerRadiologue(id); break;
+      case 'CHEF_PERSONNEL': observable = this.personnelService.supprimerChefPersonnel(id); break;
+      case 'TECHNICIEN_MAINTENANCE': observable = this.personnelService.supprimerTechnicienMaintenance(id); break;
+      default:
+        this.error = `Rôle non pris en charge pour la désactivation: ${role || 'inconnu'}`;
+        setTimeout(() => (this.error = ''), 3500);
+        return;
+    }
+
+    this.isLoading = true;
+    observable.subscribe({
+      next: () => {
+        this.success = 'Compte désactivé avec succès.';
+        this.chargerToutLePersonnel();
+        this.isLoading = false;
+        setTimeout(() => (this.success = ''), 3000);
+      },
+      error: (err: any) => {
+        this.error = err?.error?.message || 'Erreur lors de la désactivation du compte.';
+        this.isLoading = false;
+        setTimeout(() => (this.error = ''), 3500);
+      }
+    });
+  }
+
   // Utilitaires
   generateTempPassword(): string {
     return Math.random().toString(36).slice(-8);

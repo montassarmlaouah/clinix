@@ -22,8 +22,11 @@ export class TechnicienMaintenanceService {
     return this.http.get<Equipement>(`${this.base}/equipements/${id}`);
   }
 
-  /** Renvoie notifications + e-mails (SMTP doit être configuré côté serveur). */
-  renvoyerAlerteEmail(equipementId: string, note?: string): Observable<unknown> {
-    return this.http.post(`${this.base}/equipements/${equipementId}/alerte-email`, note ? { note } : {});
+  /** Clôture la panne : équipement repassé en fonctionnel + e-mail aux admins clinique. */
+  traiterPanne(
+    equipementId: string,
+    payload: { repairType: string; repairNotes: string; repairHours: number; repairMinutes: number }
+  ): Observable<Equipement> {
+    return this.http.post<Equipement>(`${this.base}/equipements/${equipementId}/traiter-panne`, payload);
   }
 }

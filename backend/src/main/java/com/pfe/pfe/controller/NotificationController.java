@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +28,9 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<List<NotificationUtilisateurDTO>> getAllNotifications() {
         Long userId = getCurrentUserIdLong();
-        log.info("GET /api/notifications - Récupération des notifications pour userId: {}", userId);
-        List<NotificationUtilisateurDTO> notifications = notificationService.getAllNotifications(userId);
+        String userIdStr = getCurrentUserIdStr();
+        log.info("GET /api/notifications - userId: {}, userIdStr: {}", userId, userIdStr);
+        List<NotificationUtilisateurDTO> notifications = notificationService.getAllNotifications(userId, userIdStr);
         return ResponseEntity.ok(notifications);
     }
 
@@ -38,8 +40,9 @@ public class NotificationController {
     @GetMapping("/non-lues")
     public ResponseEntity<List<NotificationUtilisateurDTO>> getUnreadNotifications() {
         Long userId = getCurrentUserIdLong();
-        log.info("GET /api/notifications/non-lues - userId: {}", userId);
-        List<NotificationUtilisateurDTO> notifications = notificationService.getUnreadNotifications(userId);
+        String userIdStr = getCurrentUserIdStr();
+        log.info("GET /api/notifications/non-lues - userId: {}, userIdStr: {}", userId, userIdStr);
+        List<NotificationUtilisateurDTO> notifications = notificationService.getUnreadNotifications(userId, userIdStr);
         return ResponseEntity.ok(notifications);
     }
 
@@ -111,40 +114,40 @@ public class NotificationController {
     }
 
     /**
-     * Crée une nouvelle notification (pour les administrateurs ou système)
+     * Crée une notification (usage interne / super admin uniquement).
      */
     @PostMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<NotificationUtilisateurDTO> createNotification(
             @RequestBody NotificationUtilisateurDTO notificationDTO) {
         log.info("POST /api/notifications - Création d'une notification");
-        
+
         NotificationUtilisateurDTO created = notificationService.creerNotification(notificationDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
-     * Récupère l'ID utilisateur (Long) depuis le contexte de sécurité.
-     * Retourne null si l'utilisateur a un ID UUID (String).
+     * Récupère l'ID utilisateur (Long) depuis le JWT : uniquement si l'identifiant est numérique.
      */
     private Long getCurrentUserIdLong() {
         String idStr = getCurrentUserIdStr();
         if (idStr != null && !idStr.isBlank()) {
             try {
-                return Long.parseLong(idStr);
+                return Long.parseLong(idStr.trim());
             } catch (NumberFormatException ignored) {
-                return null; // ID au format UUID
+                return null;
             }
         }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth != null ? auth.getName() : null;
-        if (username != null) {
+        if (username != null && !username.isBlank()) {
             try {
-                return Long.parseLong(username);
-            } catch (NumberFormatException e) {
-                log.debug("Username non numérique: {}", username);
+                return Long.parseLong(username.trim());
+            } catch (NumberFormatException ignored) {
+                return null;
             }
         }
-        return 1L; // fallback pour tests (ex: super.admin)
+        return null;
     }
 
     /**

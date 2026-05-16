@@ -101,16 +101,16 @@
 }
 
 .card-total::before {
-  background: var(--luna-midnight);
+  background: var(--luna-deep);
 }
 .card-file::before {
-  background: #f59e0b;
-}
-.card-cours::before {
   background: var(--luna-primary);
 }
+.card-cours::before {
+  background: var(--luna-dark);
+}
 .card-valide::before {
-  background: #10b981;
+  background: var(--luna-deep);
 }
 
 .stat-card:hover {
@@ -123,23 +123,18 @@
   width: 52px;
   height: 52px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--luna-light), rgba(167, 235, 242, 0.85));
+  background: rgba(167, 235, 242, 0.55);
+  border: 1px solid rgba(38, 101, 140, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.45rem;
-  color: #fff;
+  color: var(--luna-deep);
   flex-shrink: 0;
 }
 
-.card-file .stat-icon {
-  background: linear-gradient(135deg, #fbbf24, #d97706);
-}
-.card-cours .stat-icon {
-  background: linear-gradient(135deg, #6ee7b7, var(--luna-primary));
-}
-.card-valide .stat-icon {
-  background: linear-gradient(135deg, #34d399, #10b981);
+.stat-icon i {
+  color: inherit;
 }
 
 .stat-info {
@@ -649,4 +644,26 @@ tr.urg-haute {
   .stats-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Harmonisation roles - style admin */
+.stats-grid .stat-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(1, 28, 64, 0.05);
+}
+
+.stats-grid .stat-card::before {
+  background: var(--luna-deep) !important;
+}
+
+.stats-grid .stat-icon {
+  color: var(--luna-deep) !important;
+  background: rgba(167, 235, 242, 0.3);
+  border: 1px solid rgba(38, 101, 140, 0.2);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
+  color: #fff;
 }

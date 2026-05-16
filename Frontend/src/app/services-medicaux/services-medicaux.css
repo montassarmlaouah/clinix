@@ -120,19 +120,19 @@
 }
 
 .card-active {
-    border-bottom-color: #10b981;
+    border-bottom-color: var(--luna-primary);
 }
 
 .card-inactive {
-    border-bottom-color: #ef4444;
+    border-bottom-color: var(--luna-dark);
 }
 
 .card-rooms {
-    border-bottom-color: #3b82f6;
+    border-bottom-color: var(--luna-deep);
 }
 
 .card-beds {
-    border-bottom-color: #8b5cf6;
+    border-bottom-color: var(--luna-deep);
 }
 
 .stat-icon {
@@ -140,20 +140,11 @@
     color: var(--luna-deep);
 }
 
-.card-active .stat-icon {
-    color: #10b981;
-}
-
-.card-inactive .stat-icon {
-    color: #ef4444;
-}
-
-.card-rooms .stat-icon {
-    color: #3b82f6;
-}
-
+.card-active .stat-icon,
+.card-inactive .stat-icon,
+.card-rooms .stat-icon,
 .card-beds .stat-icon {
-    color: #8b5cf6;
+    color: var(--luna-deep);
 }
 
 .stat-info {
@@ -819,4 +810,37 @@
 .page-btn[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Harmonisation roles - style admin */
+.stats-grid .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(1, 28, 64, 0.05);
+    border-bottom: 4px solid var(--luna-deep) !important;
+}
+
+.stats-grid .stat-icon {
+    color: var(--luna-deep) !important;
+    background: rgba(167, 235, 242, 0.3);
+    border-radius: 10px;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action {
+    background: var(--luna-deep) !important;
+    color: #fff !important;
+}
+
+.btn-action:hover {
+    background: var(--luna-dark) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
+    color: #fff;
 }

@@ -1,9 +1,11 @@
 package com.pfe.pfe.repository;
 
-import com.pfe.pfe.model.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
+
+import com.pfe.pfe.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
@@ -16,4 +18,8 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByNumeroPieceIdentiteAndIdNot(String numeroPieceIdentite, String id);
 
     Optional<User> findByNumeroPieceIdentite(String numeroPieceIdentite);
+
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCaseAndIdNot(String email, String id);
 }

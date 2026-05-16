@@ -55,6 +55,17 @@ public interface NotificationUtilisateurRepository extends JpaRepository<Notific
     List<NotificationUtilisateur> findByDestinataireIdStrAndLuFalseOrderByDateCreationDesc(String destinataireIdStr);
 
     /**
+     * Notifications non lues (destinataire ID numérique et/ou UUID).
+     */
+    @Query("SELECT n FROM NotificationUtilisateur n WHERE " +
+           "((:destinataireId IS NOT NULL AND n.destinataireId = :destinataireId) OR " +
+           "(:destinataireIdStr IS NOT NULL AND n.destinataireIdStr = :destinataireIdStr)) AND n.lu = false " +
+           "ORDER BY n.dateCreation DESC")
+    List<NotificationUtilisateur> findUnreadByDestinataireIdOrStr(
+            @Param("destinataireId") Long destinataireId,
+            @Param("destinataireIdStr") String destinataireIdStr);
+
+    /**
      * Compte le nombre de notifications non lues pour un utilisateur
      */
     Long countByDestinataireIdAndLuFalse(Long destinataireId);
@@ -68,8 +79,8 @@ public interface NotificationUtilisateurRepository extends JpaRepository<Notific
      * Récupère toutes les notifications pour un utilisateur (par ID numérique ou UUID)
      */
     @Query("SELECT n FROM NotificationUtilisateur n WHERE " +
-           "(:destinataireId IS NOT NULL AND n.destinataireId = :destinataireId) OR " +
-           "(:destinataireIdStr IS NOT NULL AND n.destinataireIdStr = :destinataireIdStr) " +
+           "((:destinataireId IS NOT NULL AND n.destinataireId = :destinataireId) OR " +
+           "(:destinataireIdStr IS NOT NULL AND n.destinataireIdStr = :destinataireIdStr)) " +
            "ORDER BY n.dateCreation DESC")
     List<NotificationUtilisateur> findByDestinataireIdOrStrOrderByDateCreationDesc(
             @Param("destinataireId") Long destinataireId,

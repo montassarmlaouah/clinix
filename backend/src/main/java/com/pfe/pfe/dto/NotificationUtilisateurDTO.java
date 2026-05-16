@@ -40,6 +40,8 @@ public class NotificationUtilisateurDTO {
         dto.setDateCreation(notification.getDateCreation().toString());
         dto.setDateLecture(notification.getDateLecture() != null ? notification.getDateLecture().toString() : null);
         dto.setDestinataireId(notification.getDestinataireId());
+        dto.setDestinataireIdStr(notification.getDestinataireIdStr());
+        dto.setCode(notification.getCode());
         dto.setDestinataireType(notification.getDestinataireType());
         dto.setReferenceId(notification.getReferenceId());
         dto.setReferenceType(notification.getReferenceType());

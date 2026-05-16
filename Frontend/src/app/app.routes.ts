@@ -86,13 +86,6 @@ export const routes: Routes = [
           'TECHNICIEN_MAINTENANCE', 'ROLE_TECHNICIEN_MAINTENANCE',
         ] }
       },
-      {
-        path: 'technicien-equipements',
-        loadComponent: () =>
-          import('./technicien-equipements/technicien-equipements').then((m) => m.TechnicienEquipementsComponent),
-        canActivate: [RoleGuard],
-        data: { role: ['TECHNICIEN_MAINTENANCE', 'ROLE_TECHNICIEN_MAINTENANCE'] },
-      },
       // Routes pour Personnel Médical
       {
         path: 'patients',
@@ -194,7 +187,12 @@ export const routes: Routes = [
         path: 'equipements',
         loadComponent: () => import('./equipements/equipements').then(m => m.EquipementsComponent),
         canActivate: [RoleGuard],
-        data: { role: ['ADMIN_CLINIQUE', 'ROLE_ADMIN_CLINIQUE'] }
+        data: {
+          role: [
+            'ADMIN_CLINIQUE', 'ROLE_ADMIN_CLINIQUE',
+            'TECHNICIEN_MAINTENANCE', 'ROLE_TECHNICIEN_MAINTENANCE',
+          ],
+        },
       },
       {
         path: 'pharmacie',

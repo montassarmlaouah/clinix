@@ -47,6 +47,11 @@ throw new Error('Method not implemented.');
     return this.http.post<Equipement>(`${this.baseUrl}/${id}/traiter-panne`, payload);
   }
 
+  /** Renvoie notifications + e-mails d'alerte (admin clinique uniquement, côté API). */
+  renvoyerAlerteEmail(equipementId: string, note?: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/${equipementId}/alerte-email`, note ? { note } : {});
+  }
+
   obtenirNomCategorie(categorie: CategorieEquipement): string {
     const labels: Record<CategorieEquipement, string> = {
       [CategorieEquipement.LITS_MOBILIER]: 'Lits & Mobilier',

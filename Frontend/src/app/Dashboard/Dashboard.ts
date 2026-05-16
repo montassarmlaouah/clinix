@@ -16,7 +16,8 @@ import { Clinique, Medecin, RendezVousDTO, Patient } from '../model/user.model';
 import { MedecinService } from '../service/medecin.service';
 import { RadiologueWorkspaceService, RadiologueWorkspaceStats } from '../service/radiologue-workspace.service';
 import { TechnicienMaintenanceService } from '../service/technicien-maintenance.service';
-import { Chart, registerables } from 'chart.js';
+import { EquipementService } from '../service/equipement.service';
+import { Chart, registerables, TooltipItem } from 'chart.js';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -47,6 +48,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('secretairePatientCountChart') secretairePatientCountChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('secretaireAgeChart') secretaireAgeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('secretaireSexeChart') secretaireSexeChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('technicienEquipementsChart') technicienEquipementsChartRef!: ElementRef<HTMLCanvasElement>;
   userRole: string | null = null;
   userName: string = '';
 
@@ -150,6 +152,10 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   radiologueMessagesNonLus = 0;
 
   technicienPannesCount = 0;
+  technicienEquipementStats = { total: 0, fonctionnel: 0, panneHors: 0, maintenance: 0 };
+  technicienPctFonctionnel = 0;
+  technicienPctPanneHors = 0;
+  technicienPctMaintenance = 0;
 
   // Charts instances
   private capaciteChart: Chart | null = null;
@@ -168,6 +174,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   private secretairePatientCountChart: Chart | null = null;
   private secretaireAgeChart: Chart | null = null;
   private secretaireSexeChart: Chart | null = null;
+  private technicienEquipementsChart: Chart | null = null;
 
   constructor(
     public authService: AuthService,
@@ -183,7 +190,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     private toastService: ToastService,
     private medecinService: MedecinService,
     private radiologueWorkspaceService: RadiologueWorkspaceService,
-    private technicienMaintenanceService: TechnicienMaintenanceService
+    private technicienMaintenanceService: TechnicienMaintenanceService,
+    private equipementService: EquipementService
   ) {}
 
   ngOnInit(): void {
@@ -245,6 +253,9 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.secretaireSexeChart) {
       this.secretaireSexeChart.destroy();
+    }
+    if (this.technicienEquipementsChart) {
+      this.technicienEquipementsChart.destroy();
     }
   }
 
@@ -568,9 +579,10 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       pharmaciens: this.personnelService.listerPharmaciens().pipe(catchError(() => of([] as any[]))),
       radiologues: this.personnelService.listerRadiologues().pipe(catchError(() => of([] as any[]))),
       services: this.serviceMedicalService.obtenirServicesParClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
-      chambres: this.chambreService.listerParClinique(cliniqueId).pipe(catchError(() => of([] as any[])))
+      chambres: this.chambreService.listerParClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
+      equipements: this.equipementService.obtenirEquipementsParClinique(cliniqueId).pipe(catchError(() => of([] as any[])))
     }).subscribe({
-      next: ({ clinique, patients, medecins, infirmiers, secretaires, pharmaciens, radiologues, services, chambres }) => {
+      next: ({ clinique, patients, medecins, infirmiers, secretaires, pharmaciens, radiologues, services, chambres, equipements }) => {
         this.maClinique = clinique;
         this.stats.totalPatients = patients.length;
 
@@ -595,6 +607,10 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         this.adminStats.totalChambres = chambres.length;
         this.adminStats.chambresDisponibles = chambres.filter((c: any) => !!c.disponible).length;
         this.adminStats.totalLits = Math.round(chambres.reduce((sum: number, c: any) => sum + (Number(c.nombreLits) || 0), 0));
+        this.adminStats.totalEquipements = (equipements || []).reduce(
+          (sum: number, eq: any) => sum + (Number(eq.quantite) || 0),
+          0
+        );
 
         // Regrouper les chambres par service
         this.chambresParService = services.map((s: any) => {
@@ -846,16 +862,107 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadTechnicienMaintenanceData(): void {
-    this.technicienMaintenanceService.listerEquipementsEnPanne().subscribe({
+    this.technicienMaintenanceService.listerEquipementsMaClinique().subscribe({
       next: (rows) => {
-        this.technicienPannesCount = (rows || []).length;
+        const list = rows || [];
+        let fonctionnel = 0;
+        let panneHors = 0;
+        let maintenance = 0;
+        for (const e of list) {
+          const et = (e as { etatTechnique?: string }).etatTechnique;
+          if (et === 'EN_MAINTENANCE') {
+            maintenance++;
+          } else if (et === 'EN_PANNE' || et === 'HORS_SERVICE') {
+            panneHors++;
+          } else {
+            fonctionnel++;
+          }
+        }
+        const total = list.length;
+        this.technicienEquipementStats = { total, fonctionnel, panneHors, maintenance };
+        this.technicienPannesCount = panneHors;
+        if (total > 0) {
+          this.technicienPctFonctionnel = Math.round((fonctionnel / total) * 1000) / 10;
+          this.technicienPctPanneHors = Math.round((panneHors / total) * 1000) / 10;
+          this.technicienPctMaintenance = Math.round((maintenance / total) * 1000) / 10;
+        } else {
+          this.technicienPctFonctionnel = 0;
+          this.technicienPctPanneHors = 0;
+          this.technicienPctMaintenance = 0;
+        }
         this.loading = false;
+        setTimeout(() => this.initTechnicienEquipementsChart(), 100);
       },
       error: () => {
+        this.technicienEquipementStats = { total: 0, fonctionnel: 0, panneHors: 0, maintenance: 0 };
         this.technicienPannesCount = 0;
+        this.technicienPctFonctionnel = 0;
+        this.technicienPctPanneHors = 0;
+        this.technicienPctMaintenance = 0;
         this.loading = false;
+        setTimeout(() => this.initTechnicienEquipementsChart(), 100);
       },
     });
+  }
+
+  private initTechnicienEquipementsChart(): void {
+    if (this.technicienEquipementsChart) {
+      this.technicienEquipementsChart.destroy();
+      this.technicienEquipementsChart = null;
+    }
+    if (!this.technicienEquipementsChartRef) {
+      return;
+    }
+    const s = this.technicienEquipementStats;
+    if (s.total === 0) {
+      return;
+    }
+    const ctx = this.technicienEquipementsChartRef.nativeElement.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+    this.technicienEquipementsChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Opérationnels', 'En panne / hors service', 'En maintenance'],
+        datasets: [
+          {
+            data: [s.fonctionnel, s.panneHors, s.maintenance],
+            backgroundColor: [
+              'rgba(40, 167, 69, 0.88)',
+              'rgba(220, 53, 69, 0.88)',
+              'rgba(255, 159, 64, 0.88)',
+            ],
+            borderColor: ['rgba(25, 135, 84, 1)', 'rgba(176, 42, 55, 1)', 'rgba(200, 120, 40, 1)'],
+            borderWidth: 2,
+            hoverOffset: 10,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '58%',
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14 } },
+          title: {
+            display: true,
+            text: 'État des équipements (votre clinique)',
+            font: { size: 15, weight: 'bold' },
+            color: '#023859',
+          },
+          tooltip: {
+            callbacks: {
+              label: (item: TooltipItem<'doughnut'>) => {
+                const v = Number(item.raw) || 0;
+                const pct = s.total ? Math.round((v / s.total) * 1000) / 10 : 0;
+                return ` ${item.label}: ${v} (${pct}%)`;
+              },
+            },
+          },
+        },
+      },
+    } as any);
   }
 
   private loadInfirmierData(): void {

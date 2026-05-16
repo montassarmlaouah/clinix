@@ -1,7 +1,8 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EquipementService } from '../service/equipement.service';
+import { TechnicienMaintenanceService } from '../service/technicien-maintenance.service';
 import { ChambreService } from '../service/chambre.service';
 import { AuthService } from '../service/auth-service';
 import { Equipement, EquipementDTO, CategorieEquipement, EtatTechnique, StatutEquipement, CriticiteEquipement, TypeLocalisation } from '../model/materiel-medical';
@@ -62,6 +63,8 @@ export class EquipementsComponent implements OnInit {
   panneNotes: string = '';
   panneTime: string = '';
   maintenanceDateProchaine: string = '';
+  /** Note optionnelle pour le renvoi d'e-mails d'alerte (admin clinique). */
+  noteAlerteEmailAdmin = '';
 
   // Statistiques générales
   totalEquipements: number = 0;
@@ -110,7 +113,8 @@ export class EquipementsComponent implements OnInit {
   TypeLocalisation = TypeLocalisation;
 
   constructor(
-    @Inject(EquipementService) public equipementService: EquipementService,
+    public equipementService: EquipementService,
+    private readonly technicienMaintenanceService: TechnicienMaintenanceService,
     private chambreService: ChambreService,
     public authService: AuthService
   ) { }
@@ -128,6 +132,19 @@ export class EquipementsComponent implements OnInit {
   // ============================================================
 
   chargerEquipements(): void {
+    if (this.authService.isTechnicienMaintenance()) {
+      this.technicienMaintenanceService.listerEquipementsMaClinique().subscribe({
+        next: (data: Equipement[]) => {
+          this.equipements = data;
+          this.filterEquipements();
+        },
+        error: (err: unknown) => {
+          this.gérerErreurChargement(err);
+        },
+      });
+      return;
+    }
+
     const cliniqueId = this.authService.getCliniqueId();
     const isSuperAdmin = this.authService.isSuperAdmin();
     const isAdminClinique = this.authService.isAdminClinique();
@@ -283,12 +300,12 @@ export class EquipementsComponent implements OnInit {
   calculateStats() {
     const source = this.equipements;
 
-    this.totalEquipements = source.length;
-
     const stockMagasin = source.reduce(
       (sum, eq) => sum + (Number(eq.quantite) || 0),
       0
     );
+    /** Total unités en inventaire (somme des quantités par ligne d’équipement). */
+    this.totalEquipements = stockMagasin;
 
     const utilisesDansChambres = Number(this.EquipementUtiliseQuantite) || 0;
     this.totalQuantite = stockMagasin + utilisesDansChambres;
@@ -335,11 +352,13 @@ export class EquipementsComponent implements OnInit {
 
     request$.subscribe({
       next: (chambres) => {
-        this.EquipementUtiliseQuantite = this.compterEquipementsUtilises(chambres);
+        this.chambres = chambres || [];
+        this.EquipementUtiliseQuantite = this.compterEquipementsUtilises(this.chambres);
         this.calculateStats();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des chambres :', err);
+        this.chambres = [];
         this.EquipementUtiliseQuantite = 0;
         this.calculateStats();
       }
@@ -394,6 +413,31 @@ export class EquipementsComponent implements OnInit {
     return this.authService.isAdminClinique();
   }
 
+  /** Renvoie notifications + e-mails d'alerte panne/maintenance (réservé admin clinique). */
+  renvoyerAlerteEmailAdmin(eq: Equipement): void {
+    if (!eq?.id || !this.canManageEquipementOps()) {
+      return;
+    }
+    this.errorMessage = '';
+    this.successMessage = '';
+    const note = this.noteAlerteEmailAdmin?.trim() || undefined;
+    this.equipementService.renvoyerAlerteEmail(eq.id, note).subscribe({
+      next: () => {
+        this.successMessage =
+          `Alertes renvoyées pour « ${eq.nom || eq.code || 'équipement'} » (notifications + e-mails si le serveur mail est configuré).`;
+        this.showSuccessModal = true;
+      },
+      error: (err: unknown) => {
+        console.error('Erreur renvoi alerte e-mail :', err);
+        const httpErr = err as { error?: { message?: string } };
+        this.errorMessage =
+          httpErr.error?.message ||
+          "Impossible de renvoyer l'alerte (droits, état de l'équipement ou clinique).";
+        setTimeout(() => (this.errorMessage = ''), 5000);
+      },
+    });
+  }
+
   // ============================================================
   // Labels et helpers UI
   // ============================================================
@@ -405,9 +449,9 @@ export class EquipementsComponent implements OnInit {
   }
 
   getStockStatusIcon(quantite: number): string {
-    if (quantite === 0) return 'fa-times-circle';
-    if (quantite < 5)  return 'fa-exclamation-circle';
-    return 'fa-check-circle';
+    if (quantite === 0) return 'bi-x-circle';
+    if (quantite < 5)  return 'bi-exclamation-circle';
+    return 'bi-check-circle';
   }
 
   getStockStatusText(quantite: number): string {
@@ -434,11 +478,11 @@ export class EquipementsComponent implements OnInit {
 
   getEtatTechniqueIcon(etat: EtatTechnique): string {
     switch (etat) {
-      case EtatTechnique.FONCTIONNEL:    return 'fa-check-circle';
-      case EtatTechnique.EN_MAINTENANCE: return 'fa-tools';
-      case EtatTechnique.EN_PANNE:       return 'fa-exclamation-triangle';
-      case EtatTechnique.HORS_SERVICE:   return 'fa-times-circle';
-      default:                           return 'fa-question-circle';
+      case EtatTechnique.FONCTIONNEL:    return 'bi-check-circle';
+      case EtatTechnique.EN_MAINTENANCE: return 'bi-tools';
+      case EtatTechnique.EN_PANNE:       return 'bi-exclamation-triangle';
+      case EtatTechnique.HORS_SERVICE:   return 'bi-x-circle';
+      default:                           return 'bi-question-circle';
     }
   }
 
@@ -456,6 +500,21 @@ export class EquipementsComponent implements OnInit {
       case TypeLocalisation.AUTRE:       return 'Autre';
       default:                           return String(typeLocalisation);
     }
+  }
+
+  /** Texte affiché : localisation enregistrée, sinon chambre (via chambreId), sinon libellé du type. */
+  public getEquipementLocalisationAffichee(eq: Equipement | null | undefined): string {
+    if (!eq) return 'Non définie';
+    const texte = (eq.localisation || '').trim();
+    if (texte) return texte;
+    if (eq.chambreId) {
+      const ch = this.chambres.find(c => c.id === eq.chambreId);
+      const num = ch?.numero != null ? String(ch.numero).trim() : '';
+      if (num) return `Chambre ${num}`;
+      return this.getTypeLocalisationLabel(TypeLocalisation.CHAMBRE);
+    }
+    if (eq.typeLocalisation) return this.getTypeLocalisationLabel(eq.typeLocalisation);
+    return 'Non définie';
   }
 
   getCriticiteLabel(criticite?: CriticiteEquipement): string {
@@ -739,10 +798,12 @@ export class EquipementsComponent implements OnInit {
     const timePart = (this.panneTime && this.panneTime.trim()) ? this.panneTime.trim() : today.toTimeString().slice(0, 5);
     const dateSignalement = `${datePart}T${timePart}:00`;
 
+    const cliniqueId = this.authService.getCliniqueId();
     const dto: EquipementDTO = {
       etatTechnique: EtatTechnique.EN_PANNE,
       typeLocalisation: TypeLocalisation.CHAMBRE,
       chambreId: this.selectedChambreIdForPanne,
+      cliniqueId: cliniqueId ?? undefined,
       localisation,
       dateMaintenance: dateSignalement,
       notes: this.panneNotes?.trim()
@@ -843,7 +904,11 @@ export class EquipementsComponent implements OnInit {
       repairMinutes: this.repairMinutes
     };
 
-    this.equipementService.traiterPanne(equipement.id, payload).subscribe({
+    const req$ = this.authService.isTechnicienMaintenance()
+      ? this.technicienMaintenanceService.traiterPanne(equipement.id, payload)
+      : this.equipementService.traiterPanne(equipement.id, payload);
+
+    req$.subscribe({
       next: () => {
         this.successMessage = 'Réparation terminée avec succès. Équipement remis en service.';
         this.showSuccessModal = true;

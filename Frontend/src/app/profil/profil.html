@@ -1,90 +1,136 @@
 <div class="profil-container">
   <div class="profile-main">
-   <header class="profile-header-card">
-  <div class="profile-cover"></div>
-  <div class="profile-header-content">
-    <div class="avatar-wrapper">
-      <div class="avatar-large">
-        <i class="bi bi-person-fill"></i>
+    <header class="profile-header-card">
+      <div class="profile-cover"></div>
+      <div class="profile-header-content">
+        <div class="avatar-wrapper">
+          <div class="avatar-large">
+            <i class="bi bi-person-fill"></i>
+          </div>
+        </div>
+        <div class="text-group">
+          <h1 class="user-name">{{ getRoleLabel() }}</h1>
+          <p class="user-username">{{ getIdentifiantAffiche() }}</p>
+          @if (user['email']) {
+            <p class="user-meta">{{ user['email'] }}</p>
+          }
+          @if (user['cin']) {
+            <p class="user-meta user-meta-cin">CIN : {{ user['cin'] }}</p>
+          }
+          <span class="role-badge">{{ getRoleLabel() | uppercase }}</span>
+        </div>
       </div>
-    </div>
-    <div class="text-group">
-      <h1 class="user-name">{{ getRoleLabel() }}</h1>
-      <p class="user-username">{{ (user.telephone || 'admin') }}</p>
-      <span class="role-badge">{{ getRoleLabel() | uppercase }}</span>
-    </div>
-  </div>
-</header>
+    </header>
+
+    @if (profileMessage) {
+      <div class="alert-profil alert-profil-success">{{ profileMessage }}</div>
+    }
+    @if (profileError) {
+      <div class="alert-profil alert-profil-error">{{ profileError }}</div>
+    }
 
     <div class="profile-grid" [class.with-sidebar]="isPersonnel()">
       <div class="left-col">
         <section class="glass-card personal-card">
-        <div class="profile-card">
-   <div class="card-header">
-                <i class="fas fa-user-circle"></i>
-                    <h3>Informations Personnelles</h3>
+          <div class="profile-card">
+            <div class="card-header">
+              <i class="fas fa-user-circle"></i>
+              <h3>Informations personnelles</h3>
+            </div>
           </div>
-        </div>
           <div class="card-body">
+            @if (isLoadingProfile) {
+              <div class="loader-inner">Chargement du profil…</div>
+            } @else {
+              @if (profilModifiable) {
+                <form class="profil-edit-form" (ngSubmit)="saveProfile()">
+                  <div class="form-row-profil">
+                    <label for="pf-nom">Nom</label>
+                    <input id="pf-nom" type="text" name="pfNom" [(ngModel)]="editForm.nom" autocomplete="family-name" />
+                  </div>
+                  <div class="form-row-profil">
+                    <label for="pf-prenom">Prénom</label>
+                    <input id="pf-prenom" type="text" name="pfPrenom" [(ngModel)]="editForm.prenom" autocomplete="given-name" />
+                  </div>
+                  <div class="form-row-profil">
+                    <label for="pf-cin">CIN (carte d'identité)</label>
+                    <input id="pf-cin" type="text" name="pfCin" [(ngModel)]="editForm.cin" maxlength="64" placeholder="Ex. AB123456" autocomplete="off" />
+                  </div>
+                  <div class="form-row-profil">
+                    <label for="pf-email">E-mail</label>
+                    <input id="pf-email" type="email" name="pfEmail" [(ngModel)]="editForm.email" placeholder="vous@exemple.com" autocomplete="email" />
+                    <span class="field-hint">Vous pouvez modifier votre adresse e-mail.</span>
+                  </div>
+                  <div class="form-row-profil">
+                    <label for="pf-tel">Téléphone (connexion)</label>
+                    <input id="pf-tel" type="tel" name="pfTel" [(ngModel)]="editForm.telephone" placeholder="216XXXXXXXX ou 0XXXXXXXX" autocomplete="tel" />
+                    <span class="field-hint">Si vous changez le numéro, vous devrez vous reconnecter avec le nouveau numéro.</span>
+                  </div>
+                  <div class="form-actions-profil">
+                    <button type="submit" class="btn-profil-primary" [disabled]="savingProfile">
+                      @if (savingProfile) {
+                        <span>Enregistrement…</span>
+                      } @else {
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Enregistrer les modifications</span>
+                      }
+                    </button>
+                  </div>
+                </form>
+              } @else {
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-icon">
+                      <div class="profile-info-icon"><i class="fas fa-id-card"></i></div>
+                    </div>
+                    <div>
+                      <label>NOM COMPLET</label>
+                      <p>{{ user['prenom'] || '—' }} {{ user['nom'] || '' }}</p>
+                    </div>
+                  </div>
+                </div>
+                <p class="readonly-hint">Ce compte ne peut pas être modifié depuis cette page.</p>
+              }
+            }
+
+            <hr class="divider" />
+
             <div class="info-grid">
               <div class="info-item">
-                <div class="info-icon">
-                <div class="profile-info-icon"><i class="fas fa-user"></i></div>
-                </div>
-                <div>
-                  <label>NOM D'UTILISATEUR</label>
-                  <p>{{ (user.telephone || 'compte') }}</p>
-                </div>
-              </div>
-              <div class="info-item">
-                <div class="info-icon">
-                  <div class="profile-info-icon"><i class="fas fa-id-card"></i></div>
-                </div>
-                <div>
-                  <label>NOM COMPLET</label>
-                  <p>{{ user.prenom || '—' }} {{ user.nom || '' }}</p>
-                </div>
-              </div>
-
-              <div class="info-item"  >
                 <div class="info-icon">
                   <div class="profile-info-icon"><i class="fas fa-hospital"></i></div>
                 </div>
                 <div>
                   <label>MA CLINIQUE ASSOCIÉE</label>
-                  <p> {{ maClinique?.nom || '—' }}</p>
+                  <p>{{ maClinique?.nom || '—' }}</p>
                 </div>
               </div>
-             
+
               <div class="info-item">
                 <div class="info-icon">
-                            <div class="profile-info-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="profile-info-icon"><i class="fas fa-calendar-alt"></i></div>
                 </div>
                 <div>
-                  <label>DERINE CONNEXION </label>
-                  <p>{{ user.membreDepuis || '—' }}</p>
+                  <label>MEMBRE DEPUIS</label>
+                  <p>{{ user['membreDepuis'] || '—' }}</p>
                 </div>
               </div>
             </div>
-
-            <hr class="divider">
-
           </div>
         </section>
 
         <section class="glass-card">
-          
           <div class="card-header">
             <div class="icon-box"><i class="bi bi-shield-lock"></i></div>
-            <h3 >Sécurité</h3>
+            <h3>Sécurité</h3>
           </div>
           <div class="card-body">
             <div class="security-row">
               <div class="sec-text">
-       <label>Mot de passe</label>
+                <label>Mot de passe</label>
                 <p>••••••••••••</p>
               </div>
-              <button class="btn" (click)="goToChangePassword()">
+              <button type="button" class="btn" (click)="goToChangePassword()">
                 <i class="bi bi-key"></i>
                 Changer le mot de passe
               </button>
@@ -98,11 +144,11 @@
           <section class="glass-card">
             <div class="card-header">
               <div class="icon-box"><i class="bi bi-building"></i></div>
-              <h3>Ma Clinique</h3>
+              <h3>Ma clinique</h3>
             </div>
             <div class="card-body">
               @if (isLoadingClinique) {
-                <div class="loader-inner">Chargement...</div>
+                <div class="loader-inner">Chargement…</div>
               } @else if (clinique) {
                 <h4 class="clinic-name">{{ clinique.nom }}</h4>
                 <p class="clinic-location">

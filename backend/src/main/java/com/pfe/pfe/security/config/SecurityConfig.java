@@ -72,7 +72,9 @@ public class SecurityConfig {
                 .requestMatchers(new PublicWebUiGetMatcher()).permitAll()
                 // Test rapide : backend joignable sans JWT (navigateur GET)
                 .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
-                // Endpoints publics
+                // Profil : JWT obligatoire (avant le permitAll général /auth/**)
+                .requestMatchers("/auth/profile").authenticated()
+                // Endpoints publics sous /auth (login, codes, etc.)
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/webhooks/stripe").permitAll()
@@ -154,8 +156,11 @@ public class SecurityConfig {
 
                 // Technicien maintenance : équipements de sa clinique (lecture + alertes e-mail)
                 .requestMatchers("/api/technicien-maintenance/**").hasRole("TECHNICIEN_MAINTENANCE")
-                
-                // Équipements - Accessible uniquement par ADMIN_CLINIQUE
+
+                // Mise à jour équipement (interface /equipements côté technicien : PUT limité + contrôle clinique dans le service)
+                .requestMatchers(HttpMethod.PUT, "/api/equipements/**").hasAnyRole("ADMIN_CLINIQUE", "TECHNICIEN_MAINTENANCE")
+
+                // Équipements — le reste (GET/POST/PATCH/DELETE) : admin clinique uniquement
                 .requestMatchers("/api/equipements/**").hasRole("ADMIN_CLINIQUE")
 
                 .anyRequest().authenticated()

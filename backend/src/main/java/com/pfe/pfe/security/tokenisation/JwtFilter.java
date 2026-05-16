@@ -36,6 +36,10 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        // Le profil doit lire le JWT (identité pour GET/PUT /auth/profile)
+        if (path != null && path.endsWith("/auth/profile")) {
+            return false;
+        }
         return path.startsWith("/auth/") ||
                path.startsWith("/api/auth/") ||
                path.startsWith("/swagger-ui/") ||

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Notification {
@@ -10,7 +10,10 @@ export interface Notification {
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
   lu: boolean;
   dateCreation: string;
-  destinataireId: number;
+  destinataireId?: number | null;
+  destinataireIdStr?: string | null;
+  code?: string | null;
+  actionUrl?: string | null;
 }
 
 @Injectable({
@@ -18,8 +21,18 @@ export interface Notification {
 })
 export class NotificationService {
   private apiUrl = `${environment.apiUrl}/api/notifications`;
+  private readonly countRefresh$ = new Subject<void>();
 
   constructor(private http: HttpClient) { }
+
+  /** Demande au header (et autres composants) de recharger le badge de notifications. */
+  requestCountRefresh(): void {
+    this.countRefresh$.next();
+  }
+
+  onCountRefreshRequested(): Observable<void> {
+    return this.countRefresh$.asObservable();
+  }
 
   // Récupérer toutes les notifications
   getNotifications(): Observable<Notification[]> {

@@ -301,20 +301,95 @@ export class AuthService {
     return role === 'ROLE_TECHNICIEN_MAINTENANCE' || role === 'TECHNICIEN_MAINTENANCE';
   }
 
-  // ============ FORGOT PASSWORD ============
+  isPharmacien(): boolean {
+    const role = this.getRole();
+    return role === 'ROLE_PHARMACIEN' || role === 'PHARMACIEN';
+  }
 
-  /**
-   * Envoie un code de vérification par SMS au numéro de téléphone
-   */
-  sendVerificationCode(telephone: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/forgot-password/send-code`, { telephone });
+  /** Rôle JWT normalisé sans préfixe ROLE_ (ex. MEDECIN, ADMIN_CLINIQUE). */
+  private normalizedRoleKey(): string {
+    let r = (this.getRole() || '').toUpperCase().replace(/-/g, '_');
+    if (r.startsWith('ROLE_')) {
+      r = r.substring(5);
+    }
+    return r;
   }
 
   /**
-   * Vérifie le code de vérification
+   * Vérifie si l'utilisateur courant peut suivre le lien d'une notification (évite d'afficher des routes interdites).
    */
-  verifyCode(telephone: string, code: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/forgot-password/verify-code`, { telephone, code });
+  peutAccederNotificationLien(url?: string | null): boolean {
+    if (!url || !String(url).trim()) {
+      return false;
+    }
+    const raw = String(url).split('?')[0].split('#')[0].trim();
+    const p = raw.startsWith('/') ? raw.toLowerCase() : `/${raw.toLowerCase()}`;
+    const r = this.normalizedRoleKey();
+    const is = (...roles: string[]) => roles.includes(r);
+
+    if (p === '/login' || p === '/profil' || p === '/dashboard' || p.startsWith('/notifications')) {
+      return true;
+    }
+
+    const matchPrefix = (prefix: string, roles: string[]) => {
+      const underPath = p.startsWith(`${prefix}/`);
+      const kebabSibling = p.startsWith(`${prefix}-`);
+      return p === prefix || underPath || kebabSibling ? is(...roles) : null;
+    };
+
+    const rules: { prefix: string; roles: string[] }[] = [
+      { prefix: '/administrateurs', roles: ['SUPER_ADMIN'] },
+      { prefix: '/clinique', roles: ['SUPER_ADMIN'] },
+      { prefix: '/cabinets-medecins', roles: ['SUPER_ADMIN'] },
+      { prefix: '/equipements', roles: ['ADMIN_CLINIQUE', 'TECHNICIEN_MAINTENANCE'] },
+      { prefix: '/chambres', roles: ['ADMIN_CLINIQUE', 'SECRETAIRE', 'MEDECIN', 'INFIRMIER', 'TECHNICIEN_MAINTENANCE'] },
+      { prefix: '/mon-dossier', roles: ['PATIENT'] },
+      { prefix: '/patient', roles: ['PATIENT'] },
+      { prefix: '/medecin-hospitalisations', roles: ['MEDECIN', 'INFIRMIER'] },
+      { prefix: '/medecin', roles: ['MEDECIN'] },
+      { prefix: '/infirmier', roles: ['INFIRMIER', 'CHEF_PERSONNEL'] },
+      { prefix: '/radiologue', roles: ['RADIOLOGUE'] },
+      { prefix: '/pharmacie', roles: ['PHARMACIEN', 'ADMIN_CLINIQUE'] },
+      { prefix: '/pharmacien', roles: ['PHARMACIEN'] },
+      { prefix: '/rendez-vous', roles: ['MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'ADMIN_CLINIQUE', 'PATIENT'] },
+      { prefix: '/patients', roles: ['MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'ADMIN_CLINIQUE'] },
+      { prefix: '/personnel', roles: ['ADMIN_CLINIQUE', 'SUPER_ADMIN'] },
+      { prefix: '/services-medicaux', roles: ['ADMIN_CLINIQUE', 'SUPER_ADMIN'] },
+      { prefix: '/mon-planning', roles: ['INFIRMIER'] },
+      { prefix: '/congie', roles: ['INFIRMIER', 'CHEF_PERSONNEL'] },
+      { prefix: '/mon-abonnement', roles: ['ADMIN_CLINIQUE', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE', 'PHARMACIEN', 'RADIOLOGUE', 'TECHNICIEN_MAINTENANCE'] },
+      { prefix: '/tarifs-abonnement', roles: ['ADMIN_CLINIQUE', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE', 'PHARMACIEN', 'RADIOLOGUE'] },
+      { prefix: '/demandes-operation', roles: ['MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'ADMIN_CLINIQUE'] },
+      { prefix: '/demandes-medicament', roles: ['MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'ADMIN_CLINIQUE', 'PHARMACIEN'] },
+      { prefix: '/conges-medecin', roles: ['MEDECIN', 'SECRETAIRE', 'ADMIN_CLINIQUE', 'CHEF_PERSONNEL'] },
+      { prefix: '/presences', roles: ['CHEF_PERSONNEL', 'INFIRMIER'] },
+      { prefix: '/planning-infirmiers', roles: ['CHEF_PERSONNEL', 'INFIRMIER'] },
+    ];
+
+    for (const { prefix, roles } of rules) {
+      const hit = matchPrefix(prefix, roles);
+      if (hit !== null) {
+        return hit;
+      }
+    }
+
+    return false;
+  }
+
+  // ============ FORGOT PASSWORD ============
+
+  /**
+   * Envoie un code de réinitialisation : soit par SMS ({ telephone }), soit par e-mail ({ email }).
+   */
+  sendForgotPasswordCode(payload: { telephone?: string; email?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/forgot-password/send-code`, payload);
+  }
+
+  /**
+   * Vérifie le code (même canal que l'envoi : telephone ou email).
+   */
+  verifyForgotPasswordCode(payload: { telephone?: string; email?: string; code: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/forgot-password/verify-code`, payload);
   }
 
   /**
@@ -332,14 +407,15 @@ export class AuthService {
   }
 
   /**
-   * Réinitialise le mot de passe
+   * Réinitialise le mot de passe après vérification du code (telephone ou email selon le flux).
    */
-  resetPassword(telephone: string, newPassword: string, resetToken: string): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/forgot-password/reset`, {
-      telephone,
-      newPassword,
-      resetToken
-    });
+  resetForgotPassword(payload: {
+    telephone?: string;
+    email?: string;
+    newPassword: string;
+    resetToken: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/forgot-password/reset`, payload);
   }
 
   /**
@@ -347,5 +423,39 @@ export class AuthService {
    */
   getProfile(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/profile`);
+  }
+
+  /**
+   * Met à jour le profil (nom, prénom, e-mail, téléphone, CIN). JWT requis.
+   * Si le téléphone change, la réponse peut contenir reconnectRequired: true.
+   */
+  updateProfile(payload: {
+    nom?: string;
+    prenom?: string;
+    email?: string;
+    telephone?: string;
+    cin?: string;
+  }): Observable<{
+    message?: string;
+    nom?: string;
+    prenom?: string;
+    email?: string;
+    telephone?: string;
+    cin?: string;
+    reconnectRequired?: boolean;
+    info?: string;
+    error?: string;
+  }> {
+    return this.http.put<{
+      message?: string;
+      nom?: string;
+      prenom?: string;
+      email?: string;
+      telephone?: string;
+      cin?: string;
+      reconnectRequired?: boolean;
+      info?: string;
+      error?: string;
+    }>(`${this.baseUrl}/profile`, payload);
   }
 }

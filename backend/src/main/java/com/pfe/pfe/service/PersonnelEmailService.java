@@ -73,7 +73,8 @@ public class PersonnelEmailService {
         }
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            // multipart=true obligatoire pour setText(plain, html) (alternative/html) — Spring 6.2+
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(resolveFrom());
             helper.setTo(to);
             if (StringUtils.hasText(bccOptional)) {

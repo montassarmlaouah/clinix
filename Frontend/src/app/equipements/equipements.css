@@ -8,6 +8,29 @@
     --luna-bg: #f4f7f9;
 }
 
+/* Icônes Bootstrap (ligne, monochrome) */
+.equipements-spin {
+    display: inline-block;
+    animation: equipements-spin 0.85s linear infinite;
+}
+
+@keyframes equipements-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.modal-icon-lg {
+    font-size: 2rem;
+    color: var(--luna-midnight);
+    opacity: 0.85;
+}
+
+.modal-success-icon {
+    font-size: 3rem;
+    color: var(--luna-midnight);
+    opacity: 0.85;
+}
+
 .licences-container {
     padding: 2rem;
     background-color: var(--luna-bg);
@@ -223,16 +246,18 @@
     height: 100%;
 }
 
-.card-total::before { background: var(--luna-midnight); }
-.card-available::before { background: var(--luna-primary); }
-.card-low::before { background: #f59e0b; }
-.card-categories::before { background: var(--luna-deep); }
-.card-warning::before { background: #ef4444; }
-.card-maintenance::before { background: #8b5cf6; }
-.card-panne-urgent::before { background: #dc2626; }
-.card-maintenance-todo::before { background: #d97706; }
-.card-ready::before { background: #10b981; }
-.card-critical::before { background: #7c3aed; }
+.card-total::before,
+.card-available::before,
+.card-low::before,
+.card-categories::before,
+.card-warning::before,
+.card-maintenance::before,
+.card-panne-urgent::before,
+.card-maintenance-todo::before,
+.card-ready::before,
+.card-critical::before {
+    background: var(--luna-deep);
+}
 
 .stat-card:hover {
     transform: translateY(-4px);
@@ -244,21 +269,19 @@
     width: 56px;
     height: 56px;
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--luna-light), rgba(167, 235, 242, 0.8));
+    background: rgba(167, 235, 242, 0.55);
+    border: 1px solid rgba(38, 101, 140, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
-    color: white;
+    color: var(--luna-deep);
     flex-shrink: 0;
 }
 
-.card-warning .stat-icon { background: linear-gradient(135deg, #f87171, #ef4444); }
-.card-maintenance .stat-icon { background: linear-gradient(135deg, #a78bfa, #8b5cf6); }
-.card-panne-urgent .stat-icon { background: linear-gradient(135deg, #fca5a5, #dc2626); }
-.card-maintenance-todo .stat-icon { background: linear-gradient(135deg, #fbbf24, #d97706); }
-.card-ready .stat-icon { background: linear-gradient(135deg, #34d399, #10b981); }
-.card-critical .stat-icon { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+.stat-icon i {
+    color: inherit;
+}
 
 .stat-info {
     display: flex;
@@ -332,7 +355,8 @@
 }
 
 .technician-header h2 i {
-    color: var(--luna-primary);
+    color: var(--luna-midnight);
+    opacity: 0.72;
 }
 
 .technician-badge {
@@ -397,8 +421,8 @@
 /* Contenu des onglets */
 .tab-content {
     animation: fadeIn 0.3s ease;
- 
-    
+
+
 
 }
 
@@ -934,29 +958,29 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.btn-view { background: var(--luna-primary); }
-.btn-view:hover { background: var(--luna-deep); }
+.btn-view { background: var(--luna-deep); }
+.btn-view:hover { background: var(--luna-dark); }
 
 .btn-sync { background: var(--luna-deep); }
 .btn-sync:hover { background: var(--luna-dark); }
 
-.btn-delete { background: #ef4444; }
-.btn-delete:hover { background: #dc2626; }
+.btn-delete { background: var(--luna-deep); }
+.btn-delete:hover { background: var(--luna-dark); }
 
-.btn-warning { background: #f59e0b; }
-.btn-warning:hover { background: #d97706; }
+.btn-warning { background: var(--luna-deep); }
+.btn-warning:hover { background: var(--luna-dark); }
 
-.btn-maint { background: #8b5cf6; }
-.btn-maint:hover { background: #7c3aed; }
+.btn-maint { background: var(--luna-deep); }
+.btn-maint:hover { background: var(--luna-dark); }
 
-.btn-repair { background: #f59e0b; }
-.btn-repair:hover { background: #d97706; }
+.btn-repair { background: var(--luna-deep); }
+.btn-repair:hover { background: var(--luna-dark); }
 
-.btn-details { background: #64748b; }
-.btn-details:hover { background: #475569; }
+.btn-details { background: var(--luna-deep); }
+.btn-details:hover { background: var(--luna-dark); }
 
-.btn-complete { background: #10b981; }
-.btn-complete:hover { background: #059669; }
+.btn-complete { background: var(--luna-deep); }
+.btn-complete:hover { background: var(--luna-dark); }
 
 .btn-success { background: #10b981; }
 .btn-success:hover { background: #059669; }
@@ -1003,14 +1027,15 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
-    color: white;
-    box-shadow: 0 6px 20px rgba(84, 172, 191, 0.3);
+    background: var(--luna-deep);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(38, 101, 140, 0.35);
 }
 
 .btn-primary:hover:not(:disabled) {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(84, 172, 191, 0.4);
+    background: var(--luna-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(2, 56, 89, 0.35);
 }
 
 .btn-primary:disabled {
@@ -1056,15 +1081,15 @@
 }
 
 .btn-warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+    background: var(--luna-deep);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(38, 101, 140, 0.35);
 }
 
 .btn-warning:hover {
-    background: linear-gradient(135deg, #d97706, #b45309);
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(217, 119, 6, 0.4);
+    background: var(--luna-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(2, 56, 89, 0.35);
 }
 
 .btn-lg {
@@ -1607,4 +1632,36 @@
 .page-btn[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Harmonisation roles - style admin */
+.stats-grid .stat-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(1, 28, 64, 0.05);
+    border-bottom: 4px solid var(--luna-deep);
+}
+
+.stats-grid .stat-card::before {
+    background: var(--luna-deep);
+}
+
+.stats-grid .stat-icon {
+    color: var(--luna-deep);
+    background: rgba(167, 235, 242, 0.3);
+    border: 1px solid rgba(38, 101, 140, 0.2);
+}
+
+.btn-action {
+    background: var(--luna-deep) !important;
+    color: #fff !important;
+}
+
+.btn-action:hover {
+    background: var(--luna-dark) !important;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
+    color: #fff;
 }
