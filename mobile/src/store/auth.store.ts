@@ -4,13 +4,14 @@ import { storage } from './storage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface AuthData {
-  token:      string | null;
-  role:       string | null;
-  userId:     string | number | null;
-  cliniqueId: string | number | null;
-  nom:        string | null;
-  prenom:     string | null;
-  estCabinet: boolean;
+  token:       string | null;
+  role:        string | null;
+  userId:      string | number | null;
+  cliniqueId:  string | number | null;
+  cliniqueNom: string | null;
+  nom:         string | null;
+  prenom:      string | null;
+  estCabinet:  boolean;
 }
 
 export interface AuthState extends AuthData {
@@ -20,13 +21,14 @@ export interface AuthState extends AuthData {
 }
 
 const initialState: AuthData = {
-  token:      null,
-  role:       null,
-  userId:     null,
-  cliniqueId: null,
-  nom:        null,
-  prenom:     null,
-  estCabinet: false,
+  token:       null,
+  role:        null,
+  userId:      null,
+  cliniqueId:  null,
+  cliniqueNom: null,
+  nom:         null,
+  prenom:      null,
+  estCabinet:  false,
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -48,13 +50,14 @@ export const useAuthStore = create<AuthState>()(
       name:    'clinix-auth-v2',
       storage: createJSONStorage(() => storage),
       partialize: (state) => ({
-        token:      state.token,
-        role:       state.role,
-        userId:     state.userId,
-        cliniqueId: state.cliniqueId,
-        nom:        state.nom,
-        prenom:     state.prenom,
-        estCabinet: state.estCabinet,
+        token:       state.token,
+        role:        state.role,
+        userId:      state.userId,
+        cliniqueId:  state.cliniqueId,
+        cliniqueNom: state.cliniqueNom,
+        nom:         state.nom,
+        prenom:      state.prenom,
+        estCabinet:  state.estCabinet,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

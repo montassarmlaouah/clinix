@@ -4,8 +4,7 @@ import {
   ActivityIndicator, Alert, FlatList, Pressable,
   RefreshControl, StyleSheet, Text, View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { LunaHeroHeader, LunaScreen } from '@/src/components/common';
 import { apiGet, apiPut } from '@/src/api/client';
 import { CLINIQUES } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
@@ -67,15 +66,18 @@ export default function OrganisationsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.center}>
-        <ActivityIndicator color={LUNA_COLORS.primary} size="large" />
-      </SafeAreaView>
+      <LunaScreen edges={[]}>
+        <LunaHeroHeader title="Cliniques" subtitle="Chargement…" showBack={false} />
+        <View style={styles.center}>
+          <ActivityIndicator color={LUNA_COLORS.primary} size="large" />
+        </View>
+      </LunaScreen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Organisations</Text>
+    <LunaScreen edges={[]}>
+      <LunaHeroHeader title="Cliniques" subtitle={`${orgs.length} organisation(s)`} showBack={false} />
       <FlatList
         data={orgs}
         keyExtractor={(o) => o.id}
@@ -106,7 +108,7 @@ export default function OrganisationsScreen() {
         }}
         ListEmptyComponent={<Text style={styles.empty}>Aucune organisation trouvée.</Text>}
       />
-    </SafeAreaView>
+    </LunaScreen>
   );
 }
 

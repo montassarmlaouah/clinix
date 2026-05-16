@@ -43,4 +43,12 @@ public interface HistoriqueSmsRepository extends JpaRepository<HistoriqueSms, St
     // Coût total des SMS d'une période
     @Query("SELECT SUM(h.fraisCents) FROM HistoriqueSms h WHERE h.dateEnvoi BETWEEN :debut AND :fin")
     Double getTotalCost(@Param("debut") LocalDateTime debut, @Param("fin") LocalDateTime fin);
+
+    /** SMS envoyés avec succès pour une clinique sur la période d'abonnement. */
+    @Query("SELECT COUNT(h) FROM HistoriqueSms h WHERE h.cliniqueId = :cliniqueId AND h.statut = 'SENT' "
+            + "AND h.dateEnvoi >= :debut AND h.dateEnvoi <= :fin")
+    long countSentForCliniqueInPeriod(
+            @Param("cliniqueId") String cliniqueId,
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin);
 }

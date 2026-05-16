@@ -45,3 +45,87 @@ main {
   /* pas de padding pour le main */
   box-sizing: border-box;
 }
+
+/* Modal SUCCESS global (CRUD) */
+.luna-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1, 28, 64, 0.55);
+  padding: 1.5rem;
+}
+
+.luna-success-dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(1, 28, 64, 0.2);
+}
+
+.luna-success-badge {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #66bb6a 0%, #2e7d32 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(46, 125, 50, 0.45);
+}
+
+.luna-success-check {
+  font-size: 2.75rem;
+  color: #fff;
+  line-height: 1;
+}
+
+.luna-success-badge-label {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #fff;
+}
+
+.luna-success-message {
+  margin: 0 0 1.25rem;
+  color: #1a3a52;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.luna-success-ok {
+  border: none;
+  border-radius: 8px;
+  background: #26658c;
+  color: #fff;
+  font-weight: 600;
+  padding: 0.65rem 2rem;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.luna-success-ok:hover {
+  background: #023859;
+}
+
+/* Pied de modale compact (bouton Fermer non étiré) */
+.modal-footer.luna-footer-single {
+  justify-content: center;
+}
+
+.modal-footer.luna-footer-single .btn,
+.modal-footer .btn-luna-close {
+  flex: 0 0 auto;
+  min-width: 7.5rem;
+  max-width: 11rem;
+  width: auto;
+}

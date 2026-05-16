@@ -17,7 +17,9 @@ export function RoleMenuScreen(): React.JSX.Element {
   const role = useAuthStore((s) => s.role);
   const prenom = useAuthStore((s) => s.prenom);
   const nom = useAuthStore((s) => s.nom);
-  const items = getRoleMenu(role);
+  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const estCabinet = useAuthStore((s) => s.estCabinet);
+  const items = getRoleMenu(role, { estCabinet, cliniqueId });
   const roleLabel = role ? (roleLabels[role] ?? role) : 'Utilisateur';
 
   return (

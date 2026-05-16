@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · Agenda · Patients */
 export default function SecretaireLayout(): React.JSX.Element {
@@ -31,24 +31,24 @@ export default function SecretaireLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('people-outline'),
         }}
       />
-      <Tabs.Screen name="transferts" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="admissions" options={{ href: null }} />
-      <Tabs.Screen name="admissions/creer" options={{ href: null }} />
-      <Tabs.Screen name="patients/nouveau" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/dossier" options={{ href: null }} />
-      <Tabs.Screen name="rendez-vous/nouveau" options={{ href: null }} />
-      <Tabs.Screen name="rendez-vous/[id]" options={{ href: null }} />
-      <Tabs.Screen name="transferts/[id]" options={{ href: null }} />
-      <Tabs.Screen name="chambres" options={{ href: null }} />
-      <Tabs.Screen name="conges-medecin" options={{ href: null }} />
-      <Tabs.Screen name="demandes-operation" options={{ href: null }} />
-      <Tabs.Screen name="demandes-medicament" options={{ href: null }} />
-      <Tabs.Screen name="abonnement" options={{ href: null }} />
-      <Tabs.Screen name="tarifs" options={{ href: null }} />
-      <Tabs.Screen name="abonnement-paiement" options={{ href: null }} />
+      <Tabs.Screen name="transferts" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="admissions" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="admissions/creer" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/nouveau" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/dossier" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rendez-vous/nouveau" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rendez-vous/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="transferts/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="chambres" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="tarifs" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

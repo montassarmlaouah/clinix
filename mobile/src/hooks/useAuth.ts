@@ -5,11 +5,11 @@ import { useAuthStore } from '@/src/store/auth.store';
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 export function useAuth() {
-  const { role, userId, clearAuth } = useAuthStore();
+  const { role, token, clearAuth } = useAuthStore();
   const router = useRouter();
 
   /** true si une session active est présente */
-  const isLoggedIn: boolean = Boolean(userId);
+  const isLoggedIn: boolean = Boolean(token);
 
   /** Vérifie si l'utilisateur a exactement le rôle donné (ex: 'ROLE_MEDECIN') */
   function isRole(r: string): boolean {

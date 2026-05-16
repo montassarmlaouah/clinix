@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { notificationService, type NotificationItem } from '@/src/api/services/notification.service';
-import { EmptyState, LoadingOverlay } from '@/src/components/common';
+import { EmptyState, LoadingOverlay, LunaScreen } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
@@ -44,7 +42,7 @@ export function NotificationsScreen(): React.JSX.Element {
   if (loading) return <LoadingOverlay />;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <LunaScreen edges={[]}>
       <ScreenHeader title="Notifications" subtitle={`${items.filter((n) => !n.lu).length} non lue(s)`} />
       {items.some((n) => !n.lu) ? (
         <Pressable style={styles.markAll} onPress={markAll}>
@@ -74,7 +72,7 @@ export function NotificationsScreen(): React.JSX.Element {
           <EmptyState icon="notifications-outline" title="Aucune notification" subtitle="Rien pour aujourd'hui." />
         }
       />
-    </SafeAreaView>
+    </LunaScreen>
   );
 }
 

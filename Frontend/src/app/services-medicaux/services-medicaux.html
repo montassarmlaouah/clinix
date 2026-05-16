@@ -278,10 +278,10 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" (click)="fermerDetails()">
+            <button type="button" class="btn btn-secondary btn-luna-close" (click)="fermerDetails()">
               Fermer
             </button>
-            <button type="button" class="btn btn-primary" (click)="ouvrirModalEdition(selectedService)">
+            <button type="button" class="btn btn-primary" (click)="ouvrirModalEdition(selectedService!)">
               <i class="fas fa-edit"></i> Modifier
             </button>
           </div>
@@ -461,7 +461,7 @@
               <button type="button" class="btn btn-secondary" (click)="fermerModalEdition()">
                 Annuler
               </button>
-              <button type="submit" class="btn btn-primary" [disabled]="editForm.invalid">
+              <button type="submit" class="btn btn-primary" [disabled]="!serviceEnEdition.nom?.trim()">
                 <i class="fas fa-save"></i> Enregistrer les modifications
               </button>
             </div>

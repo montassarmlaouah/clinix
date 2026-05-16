@@ -72,9 +72,12 @@ export default function MedecinDashboard(): React.JSX.Element {
     }
     if (!silent) setLoading(true);
     try {
-      const [patientData] = await Promise.all([
-        apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(medecinId)),
-      ]);
+      let patientData: Patient[] = [];
+      if (hasMedecinClinique(cliniqueId)) {
+        patientData = await patientService.getByClinique(String(cliniqueId));
+      } else {
+        patientData = await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(medecinId));
+      }
       setPatients(patientData ?? []);
 
       const latestEntries = await Promise.all(
@@ -118,7 +121,10 @@ export default function MedecinDashboard(): React.JSX.Element {
       />
 
       <View style={{ paddingHorizontal: spacing.lg }}>
-        <DashboardQuickLinks maxItems={6} excludeRoutes={['/(medecin)/index', '/(medecin)/patients']} />
+        <DashboardQuickLinks
+          maxItems={9}
+          excludeRoutes={['/(medecin)/index', '/(medecin)/patients', '/(medecin)/messagerie']}
+        />
       </View>
 
       <View style={styles.filters}>

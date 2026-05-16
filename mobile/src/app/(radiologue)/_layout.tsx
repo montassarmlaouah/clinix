@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { apiGet } from '@/src/api/client';
 import { IMAGERIES } from '@/src/api/endpoints';
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · File · Examens */
 export default function RadiologueLayout(): React.JSX.Element {
@@ -56,12 +56,12 @@ export default function RadiologueLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('document-text-outline'),
         }}
       />
-      <Tabs.Screen name="messagerie" options={{ href: null }} />
-      <Tabs.Screen name="agenda" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="examen" options={{ href: null }} />
-      <Tabs.Screen name="rapport" options={{ href: null }} />
+      <Tabs.Screen name="messagerie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="agenda" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

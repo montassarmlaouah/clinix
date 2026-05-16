@@ -142,6 +142,18 @@ export class MonAbonnementComponent implements OnInit {
     return this.nouvelleCategorie === 'CLINIQUE';
   }
 
+  /** Bascule clinique / cabinet : masque et remet à zéro les limites non applicables. */
+  onCategorieOffreChange(cat: 'CLINIQUE' | 'CABINET_MEDICAL'): void {
+    this.nouvelleCategorie = cat;
+    if (cat === 'CABINET_MEDICAL') {
+      this.nouvelleSms = 0;
+      this.nouvelleChambres = 0;
+    } else {
+      this.nouvellePatients = 0;
+      this.nouvelleRendezVous = 0;
+    }
+  }
+
   basculerActif(offre: OffreAbonnement): void {
     this.error = '';
     this.abonnementService.mettreAJourOffre(offre.id, { actif: !offre.actif }).subscribe({

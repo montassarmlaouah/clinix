@@ -4,14 +4,13 @@ import {
   View, Text, StyleSheet, ScrollView, Dimensions,
   ActivityIndicator, TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BarChart, PieChart } from 'react-native-chart-kit';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/store/auth.store';
 import { apiGet } from '@/src/api/client';
+import { LunaHeroHeader, LunaScreen } from '@/src/components/common';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { HeaderBar } from '@/src/components/superadmin/HeaderBar';
 import type { Clinique, CabinetMedecin } from '@/src/types/superadmin.types';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -81,31 +80,35 @@ export default function DashboardScreen() {
     barPercentage: 0.6,
   };
 
+  const header = (
+    <LunaHeroHeader title="Dashboard" subtitle="Super administrateur" showBack={false} />
+  );
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <HeaderBar title="Dashboard" showLogout />
+      <LunaScreen edges={[]}>
+        {header}
         <View style={styles.centered}><ActivityIndicator size="large" color={LUNA_COLORS.secondary} /></View>
-      </View>
+      </LunaScreen>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <HeaderBar title="Dashboard" showLogout />
+      <LunaScreen edges={[]}>
+        {header}
         <View style={styles.centered}>
           <Ionicons name="wifi-outline" size={48} color={LUNA_COLORS.textDisabled} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={loadData}><Text style={styles.retryBtnText}>Réessayer</Text></TouchableOpacity>
         </View>
-      </View>
+      </LunaScreen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <HeaderBar title="Dashboard" showLogout />
+    <LunaScreen edges={[]}>
+      {header}
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[LUNA_COLORS.secondary]} />}
@@ -168,7 +171,7 @@ export default function DashboardScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </LunaScreen>
   );
 }
 

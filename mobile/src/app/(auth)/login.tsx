@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { apiPost } from '@/src/api/client';
 import { AUTH_ENDPOINTS } from '@/src/api/endpoints';
 import { Button, Card, Input } from '@/src/components/common';
-import { ROLE_ROUTES } from '@/src/constants/roles';
+import { normalizeRole, ROLE_ROUTES } from '@/src/constants/roles';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
@@ -31,8 +31,9 @@ interface JwtPayload {
   role?:      string;
   nom?:       string;
   prenom?:    string;
-  cliniqueId?:string;
-  exp:        number;
+  cliniqueId?: string;
+  cliniqueNom?: string;
+  exp:         number;
 }
 
 // ── Type réponse login ────────────────────────────────────────────────────────
@@ -49,6 +50,7 @@ interface LoginResponse {
     nom?:       string | null;
     prenom?:    string | null;
     cliniqueId?: number | null;
+    cliniqueNom?: string | null;
     estCabinet?: boolean;
   };
 }
@@ -87,20 +89,25 @@ export default function LoginScreen(): React.JSX.Element {
         } catch { /* ignore */ }
       }
 
-      // ── Extraire l'id : racine → user{} → JWT ────────────────────────────
-      let userId: number | null = data.id ?? data.user?.id ?? decodedJwt?.userId ?? decodedJwt?.id ?? null;
+      // ── Extraire l'id : racine → user{} → JWT → sub (super admin) ─────────
+      let userId: string | number | null =
+        data.id ?? data.user?.id ?? decodedJwt?.userId ?? decodedJwt?.id ?? null;
+      if (userId == null && decodedJwt?.sub) {
+        userId = decodedJwt.sub;
+      }
 
       // ── Extraire le rôle : racine → user{} → JWT ─────────────────────────
-      let role: string | null = data.role ?? data.user?.role ?? decodedJwt?.role ?? null;
-      // Normaliser : ajouter ROLE_ si absent
-      if (role && !role.startsWith('ROLE_')) {
-        role = `ROLE_${role}`;
-      }
+      const role = normalizeRole(
+        data.role ?? data.user?.role ?? decodedJwt?.role ?? null,
+      );
 
       // ── Extraire nom/prénom depuis user{} ou JWT claims ──────────────────
       const nom        = data.user?.nom ?? data.user?.username ?? decodedJwt?.nom ?? null;
       const prenom     = data.user?.prenom ?? decodedJwt?.prenom ?? null;
-      const cliniqueId = data.user?.cliniqueId ?? decodedJwt?.cliniqueId ?? null;
+      const cliniqueId =
+        data.user?.cliniqueId ?? decodedJwt?.cliniqueId ?? null;
+      const cliniqueNom =
+        data.user?.cliniqueNom ?? decodedJwt?.cliniqueNom ?? null;
       const estCabinet = !!(data.user?.estCabinet);
 
       // ── Sauvegarde dans le store Zustand (persiste automatiquement) ───────
@@ -109,6 +116,7 @@ export default function LoginScreen(): React.JSX.Element {
         role,
         userId,
         cliniqueId,
+        cliniqueNom,
         nom,
         prenom,
         estCabinet,
@@ -192,11 +200,12 @@ export default function LoginScreen(): React.JSX.Element {
           {/* ── Formulaire ── */}
           <Card style={styles.formCard}>
             <Input
-              label="Téléphone"
+              label="Identifiant"
               value={telephone}
               onChangeText={setTelephone}
-              keyboardType="phone-pad"
-              placeholder="Ex : 55 123 456"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="Tél. ou super.admin"
               returnKeyType="next"
               leftIcon={
                 <Ionicons

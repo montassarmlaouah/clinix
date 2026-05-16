@@ -7,6 +7,7 @@ import { ChambreService } from '../service/chambre.service';
 import { AuthService } from '../service/auth-service';
 import { Equipement, EquipementDTO, CategorieEquipement, EtatTechnique, StatutEquipement, CriticiteEquipement, TypeLocalisation } from '../model/materiel-medical';
 import { Chambre } from '../model/chambre';
+import { LunaSuccessService } from '../service/luna-success.service';
 
 @Component({
   selector: 'app-equipements',
@@ -33,7 +34,6 @@ export class EquipementsComponent implements OnInit {
   editionId: string | null = null;
   successMessage: string = '';
   errorMessage: string = '';
-  showSuccessModal: boolean = false;
   searchTerm: string = '';
   stockFilter: string = 'all';
   etatFilter: string = 'all';
@@ -116,8 +116,13 @@ export class EquipementsComponent implements OnInit {
     public equipementService: EquipementService,
     private readonly technicienMaintenanceService: TechnicienMaintenanceService,
     private chambreService: ChambreService,
-    public authService: AuthService
+    public authService: AuthService,
+    private lunaSuccess: LunaSuccessService
   ) { }
+
+  private afficherSuccesCrud(message: string): void {
+    this.lunaSuccess.show(message);
+  }
 
   ngOnInit() {
     this.chargerEquipements();
@@ -423,9 +428,9 @@ export class EquipementsComponent implements OnInit {
     const note = this.noteAlerteEmailAdmin?.trim() || undefined;
     this.equipementService.renvoyerAlerteEmail(eq.id, note).subscribe({
       next: () => {
-        this.successMessage =
-          `Alertes renvoyées pour « ${eq.nom || eq.code || 'équipement'} » (notifications + e-mails si le serveur mail est configuré).`;
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud(
+          `Alertes renvoyées pour « ${eq.nom || eq.code || 'équipement'} » (notifications + e-mails si le serveur mail est configuré).`
+        );
       },
       error: (err: unknown) => {
         console.error('Erreur renvoi alerte e-mail :', err);
@@ -573,8 +578,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.creerEquipement(dto).subscribe({
       next: () => {
-        this.successMessage = 'Équipement ajouté avec succès !';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Équipement ajouté avec succès !');
         this.nouvelEquipement = {
           quantite: 1,
           categorie: CategorieEquipement.LITS_MOBILIER,
@@ -666,8 +670,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(this.editionId, dto).subscribe({
       next: () => {
-        this.successMessage = 'Équipement modifié avec succès !';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Équipement modifié avec succès !');
         this.annulerEdition();
         this.chargerEquipements();
       },
@@ -724,8 +727,7 @@ export class EquipementsComponent implements OnInit {
     if (this.equipementToDeleteId) {
       this.equipementService.supprimerEquipement(this.equipementToDeleteId).subscribe({
         next: () => {
-          this.successMessage = 'Équipement supprimé avec succès !';
-          this.showSuccessModal = true;
+          this.afficherSuccesCrud('Équipement supprimé avec succès !');
           this.closeDeleteModal();
           this.chargerEquipements();
         },
@@ -738,11 +740,6 @@ export class EquipementsComponent implements OnInit {
         }
       });
     }
-  }
-
-  closeSuccessModal() {
-    this.showSuccessModal = false;
-    this.successMessage = '';
   }
 
   // ============================================================
@@ -813,8 +810,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(this.selectedEquipement.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Panne signalée avec succès.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Panne signalée avec succès.');
         this.closePanneModal();
         this.closeDetailsModal();
         this.chargerEquipements();
@@ -860,8 +856,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(this.selectedEquipement.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Maintenance planifiée avec succès.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Maintenance planifiée avec succès.');
         this.closeMaintenanceModal();
         this.closeDetailsModal();
         this.chargerEquipements();
@@ -910,8 +905,7 @@ export class EquipementsComponent implements OnInit {
 
     req$.subscribe({
       next: () => {
-        this.successMessage = 'Réparation terminée avec succès. Équipement remis en service.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Réparation terminée avec succès. Équipement remis en service.');
         this.selectedEquipementForRepair = null;
         this.showRepairModal = false;
         this.repairNotes = '';
@@ -962,8 +956,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(equipement.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Maintenance terminée avec succès. Équipement remis en service.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Maintenance terminée avec succès. Équipement remis en service.');
         this.chargerEquipements();
       },
       error: (err: unknown) => {
@@ -990,8 +983,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(equipement.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Maintenance validée avec succès. Équipement remis en service.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Maintenance validée avec succès. Équipement remis en service.');
         this.showValidateMaintenanceModal = false;
         this.selectedEquipementForMaintenanceValidation = null;
         this.maintenanceValidationNotes = '';
@@ -1054,8 +1046,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(this.selectedEquipementForMaintenir.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Équipement marqué comme "À Maintenir". Une nouvelle intervention est nécessaire.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Équipement marqué comme "À Maintenir". Une nouvelle intervention est nécessaire.');
         this.closeMarquerAMaintenirModal();
         this.closeDetailsModal();
         this.chargerEquipements();
@@ -1089,8 +1080,7 @@ export class EquipementsComponent implements OnInit {
 
     this.equipementService.mettreAJourEquipement(this.selectedEquipementForValidation.id, dto).subscribe({
       next: () => {
-        this.successMessage = 'Équipement validé et mis en service avec succès.';
-        this.showSuccessModal = true;
+        this.afficherSuccesCrud('Équipement validé et mis en service avec succès.');
         this.selectedEquipementForValidation = null;
         this.validationNotes = '';
         this.chargerEquipements();

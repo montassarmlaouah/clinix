@@ -5,7 +5,15 @@ import {
   RefreshControl, ActivityIndicator, Modal, KeyboardAvoidingView,
   Platform, Pressable, Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  LunaAccessHeader,
+  LunaActionButton,
+  LunaDetailsModal,
+  LunaScreen,
+  LunaSuccessModal,
+} from '@/src/components/common';
+import { lunaModalStyles as ms } from '@/src/theme/lunaModal';
+import { adminTableStyles as tbl } from '@/src/theme/adminTable';
 import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,8 +62,8 @@ const statutCfg = (s: StatutEquipement) => ({
 
 const genCode = () => 'EQ-' + Math.random().toString(36).substring(2,10).toUpperCase();
 
-const COL_EQ: Record<string,number> = { EQ: 180, CATEGORIE: 130, QUANTITE: 90, STOCK: 120, ACTIONS: 170 };
-const COL_PANNE: Record<string,number> = { EQ: 160, CATEGORIE: 120, LOCALISATION: 130, ETAT: 110, NOTES: 150, ACTIONS: 120 };
+const COL_EQ: Record<string,number> = { EQ: 180, CATEGORIE: 130, QUANTITE: 90, STOCK: 120, ACTIONS: 180 };
+const COL_PANNE: Record<string,number> = { EQ: 160, CATEGORIE: 120, LOCALISATION: 130, ETAT: 110, NOTES: 150, ACTIONS: 84 };
 
 export default function EquipementsScreen() {
   const { cliniqueId } = useAuthStore();
@@ -68,6 +76,13 @@ export default function EquipementsScreen() {
   const [selected, setSelected] = useState<Equipement | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setSuccessVisible(true);
+  };
 
   const { control: ac, handleSubmit: has, reset: ra, setValue: sva, formState: { errors: ae } } = useForm<AddForm>({
     resolver: zodResolver(addSchema),
@@ -106,7 +121,9 @@ const [eq, ch] = await Promise.all([
         chambreId: data.chambreId ? Number(data.chambreId) : undefined,
         notes: data.notes || undefined, cliniqueId: Number(cliniqueId),
       });
-      await fetchAll(); closeModal();
+      await fetchAll();
+      closeModal();
+      showSuccess('Équipement ajouté avec succès');
     } catch (err: unknown) {
       setSubmitError((err as { message?: string })?.message ?? 'Erreur');
     } finally { setSubmitting(false); }
@@ -119,20 +136,32 @@ const [eq, ch] = await Promise.all([
 await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
         repairNotes: data.description,
       });
-      await fetchAll(); closeModal();
+      await fetchAll();
+      closeModal();
+      showSuccess('Panne signalée avec succès');
     } catch (err: unknown) {
       setSubmitError((err as { message?: string })?.message ?? 'Erreur');
     } finally { setSubmitting(false); }
   };
 
   const handleReparer = async (id: number) => {
-    try { await apiPatch(`/api/equipements/${id}/statut/DISPONIBLE`, {}); await fetchAll(); }
-    catch {}
+    try {
+      await apiPatch(`/api/equipements/${id}/statut/DISPONIBLE`, {});
+      await fetchAll();
+      showSuccess('Équipement remis en service');
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleMaintenance = async (id: number) => {
-    try { await apiPatch(`/api/equipements/${id}/statut/EN_MAINTENANCE`, {}); await fetchAll(); }
-    catch {}
+    try {
+      await apiPatch(`/api/equipements/${id}/statut/EN_MAINTENANCE`, {});
+      await fetchAll();
+      showSuccess('Maintenance planifiée avec succès');
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleDelete = async () => {
@@ -140,7 +169,9 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
     try {
       setSubmitting(true);
       await apiDelete(`/api/equipements/${selected.id}`);
-      await fetchAll(); closeModal();
+      await fetchAll();
+      closeModal();
+      showSuccess('Équipement supprimé avec succès');
     } catch (err: unknown) {
       setSubmitError((err as { message?: string })?.message ?? 'Erreur');
     } finally { setSubmitting(false); }
@@ -165,13 +196,11 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBar}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Ionicons name="construct-outline" size={24} color={LUNA_COLORS.textInverse} />
-          <Text style={styles.headerTitle}>Tableau de Bord - Équipements</Text>
-        </View>
-      </View>
+    <LunaScreen edges={[]}>
+      <LunaAccessHeader
+        pageTitle="Gestion des équipements"
+        pageSubtitle={`${total} équipement(s) · ${nbPannes} en panne`}
+      />
 
       {/* 4 KPI cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.kpiScroll} contentContainerStyle={styles.kpiContent}>
@@ -205,15 +234,15 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
               </View>
               <ScrollView horizontal>
                 <View>
-                  <View style={styles.tableHeader}>
+                  <View style={tbl.tableHeader}>
                     {['ÉQUIPEMENT','CATÉGORIE','LOCALISATION','ÉTAT','NOTES','ACTIONS'].map((c, i) => (
                       <View key={c} style={{ width: [COL_PANNE.EQ, COL_PANNE.CATEGORIE, COL_PANNE.LOCALISATION, COL_PANNE.ETAT, COL_PANNE.NOTES, COL_PANNE.ACTIONS][i] }}>
-                        <Text style={styles.thText}>{c}</Text>
+                        <Text style={tbl.thText}>{c}</Text>
                       </View>
                     ))}
                   </View>
                   {pannes.map((p, idx) => (
-                    <View key={p.id} style={[styles.tableRow, idx % 2 === 1 && styles.tableRowAlt]}>
+                    <View key={p.id} style={[tbl.tableRow, idx % 2 === 1 && tbl.tableRowAlt]}>
                       <View style={{ width: COL_PANNE.EQ }}>
                         <Text style={styles.eqName}>{p.nom}</Text>
                         <Text style={styles.eqCode}>{p.code}</Text>
@@ -232,18 +261,17 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
                       <View style={{ width: COL_PANNE.NOTES }}>
                         <Text style={styles.cellText} numberOfLines={2}>{p.notes ?? '—'}</Text>
                       </View>
-                      <View style={{ width: COL_PANNE.ACTIONS, flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.warningLight }]}
-                          onPress={() => handleReparer(p.id)}>
-                          <Ionicons name="hammer-outline" size={13} color={LUNA_COLORS.warning} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.infoLight??'#E3F4F7' }]}
-                          onPress={() => { setSelected(p); setModal('details'); }}>
-                          <Ionicons name="eye-outline" size={13} color={LUNA_COLORS.info??LUNA_COLORS.secondary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.surfaceLight }]}>
-                          <Ionicons name="create-outline" size={13} color={LUNA_COLORS.secondary} />
-                        </TouchableOpacity>
+                      <View style={{ width: COL_PANNE.ACTIONS }}>
+                        <View style={tbl.actionsRow}>
+                          <LunaActionButton icon="hammer-outline" onPress={() => handleReparer(p.id)} />
+                          <LunaActionButton
+                            icon="eye-outline"
+                            onPress={() => {
+                              setSelected(p);
+                              setModal('details');
+                            }}
+                          />
+                        </View>
                       </View>
                     </View>
                   ))}
@@ -266,10 +294,10 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
             </View>
             <ScrollView horizontal>
               <View>
-                <View style={styles.tableHeader}>
+                <View style={tbl.tableHeader}>
                   {['ÉQUIPEMENT','CATÉGORIE','QUANTITÉ','STATUT STOCK','ACTIONS'].map((c, i) => (
                     <View key={c} style={{ width: [COL_EQ.EQ, COL_EQ.CATEGORIE, COL_EQ.QUANTITE, COL_EQ.STOCK, COL_EQ.ACTIONS][i] }}>
-                      <Text style={styles.thText}>{c}</Text>
+                      <Text style={tbl.thText}>{c}</Text>
                     </View>
                   ))}
                 </View>
@@ -302,26 +330,36 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
                         {sc && <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}><Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text></View>}
                       </View>
                       {/* ACTIONS 5 buttons */}
-                      <View style={{ width: COL_EQ.ACTIONS, flexDirection: 'row', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.infoLight??'#E3F4F7' }]}
-                          onPress={() => { setSelected(item); setModal('details'); }}>
-                          <Ionicons name="eye-outline" size={12} color={LUNA_COLORS.info??LUNA_COLORS.secondary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.warningLight }]}
-                          onPress={() => { setSelected(item); rp(); setSubmitError(null); setModal('panne'); }}>
-                          <Ionicons name="alert-outline" size={12} color={LUNA_COLORS.warning} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.purpleLight??'#F3E5F5' }]}
-                          onPress={() => handleMaintenance(item.id)}>
-                          <Ionicons name="close-outline" size={12} color={LUNA_COLORS.purple??'#9C27B0'} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: `${LUNA_COLORS.secondary}26` }]}>
-                          <Ionicons name="create-outline" size={12} color={LUNA_COLORS.secondary} />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actBtn, { backgroundColor: LUNA_COLORS.errorLight }]}
-                          onPress={() => { setSelected(item); setModal('delete'); }}>
-                          <Ionicons name="trash-outline" size={12} color={LUNA_COLORS.error} />
-                        </TouchableOpacity>
+                      <View style={{ width: COL_EQ.ACTIONS }}>
+                        <View style={tbl.actionsRow}>
+                          <LunaActionButton
+                            icon="eye-outline"
+                            onPress={() => {
+                              setSelected(item);
+                              setModal('details');
+                            }}
+                          />
+                          <LunaActionButton
+                            icon="alert-circle-outline"
+                            onPress={() => {
+                              setSelected(item);
+                              rp();
+                              setSubmitError(null);
+                              setModal('panne');
+                            }}
+                          />
+                          <LunaActionButton
+                            icon="construct-outline"
+                            onPress={() => handleMaintenance(item.id)}
+                          />
+                          <LunaActionButton
+                            icon="trash-outline"
+                            onPress={() => {
+                              setSelected(item);
+                              setModal('delete');
+                            }}
+                          />
+                        </View>
                       </View>
                     </View>
                   );
@@ -332,34 +370,31 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
         </ScrollView>
       )}
 
-      {/* MODAL DETAILS */}
-      <Modal visible={modal === 'details'} transparent animationType="fade" onRequestClose={closeModal}>
-        <Pressable style={styles.overlay} onPress={closeModal}>
-          <Pressable style={styles.modalCard} onPress={e => e.stopPropagation()}>
-            <View style={styles.mHeader}>
-              <Ionicons name="construct-outline" size={22} color={LUNA_COLORS.textInverse} />
-              <Text style={styles.mTitle} numberOfLines={1}>{selected?.nom}</Text>
-              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.textInverse} /></TouchableOpacity>
+      <LunaDetailsModal
+        visible={modal === 'details'}
+        title={selected?.nom ?? 'Équipement'}
+        icon="construct-outline"
+        onClose={closeModal}
+      >
+        <Text style={ms.detailLabel}>Code</Text>
+        <Text style={ms.detailValue}>{selected?.code ?? '—'}</Text>
+        <Text style={ms.detailLabel}>Catégorie</Text>
+        <Text style={ms.detailValue}>{selected?.categorie ?? '—'}</Text>
+        <Text style={ms.detailLabel}>Quantité / Chambre</Text>
+        <Text style={ms.detailValue}>
+          {selected?.quantite ?? 1} · {selected?.chambre?.numero ?? '—'}
+        </Text>
+        <Text style={ms.detailLabel}>Notes</Text>
+        <Text style={ms.detailValue}>{selected?.notes ?? '—'}</Text>
+        {selected && (() => {
+          const sc = statutCfg(selected.statut);
+          return sc ? (
+            <View style={[styles.statusBadge, { backgroundColor: sc.bg, alignSelf: 'flex-start', marginTop: 8 }]}>
+              <Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text>
             </View>
-            <View style={styles.mBody}>
-              {[['Code', selected?.code], ['Catégorie', selected?.categorie], ['Quantité', String(selected?.quantite ?? 1)], ['Chambre', selected?.chambre?.numero ?? '—'], ['Notes', selected?.notes ?? '—']].map(([l, v]) => (
-                <View key={l} style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>{l}</Text>
-                  <Text style={styles.detailValue}>{v}</Text>
-                </View>
-              ))}
-              {selected && (
-                <View style={{ marginTop: 10 }}>
-                  {(() => { const sc = statutCfg(selected.statut); return sc ? <View style={[styles.statusBadge, { backgroundColor: sc.bg, alignSelf: 'flex-start' }]}><Text style={[styles.statusText, { color: sc.color }]}>{sc.label}</Text></View> : null; })()}
-                </View>
-              )}
-            </View>
-            <View style={styles.mFooter}>
-              <TouchableOpacity style={styles.closeBtn} onPress={closeModal}><Text style={styles.closeBtnText}>Fermer</Text></TouchableOpacity>
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+          ) : null;
+        })()}
+      </LunaDetailsModal>
 
       {/* MODAL SIGNALER PANNE */}
       <Modal visible={modal === 'panne'} transparent animationType="slide" onRequestClose={closeModal}>
@@ -493,7 +528,13 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
           </Pressable>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+
+      <LunaSuccessModal
+        visible={successVisible}
+        message={successMessage}
+        onClose={() => setSuccessVisible(false)}
+      />
+    </LunaScreen>
   );
 }
 

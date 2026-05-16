@@ -8,7 +8,8 @@ import type {
   PersonnelRole,
 } from '@/src/types/personnel';
 
-function listUrl(role: PersonnelRole, cliniqueId: string): string {
+function listUrl(role: PersonnelRole, cliniqueId: string | number): string {
+  const cid = encodeURIComponent(String(cliniqueId));
   const base = {
     MEDECIN: PERSONNEL.MEDECINS,
     INFIRMIER: PERSONNEL.INFIRMIERS,
@@ -18,7 +19,7 @@ function listUrl(role: PersonnelRole, cliniqueId: string): string {
     CHEF_PERSONNEL: PERSONNEL.CHEFS,
     TECHNICIEN_MAINTENANCE: PERSONNEL.TECHNICIENS,
   }[role];
-  return `${base}?cliniqueId=${encodeURIComponent(cliniqueId)}`;
+  return `${base}?cliniqueId=${cid}`;
 }
 
 function deleteUrl(role: PersonnelRole, id: string): string {
@@ -35,7 +36,7 @@ function deleteUrl(role: PersonnelRole, id: string): string {
 }
 
 export const personnelService = {
-  listByRole(role: PersonnelRole, cliniqueId: string): Promise<PersonnelMember[]> {
+  listByRole(role: PersonnelRole, cliniqueId: string | number): Promise<PersonnelMember[]> {
     return apiGet<PersonnelMember[]>(listUrl(role, cliniqueId));
   },
 

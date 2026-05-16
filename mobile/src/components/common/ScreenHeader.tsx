@@ -13,14 +13,14 @@ interface ScreenHeaderProps {
   showBrand?: boolean;
 }
 
-/** En-tête secondaire — style navbar web (teal + retour) */
+/** En-tête — même barre que Personnel (menu · logo · notif · profil, ou retour). */
 export function ScreenHeader({
   title,
   subtitle,
   onBack,
   right,
   showBack = true,
-  showBrand = false,
+  showBrand = true,
 }: ScreenHeaderProps): React.JSX.Element {
   return (
     <LunaHeroHeader
@@ -30,8 +30,8 @@ export function ScreenHeader({
       onBack={onBack}
       showBrand={showBrand}
       showMenu={!showBack}
-      showNotifications={false}
-      showProfil={false}
+      showNotifications
+      showProfil
       right={right}
     />
   );

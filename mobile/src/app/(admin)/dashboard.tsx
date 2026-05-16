@@ -4,10 +4,10 @@ import {
   View, Text, StyleSheet, ScrollView, RefreshControl,
   ActivityIndicator, TouchableOpacity, Platform, Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BarChart, PieChart } from 'react-native-chart-kit';
-import { DashboardQuickLinks } from '@/src/components/common/DashboardQuickLinks';
+import { DashboardQuickLinks, LunaAccessHeader, LunaScreen } from '@/src/components/common';
+import { ADMIN_NAV_TAB_ROUTES } from '@/src/constants/roleTabs';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { useAuthStore } from '@/src/store/auth.store';
 import { apiGet } from '@/src/api/client';
@@ -104,18 +104,23 @@ const [med, inf, sec, phar, rad, s, c, e] = await Promise.all([
   const svcChambresLabels = services.slice(0, 6).map(s => s.nom.substring(0, 8));
   const svcChambresData = services.slice(0, 6).map(s => s.nombreChambres ?? 0);
 
+  const header = (
+    <LunaAccessHeader
+      pageTitle="Dashboard"
+      pageSubtitle={`Bienvenue, ${nom ?? 'Administrateur'}`}
+    />
+  );
+
   if (loading) return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBar}>
-        <Text style={styles.headerTitle}>Dashboard Admin</Text>
-      </View>
+    <LunaScreen edges={[]}>
+      {header}
       <View style={styles.centered}><ActivityIndicator size="large" color={LUNA_COLORS.secondary} /></View>
-    </SafeAreaView>
+    </LunaScreen>
   );
 
   if (error) return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBar}><Text style={styles.headerTitle}>Dashboard Admin</Text></View>
+    <LunaScreen edges={[]}>
+      {header}
       <View style={styles.centered}>
         <Ionicons name="wifi-outline" size={48} color={LUNA_COLORS.textDisabled ?? '#BDBDBD'} />
         <Text style={styles.errorText}>{error}</Text>
@@ -123,12 +128,12 @@ const [med, inf, sec, phar, rad, s, c, e] = await Promise.all([
           <Text style={styles.retryBtnText}>Réessayer</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </LunaScreen>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.headerBar}><Text style={styles.headerTitle}>Dashboard Admin</Text></View>
+    <LunaScreen edges={[]}>
+      {header}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -228,16 +233,14 @@ const [med, inf, sec, phar, rad, s, c, e] = await Promise.all([
           </View>
         )}
 
-        <DashboardQuickLinks maxItems={8} />
+        <DashboardQuickLinks pinnedRoutes={ADMIN_NAV_TAB_ROUTES} />
       </ScrollView>
-    </SafeAreaView>
+    </LunaScreen>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  headerBar: { backgroundColor: LUNA_COLORS.dark, paddingHorizontal: 16, paddingVertical: 14 },
-  headerTitle: { color: LUNA_COLORS.textInverse, fontSize: 18, fontWeight: '700' },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, gap: 16, paddingBottom: 32 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },

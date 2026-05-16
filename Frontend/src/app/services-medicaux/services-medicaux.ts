@@ -7,6 +7,7 @@ import { AuthService } from '../service/auth-service';
 import { Service, ServiceDTO } from '../model/service';
 import { ChambreDTO } from '../model/chambre';
 import { TypeChambre } from '../model/enums';
+import { LunaSuccessService } from '../service/luna-success.service';
 
 @Component({
   selector: 'app-services-medicaux',
@@ -59,7 +60,8 @@ export class ServicesMedicauxComponent implements OnInit {
   constructor(
     private serviceMedicalService: ServiceMedicalService,
     private chambreService: ChambreService,
-    private authService: AuthService
+    private authService: AuthService,
+    private lunaSuccess: LunaSuccessService
   ) {}
 
   ngOnInit(): void {
@@ -165,7 +167,7 @@ export class ServicesMedicauxComponent implements OnInit {
   }
 
   ajouterService(): void {
-    if (!this.nouveauService.nom) {
+    if (!this.nouveauService.nom?.trim()) {
       this.afficherErreur('Le nom du service est requis');
       return;
     }
@@ -174,6 +176,13 @@ export class ServicesMedicauxComponent implements OnInit {
       this.afficherErreur('ID de clinique manquant. Veuillez vous reconnecter.');
       return;
     }
+
+    const description = (this.nouveauService.description ?? '').trim();
+    this.nouveauService = {
+      ...this.nouveauService,
+      nom: this.nouveauService.nom.trim(),
+      description: description || 'Sans description',
+    };
 
     this.serviceMedicalService.creerService(this.nouveauService).subscribe({
       next: () => {
@@ -199,6 +208,8 @@ export class ServicesMedicauxComponent implements OnInit {
   }
 
   ouvrirModalEdition(service: Service): void {
+    this.showDetailsModal = false;
+    this.selectedService = null;
     this.serviceEnEdition = { ...service };
 
     if (service.chambres && service.chambres.length > 0) {
@@ -223,10 +234,18 @@ export class ServicesMedicauxComponent implements OnInit {
   modifierService(): void {
     if (!this.serviceEnEdition.id) return;
 
+    const cliniqueId =
+      this.serviceEnEdition.cliniqueId ||
+      this.authService.getCliniqueId() ||
+      localStorage.getItem('cliniqueId') ||
+      '';
+    const description = (this.serviceEnEdition.description ?? '').trim();
+
     const dto: ServiceDTO = {
-      nom: this.serviceEnEdition.nom,
-      description: this.serviceEnEdition.description,
-      cliniqueId: this.serviceEnEdition.cliniqueId || ''
+      nom: (this.serviceEnEdition.nom ?? '').trim(),
+      description: description || 'Sans description',
+      cliniqueId,
+      actif: this.serviceEnEdition.actif ?? true,
     };
 
     this.serviceMedicalService.mettreAJourService(this.serviceEnEdition.id, dto).subscribe({
@@ -428,9 +447,9 @@ export class ServicesMedicauxComponent implements OnInit {
   }
 
   afficherSucces(message: string): void {
-    this.successMessage = message;
+    this.successMessage = '';
     this.errorMessage = '';
-    setTimeout(() => this.successMessage = '', 5000);
+    this.lunaSuccess.show(message);
   }
 
   afficherErreur(message: string): void {

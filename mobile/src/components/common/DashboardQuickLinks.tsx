@@ -13,22 +13,37 @@ import { fontSize, fontWeight } from '@/src/theme/typography';
 interface DashboardQuickLinksProps {
   maxItems?: number;
   excludeRoutes?: string[];
+  /** Routes affichées en priorité (ex. navigation principale admin). */
+  pinnedRoutes?: readonly string[];
 }
 
 export function DashboardQuickLinks({
   maxItems = 12,
   excludeRoutes = [],
+  pinnedRoutes,
 }: DashboardQuickLinksProps): React.JSX.Element | null {
   const router = useRouter();
   const role = useAuthStore((s) => s.role);
+  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const estCabinet = useAuthStore((s) => s.estCabinet);
+  const menu = getRoleMenu(role, { estCabinet, cliniqueId });
   const tabRoutes = getRoleTabRoutes(role);
-  const items = getRoleMenu(role).filter(
-    (i) =>
-      !tabRoutes.includes(i.route) &&
-      !excludeRoutes.includes(i.route) &&
-      !i.route.endsWith('/menu') &&
-      !i.route.includes('/profil'),
-  );
+
+  let items: RoleMenuItem[];
+
+  if (pinnedRoutes?.length) {
+    items = pinnedRoutes
+      .map((route) => menu.find((i) => i.route === route))
+      .filter((i): i is RoleMenuItem => !!i);
+  } else {
+    items = menu.filter(
+      (i) =>
+        !tabRoutes.includes(i.route) &&
+        !excludeRoutes.includes(i.route) &&
+        !i.route.endsWith('/menu') &&
+        !i.route.includes('/profil'),
+    );
+  }
 
   if (items.length === 0) return null;
 

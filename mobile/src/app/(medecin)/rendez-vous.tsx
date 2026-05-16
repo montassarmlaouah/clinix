@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,6 +17,7 @@ import {
 import { apiGet, apiPatch, apiPost } from '@/src/api/client';
 import { MEDECINS, PATIENTS, RDV } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
+import { hasMedecinClinique } from '@/src/utils/medecinContext';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
@@ -69,7 +71,18 @@ function formatDT(dt: string): string {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 export default function MedecinRendezVousScreen(): React.JSX.Element {
-  const { userId, cliniqueId } = useAuthStore();
+  const { scope: scopeParam } = useLocalSearchParams<{ scope?: string }>();
+  const userId = useAuthStore((s) => s.userId);
+  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+
+  const scope = useMemo<'clinique' | 'cabinet'>(() => {
+    if (scopeParam === 'clinique' || scopeParam === 'cabinet') return scopeParam;
+    if (hasMedecinClinique(cliniqueId)) return 'clinique';
+    return 'cabinet';
+  }, [scopeParam, cliniqueId]);
+
+  const title =
+    scope === 'clinique' ? 'Rendez-vous clinique' : 'Rendez-vous cabinet';
 
   const [items, setItems]       = useState<RendezVous[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -91,11 +104,15 @@ export default function MedecinRendezVousScreen(): React.JSX.Element {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const data = await apiGet<RendezVous[]>(
-        cliniqueId
-          ? RDV.BY_MEDECIN_CLINIQUE(userId, cliniqueId)
-          : RDV.BY_MEDECIN(userId),
-      );
+      let url: string;
+      if (scope === 'cabinet') {
+        url = RDV.BY_MEDECIN_CABINET(userId);
+      } else if (hasMedecinClinique(cliniqueId)) {
+        url = RDV.BY_MEDECIN_CLINIQUE(userId, cliniqueId!);
+      } else {
+        url = RDV.BY_MEDECIN(userId);
+      }
+      const data = await apiGet<RendezVous[]>(url);
       setItems((data ?? []).sort(
         (a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime(),
       ));
@@ -105,12 +122,41 @@ export default function MedecinRendezVousScreen(): React.JSX.Element {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [userId, cliniqueId]);
+  }, [userId, cliniqueId, scope]);
 
   useEffect(() => { void load(); }, [load]);
 
   // Recherche patients pour le formulaire
   useEffect(() => {
+    if (patientSearch.length < 2) { setPatients([]); return; }
+    let cancelled = false;
+    const loadPatients = async () => {
+      try {
+        let res: Patient[] = [];
+        if (scope === 'cabinet' && userId) {
+          res = await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(userId));
+        } else if (hasMedecinClinique(cliniqueId)) {
+          res = await apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId!));
+        }
+        if (!cancelled) {
+          const kw = patientSearch.toLowerCase();
+          setPatients(
+            (res ?? []).filter(
+              (p) => p.nom.toLowerCase().includes(kw) || p.prenom.toLowerCase().includes(kw),
+            ).slice(0, 8),
+          );
+        }
+      } catch {
+        if (!cancelled) setPatients([]);
+      }
+    };
+    void loadPatients();
+    return () => { cancelled = true; };
+  }, [patientSearch, cliniqueId, scope, userId]);
+
+  /* legacy clinique-only search removed */
+  useEffect(() => {
+    if (true) return;
     if (!cliniqueId || patientSearch.length < 2) { setPatients([]); return; }
     let cancelled = false;
     apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId)).then((res) => {
@@ -215,7 +261,7 @@ export default function MedecinRendezVousScreen(): React.JSX.Element {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Mes rendez-vous</Text>
+        <Text style={styles.title}>{title}</Text>
         <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addBtn}>
           <Ionicons name="add-circle" size={28} color={LUNA_COLORS.secondary} />
         </TouchableOpacity>

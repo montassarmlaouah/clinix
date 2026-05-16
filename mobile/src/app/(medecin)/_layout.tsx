@@ -5,7 +5,7 @@ import { apiGet } from '@/src/api/client';
 import { MESSAGES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 interface Contact {
   id: number;
@@ -64,45 +64,48 @@ export default function MedecinLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('chatbubbles-outline', { badge: unread }),
         }}
       />
-      <Tabs.Screen name="planning" options={{ href: null }} />
-      <Tabs.Screen name="operations" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="statistiques" options={{ href: null }} />
-      <Tabs.Screen name="taches-soins" options={{ href: null }} />
-      <Tabs.Screen name="notes" options={{ href: null }} />
-      <Tabs.Screen name="ordonnances" options={{ href: null }} />
-      <Tabs.Screen name="demandes-medicament" options={{ href: null }} />
-      <Tabs.Screen name="demandes-operation" options={{ href: null }} />
-      <Tabs.Screen name="hospitalisations" options={{ href: null }} />
-      <Tabs.Screen name="change-organisation" options={{ href: null }} />
-      <Tabs.Screen name="scanner" options={{ href: null }} />
-      <Tabs.Screen name="abonnement" options={{ href: null }} />
-      <Tabs.Screen name="alertes" options={{ href: null }} />
-      <Tabs.Screen name="conges" options={{ href: null }} />
-      <Tabs.Screen name="rendez-vous" options={{ href: null }} />
-      <Tabs.Screen name="examens" options={{ href: null }} />
-      <Tabs.Screen name="notifications" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/consultation" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/ordonnance" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/examens" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/constantes" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/observations" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/hospitalisations" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/diagnostics" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/dossier" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/prescriptions" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/rapport/[rapportId]" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/sortie" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/transfert" options={{ href: null }} />
-      <Tabs.Screen name="operations/[id]" options={{ href: null }} />
-      <Tabs.Screen name="operations/[id]/plan" options={{ href: null }} />
-      <Tabs.Screen name="operations/[id]/compte-rendu" options={{ href: null }} />
-      <Tabs.Screen name="messagerie/[contactId]" options={{ href: null }} />
-      <Tabs.Screen name="transferts/creer" options={{ href: null }} />
-      <Tabs.Screen name="patients/nouveau" options={{ href: null }} />
-      <Tabs.Screen name="operations/nouveau" options={{ href: null }} />
+      <Tabs.Screen name="planning" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="taches-soins" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="notes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="ordonnances" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="hospitalisations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="change-organisation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="scanner" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="tarifs" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="alertes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="conges" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rendez-vous" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="examens" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/consultation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/ordonnance" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/examens" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/constantes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/observations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/hospitalisations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/diagnostics" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/dossier" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/prescriptions" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/rapport/[rapportId]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/sortie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/transfert" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]/plan" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]/compte-rendu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="messagerie/[contactId]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="transferts/creer" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/nouveau" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/nouveau" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

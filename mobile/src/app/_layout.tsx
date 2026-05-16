@@ -33,7 +33,7 @@ export default function RootLayout() {
 
   // ── Lire tout l'état auth en UNE SEULE FOIS pour éviter les re-renders
   //    partiels quand setAuth() met à jour plusieurs champs (BUG 2)
-  const { userId, role, estCabinet, isRehydrated } = useAuthStore();
+  const { token, userId, role, estCabinet, isRehydrated } = useAuthStore();
 
   // ── Gérer les erreurs 402 abonnement expiré ───────────────────────────────
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function RootLayout() {
       router.replace('/(auth)/login');
       return;
     }
-  }, [segments, userId, role, estCabinet, isRehydrated, router]);
+  }, [segments, token, userId, role, estCabinet, isRehydrated, router]);
 
   // Reset le flag quand on revient sur un segment public OU quand l'utilisateur change
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function RootLayout() {
   }, [userId, role]);
 
   const firstSegment = segments[0] as string | undefined ?? '';
-  const showDrawer = Boolean(userId) && !PUBLIC_SEGMENTS.has(firstSegment);
+  const showDrawer = Boolean(token) && !PUBLIC_SEGMENTS.has(firstSegment);
 
   return (
     <>

@@ -54,6 +54,10 @@ public class HistoriqueSms {
     @Column(name = "destinataire_id") 
     private String destinataireId; // Lien vers Patient, Personnel, etc.
 
+    /** Clinique concernée (quota offre d'abonnement). */
+    @Column(name = "clinique_id", length = 64)
+    private String cliniqueId;
+
     @PrePersist
     public void prePersist() {
         this.dateEnvoi = LocalDateTime.now();

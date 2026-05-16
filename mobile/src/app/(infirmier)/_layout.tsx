@@ -5,7 +5,7 @@ import { apiGet } from '@/src/api/client';
 import { ADMINISTRATIONS } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · Patients · Soins */
 export default function InfirmierLayout(): React.JSX.Element {
@@ -61,27 +61,27 @@ export default function InfirmierLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('medkit-outline', { badge: pendingTasks }),
         }}
       />
-      <Tabs.Screen name="alertes" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="planning" options={{ href: null }} />
-      <Tabs.Screen name="presences" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/administrations" options={{ href: null }} />
-      <Tabs.Screen name="patients/[id]/constantes" options={{ href: null }} />
-      <Tabs.Screen name="signalements" options={{ href: null }} />
-      <Tabs.Screen name="signalement/creer" options={{ href: null }} />
-      <Tabs.Screen name="signalement/nouveau" options={{ href: null }} />
-      <Tabs.Screen name="scanner" options={{ href: null }} />
-      <Tabs.Screen name="bracelet" options={{ href: null }} />
-      <Tabs.Screen name="visites-jour" options={{ href: null }} />
-      <Tabs.Screen name="hospitalisations" options={{ href: null }} />
-      <Tabs.Screen name="congie" options={{ href: null }} />
-      <Tabs.Screen name="check-list" options={{ href: null }} />
-      <Tabs.Screen name="sspi" options={{ href: null }} />
-      <Tabs.Screen name="transmissions" options={{ href: null }} />
-      <Tabs.Screen name="demandes-operation" options={{ href: null }} />
-      <Tabs.Screen name="demandes-medicament" options={{ href: null }} />
+      <Tabs.Screen name="alertes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="planning" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="presences" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/administrations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/constantes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="signalements" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="signalement/creer" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="signalement/nouveau" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="scanner" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="bracelet" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="visites-jour" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="hospitalisations" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="congie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="check-list" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="sspi" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="transmissions" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

@@ -2,48 +2,37 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { ADMIN_TAB_SCREENS } from '@/src/constants/roleTabs';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icônes — Accueil · Patients · Personnel */
+/** Barre du bas : Dashboard · Services · Chambres · Équipements (icônes = accès rapide) */
 export default function AdminLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
   return (
-    <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Accueil',
-          tabBarIcon: createTabBarIcon('grid-outline'),
-        }}
-      />
-      <Tabs.Screen
-        name="patients"
-        options={{
-          title: 'Patients',
-          tabBarIcon: createTabBarIcon('people-outline'),
-        }}
-      />
-      <Tabs.Screen
-        name="personnel"
-        options={{
-          title: 'Personnel',
-          tabBarIcon: createTabBarIcon('person-outline'),
-        }}
-      />
-      <Tabs.Screen name="services" options={{ href: null }} />
-      <Tabs.Screen name="chambres" options={{ href: null }} />
-      <Tabs.Screen name="equipements" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="abonnement" options={{ href: null }} />
-      <Tabs.Screen name="rendez-vous" options={{ href: null }} />
-      <Tabs.Screen name="pharmacie" options={{ href: null }} />
-      <Tabs.Screen name="tarifs" options={{ href: null }} />
-      <Tabs.Screen name="abonnement-paiement" options={{ href: null }} />
-      <Tabs.Screen name="demandes-operation" options={{ href: null }} />
-      <Tabs.Screen name="demandes-medicament" options={{ href: null }} />
-      <Tabs.Screen name="conges-medecin" options={{ href: null }} />
+    <Tabs screenOptions={screenOptions} initialRouteName="dashboard">
+      {ADMIN_TAB_SCREENS.map(({ name, icon }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title: name === 'dashboard' ? 'Dashboard' : name.charAt(0).toUpperCase() + name.slice(1),
+            tabBarIcon: createTabBarIcon(icon),
+          }}
+        />
+      ))}
+      <Tabs.Screen name="patients" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="personnel" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rendez-vous" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="pharmacie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="tarifs" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

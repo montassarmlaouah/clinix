@@ -1,6 +1,12 @@
 import type { ComponentProps } from 'react';
 import type { Ionicons } from '@expo/vector-icons';
 
+import {
+  hasMedecinClinique,
+  isMedecinCabinet,
+  medecinShowCabinetMenus,
+} from '@/src/utils/medecinContext';
+
 export type RoleMenuIcon = ComponentProps<typeof Ionicons>['name'];
 
 export interface RoleMenuItem {
@@ -26,12 +32,6 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
     { label: 'Services médicaux', route: '/(admin)/services', icon: 'medical-outline' },
     { label: 'Chambres', route: '/(admin)/chambres', icon: 'bed-outline' },
     { label: 'Équipements', route: '/(admin)/equipements', icon: 'construct-outline' },
-    { label: 'Patients', route: '/(admin)/patients', icon: 'person-outline' },
-    { label: 'Rendez-vous', route: '/(admin)/rendez-vous', icon: 'calendar-outline' },
-    { label: 'Pharmacie', route: '/(admin)/pharmacie', icon: 'medkit-outline' },
-    { label: 'Demandes opération', route: '/(admin)/demandes-operation', icon: 'cut-outline' },
-    { label: 'Demandes médicament', route: '/(admin)/demandes-medicament', icon: 'clipboard-outline' },
-    { label: 'Congés médecins', route: '/(admin)/conges-medecin', icon: 'calendar-outline' },
     { label: 'Mon abonnement', route: '/(admin)/abonnement', icon: 'card-outline' },
     { label: 'Forfaits', route: '/(admin)/tarifs', icon: 'grid-outline' },
     { label: 'Paiement Stripe', route: '/(admin)/abonnement-paiement', icon: 'card-outline' },
@@ -54,27 +54,7 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
     { label: 'Notifications', route: '/notifications', icon: 'notifications-outline' },
     { label: 'Profil', route: '/(secretaire)/profil', icon: 'person-circle-outline' },
   ],
-  ROLE_MEDECIN: [
-    { label: 'Dashboard', route: '/(medecin)/index', icon: 'pulse-outline' },
-    { label: 'Statistiques', route: '/(medecin)/statistiques', icon: 'stats-chart-outline' },
-    { label: 'Patients', route: '/(medecin)/patients', icon: 'people-outline' },
-    { label: 'Scanner', route: '/(medecin)/scanner', icon: 'scan-outline' },
-    { label: 'Consultations', route: '/(medecin)/patients', icon: 'document-text-outline' },
-    { label: 'Examens', route: '/(medecin)/examens', icon: 'flask-outline' },
-    { label: 'Ordonnances', route: '/(medecin)/ordonnances', icon: 'medical-outline' },
-    { label: 'Tâches infirmiers', route: '/(medecin)/taches-soins', icon: 'clipboard-outline' },
-    { label: 'Notes confidentielles', route: '/(medecin)/notes', icon: 'lock-closed-outline' },
-    { label: 'Hospitalisations', route: '/(medecin)/hospitalisations', icon: 'bed-outline' },
-    { label: 'Urgences', route: '/(medecin)/alertes', icon: 'warning-outline' },
-    { label: 'Messagerie', route: '/(medecin)/messagerie', icon: 'chatbubbles-outline' },
-    { label: 'Planning / RDV', route: '/(medecin)/planning', icon: 'calendar-outline' },
-    { label: 'Rendez-vous', route: '/(medecin)/rendez-vous', icon: 'calendar-outline' },
-    { label: 'Opérations', route: '/(medecin)/operations', icon: 'cut-outline' },
-    { label: 'Mes congés', route: '/(medecin)/conges', icon: 'airplane-outline' },
-    { label: 'Demandes médicament', route: '/(medecin)/demandes-medicament', icon: 'medkit-outline' },
-    { label: 'Notifications', route: '/notifications', icon: 'notifications-outline' },
-    { label: 'Profil', route: '/(medecin)/profil', icon: 'person-circle-outline' },
-  ],
+  ROLE_MEDECIN: [],
   ROLE_INFIRMIER: [
     { label: 'Accueil', route: '/(infirmier)/index', icon: 'home-outline' },
     { label: 'Liste des patients', route: '/(infirmier)/patients', icon: 'list-outline' },
@@ -144,19 +124,90 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
   ],
 };
 
-export function getRoleMenu(role: string | null): RoleMenuItem[] {
-  if (!role) return [];
-  let items: RoleMenuItem[] = [];
-  if (ROLE_MENUS[role]) items = ROLE_MENUS[role];
-  else {
-    const withPrefix = `ROLE_${role}`;
-    if (ROLE_MENUS[withPrefix]) items = ROLE_MENUS[withPrefix];
+export interface RoleMenuContext {
+  estCabinet?: boolean;
+  cliniqueId?: string | number | null;
+}
+
+function buildMedecinMenu(ctx: RoleMenuContext): RoleMenuItem[] {
+  const { estCabinet = false, cliniqueId = null } = ctx;
+  const clinique = hasMedecinClinique(cliniqueId);
+  const cabinet = medecinShowCabinetMenus(estCabinet, cliniqueId);
+  const cabinetOnly = isMedecinCabinet(estCabinet, cliniqueId) && !clinique;
+
+  const items: RoleMenuItem[] = [
+    { label: 'Dashboard', route: '/(medecin)/index', icon: 'pulse-outline' },
+    { label: 'Statistiques', route: '/(medecin)/statistiques', icon: 'stats-chart-outline' },
+    { label: 'Messagerie', route: '/(medecin)/messagerie', icon: 'chatbubbles-outline' },
+    { label: 'Demandes opération', route: '/(medecin)/demandes-operation', icon: 'medical-outline' },
+    { label: 'Demandes médicament', route: '/(medecin)/demandes-medicament', icon: 'medkit-outline' },
+    { label: 'Mes congés', route: '/(medecin)/conges', icon: 'airplane-outline' },
+    { label: 'Mon abonnement', route: '/(medecin)/abonnement', icon: 'card-outline' },
+    { label: 'Forfaits', route: '/(medecin)/tarifs', icon: 'grid-outline' },
+    { label: 'Paiement Stripe', route: '/(medecin)/abonnement-paiement', icon: 'card-outline' },
+    { label: 'Scanner', route: '/(medecin)/scanner', icon: 'scan-outline' },
+    { label: 'Examens', route: '/(medecin)/examens', icon: 'flask-outline' },
+    { label: 'Ordonnances', route: '/(medecin)/ordonnances', icon: 'medical-outline' },
+    { label: 'Tâches infirmiers', route: '/(medecin)/taches-soins', icon: 'clipboard-outline' },
+    { label: 'Notes confidentielles', route: '/(medecin)/notes', icon: 'lock-closed-outline' },
+    { label: 'Opérations (planning)', route: '/(medecin)/operations', icon: 'cut-outline' },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications-outline' },
+    { label: 'Profil', route: '/(medecin)/profil', icon: 'person-circle-outline' },
+  ];
+
+  if (clinique) {
+    items.unshift(
+      { label: 'Patients clinique', route: '/(medecin)/patients?scope=clinique', icon: 'people-outline' },
+      { label: 'Rendez-vous clinique', route: '/(medecin)/rendez-vous?scope=clinique', icon: 'calendar-outline' },
+      { label: 'Hospitalisations', route: '/(medecin)/hospitalisations', icon: 'bed-outline' },
+      { label: 'Urgences', route: '/(medecin)/alertes', icon: 'warning-outline' },
+      { label: 'Planning bloc', route: '/(medecin)/planning', icon: 'calendar-outline' },
+    );
   }
-  // Dédupliquer par route (évite doublons menu)
+
+  if (cabinet) {
+    const patientRoute = cabinetOnly
+      ? '/(medecin)/patients'
+      : '/(medecin)/patients?scope=cabinet';
+    const rdvRoute = cabinetOnly
+      ? '/(medecin)/rendez-vous'
+      : '/(medecin)/rendez-vous?scope=cabinet';
+    items.unshift(
+      { label: 'Patients cabinet', route: patientRoute, icon: 'person-outline' },
+      { label: 'Rendez-vous cabinet', route: rdvRoute, icon: 'calendar-outline' },
+    );
+  }
+
+  if (!clinique && !cabinet) {
+    items.unshift(
+      { label: 'Patients', route: '/(medecin)/patients', icon: 'people-outline' },
+      { label: 'Rendez-vous', route: '/(medecin)/rendez-vous', icon: 'calendar-outline' },
+    );
+  }
+
+  return items;
+}
+
+function dedupeMenuItems(items: RoleMenuItem[]): RoleMenuItem[] {
   const seen = new Set<string>();
   return items.filter((item) => {
     if (seen.has(item.route)) return false;
     seen.add(item.route);
     return true;
   });
+}
+
+export function getRoleMenu(role: string | null, ctx: RoleMenuContext = {}): RoleMenuItem[] {
+  if (!role) return [];
+  const key = ROLE_MENUS[role] ? role : ROLE_MENUS[`ROLE_${role}`] ? `ROLE_${role}` : role;
+  const normalized = ROLE_MENUS[key] !== undefined ? key : `ROLE_${role}`;
+
+  if (normalized === 'ROLE_MEDECIN' || role === 'MEDECIN') {
+    return dedupeMenuItems(buildMedecinMenu(ctx));
+  }
+
+  let items: RoleMenuItem[] = [];
+  if (ROLE_MENUS[normalized]) items = [...ROLE_MENUS[normalized]];
+  else if (ROLE_MENUS[role]) items = [...ROLE_MENUS[role]];
+  return dedupeMenuItems(items);
 }

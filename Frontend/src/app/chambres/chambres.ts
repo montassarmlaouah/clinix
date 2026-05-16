@@ -14,6 +14,7 @@ import { HospitalisationService } from '../service/hospitalisation.service';
 import { Hospitalisation, HospitalisationDTO } from '../model/hospitalisation';
 import { EquipementService } from '../service/equipement.service';
 import { CategorieEquipement, Equipement } from '../model/materiel-medical';
+import { LunaSuccessService } from '../service/luna-success.service';
 
 @Component({
   selector: 'app-chambres',
@@ -140,7 +141,8 @@ export class ChambresComponent implements OnInit {
     private patientService: PatientService,
     private medecinService: MedecinService,
     private equipementService: EquipementService,
-    @Inject(HospitalisationService) private hospitalisationService: HospitalisationService
+    @Inject(HospitalisationService) private hospitalisationService: HospitalisationService,
+    private lunaSuccess: LunaSuccessService
   ) { }
 
   // ==================== LIFECYCLE HOOKS ====================
@@ -940,7 +942,7 @@ export class ChambresComponent implements OnInit {
 
 
   getLibelleStatut(disponible?: boolean): string {
-    return disponible ? 'Disponible' : 'Occupée';
+    return disponible !== false ? 'DISPONIBLE' : 'OCCUPÉE';
   }
 
   getStatusClass(disponible?: boolean): string {
@@ -996,8 +998,8 @@ export class ChambresComponent implements OnInit {
   // ==================== GESTION DES MESSAGES ====================
 
   afficherSucces(message: string): void {
-    this.successMessage = message;
-    setTimeout(() => this.successMessage = '', 5000);
+    this.successMessage = '';
+    this.lunaSuccess.show(message);
   }
 
   afficherErreur(message: string): void {

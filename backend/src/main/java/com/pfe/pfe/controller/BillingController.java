@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.pfe.pfe.billing.BillingConstants;
 import com.pfe.pfe.billing.BillingManagementService;
+import com.pfe.pfe.billing.CliniqueSmsQuotaService;
 import com.pfe.pfe.billing.StripeCredentialsService;
 import com.pfe.pfe.billing.StripeSubscriptionFlowService;
 import com.pfe.pfe.billing.crypto.FieldCipher;
@@ -37,6 +38,7 @@ import lombok.RequiredArgsConstructor;
 public class BillingController {
 
     private final BillingManagementService billingManagementService;
+    private final CliniqueSmsQuotaService cliniqueSmsQuotaService;
     private final StripeSubscriptionFlowService stripeSubscriptionFlowService;
     private final StripeCredentialsService stripeCredentialsService;
     private final FieldCipher fieldCipher;
@@ -141,6 +143,23 @@ public class BillingController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
+    }
+
+    /** Quota SMS de l'offre active (clinique). */
+    @GetMapping("/clinique/{cliniqueId}/sms-quota")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> smsQuota(@PathVariable String cliniqueId) {
+        var q = cliniqueSmsQuotaService.verifierQuota(cliniqueId);
+        Map<String, Object> m = new HashMap<>();
+        m.put("autorise", q.autorise());
+        m.put("message", q.message());
+        m.put("limite", q.limite());
+        m.put("utilises", q.utilises());
+        m.put("restants", q.restants());
+        m.put("offreNom", q.offreNom());
+        m.put("periodeDebut", q.periodeDebut());
+        m.put("periodeFin", q.periodeFin());
+        return ResponseEntity.ok(m);
     }
 
     @GetMapping("/abonnement-courant")

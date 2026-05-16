@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Dossier · Ordonnances · RDV */
 export default function PatientLayout(): React.JSX.Element {
@@ -31,10 +31,10 @@ export default function PatientLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('calendar-outline'),
         }}
       />
-      <Tabs.Screen name="resultats" options={{ href: null }} />
-      <Tabs.Screen name="teleconsultation" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
+      <Tabs.Screen name="resultats" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="teleconsultation" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

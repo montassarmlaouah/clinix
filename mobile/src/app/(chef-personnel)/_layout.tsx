@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · Planning · Présences */
 export default function ChefPersonnelLayout(): React.JSX.Element {
@@ -31,10 +31,10 @@ export default function ChefPersonnelLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('time-outline'),
         }}
       />
-      <Tabs.Screen name="conges" options={{ href: null }} />
-      <Tabs.Screen name="conges-medecin" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
+      <Tabs.Screen name="conges" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

@@ -1,15 +1,34 @@
-/** 3 onglets visibles max par rôle (icônes seules). Le reste = Accès rapide sur l’accueil. */
+import type { ComponentProps } from 'react';
+import type { Ionicons } from '@expo/vector-icons';
+
+type IonIcon = ComponentProps<typeof Ionicons>['name'];
+
+/** Onglets visibles dans la barre du bas. Le reste = menu latéral / accès rapide. */
+export const ADMIN_NAV_TAB_ROUTES = [
+  '/(admin)/dashboard',
+  '/(admin)/services',
+  '/(admin)/chambres',
+  '/(admin)/equipements',
+] as const;
+
+/** Icônes alignées sur le menu / accès rapide (outline Ionicons). */
+export const ADMIN_TAB_SCREENS: ReadonlyArray<{
+  name: 'dashboard' | 'services' | 'chambres' | 'equipements';
+  icon: IonIcon;
+}> = [
+  { name: 'dashboard', icon: 'speedometer-outline' },
+  { name: 'services', icon: 'medical-outline' },
+  { name: 'chambres', icon: 'bed-outline' },
+  { name: 'equipements', icon: 'construct-outline' },
+];
+
 export const ROLE_TAB_ROUTES: Record<string, readonly string[]> = {
   ROLE_SUPER_ADMIN: [
     '/(superadmin)/dashboard',
     '/(superadmin)/organisations',
     '/(superadmin)/abonnements',
   ],
-  ROLE_ADMIN_CLINIQUE: [
-    '/(admin)/dashboard',
-    '/(admin)/patients',
-    '/(admin)/personnel',
-  ],
+  ROLE_ADMIN_CLINIQUE: [...ADMIN_NAV_TAB_ROUTES],
   ROLE_SECRETAIRE: [
     '/(secretaire)/index',
     '/(secretaire)/rendez-vous',

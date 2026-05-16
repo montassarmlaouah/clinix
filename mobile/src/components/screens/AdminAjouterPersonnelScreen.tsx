@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -97,8 +97,10 @@ const field = StyleSheet.create({
 export function AdminAjouterPersonnelScreen(): React.JSX.Element {
   const router = useRouter();
   const { role: roleParam } = useLocalSearchParams<{ role?: string }>();
-  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const cliniqueIdRaw = useAuthStore((s) => s.cliniqueId);
+  const cliniqueId = cliniqueIdRaw != null ? String(cliniqueIdRaw) : '';
 
+  const scrollRef = useRef<ScrollView>(null);
   const [step, setStep] = useState<WizardStep>(1);
   const [role, setRole] = useState<PersonnelRole>(() => parseRoleParam(roleParam));
   const [cin, setCin] = useState('');
@@ -243,6 +245,8 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
           ? (e as { message: string }).message
           : 'Erreur lors de la création.';
       setError(msg);
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      Alert.alert('Création impossible', msg);
     } finally {
       setSaving(false);
     }
@@ -275,6 +279,7 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.form}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}

@@ -117,7 +117,6 @@
             <th>TYPE</th>
             <th>CAPACITÉ</th>
             <th>LITS</th>
-            <th>ÉQUIPEMENTS</th>
             <th>STATUT</th>
             <th class="text-center">ACTIONS</th>
           </tr>
@@ -150,31 +149,6 @@
               <div class="beds-info">
                 <i class="fas fa-bed"></i>
                 <span>{{ chambre.nombreLits }} lits</span>
-              </div>
-            </td>
-            <td>
-              <div class="equipments-list">
-                <ng-container *ngIf="getMaterielLabels(chambre.materielIds).length > 0; else equipementsTexte">
-                  <span class="equipment-tag" *ngFor="let equip of getMaterielLabels(chambre.materielIds).slice(0, 2)">
-                    {{ equip }}
-                  </span>
-                  <span class="more-equip" *ngIf="getMaterielLabels(chambre.materielIds).length > 2">
-                    +{{ getMaterielLabels(chambre.materielIds).length - 2 }}
-                  </span>
-                </ng-container>
-                <ng-template #equipementsTexte>
-                  <ng-container *ngIf="chambre.equipements && chambre.equipements.length > 0; else noEquipements">
-                    <span class="equipment-tag" *ngFor="let equip of chambre.equipements.slice(0, 2)">
-                      {{ equip }}
-                    </span>
-                    <span class="more-equip" *ngIf="chambre.equipements.length > 2">
-                      +{{ chambre.equipements.length - 2 }}
-                    </span>
-                  </ng-container>
-                  <ng-template #noEquipements>
-                    <span class="no-equipment">Aucun</span>
-                  </ng-template>
-                </ng-template>
               </div>
             </td>
             <td>
@@ -318,8 +292,8 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="fermerModalDetails()">
+      <div class="modal-footer luna-footer-single">
+        <button type="button" class="btn btn-secondary btn-luna-close" (click)="fermerModalDetails()">
           Fermer
         </button>
       </div>

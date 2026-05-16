@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · Stock · Demandes */
 export default function PharmacienLayout(): React.JSX.Element {
@@ -31,11 +31,11 @@ export default function PharmacienLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('clipboard-outline'),
         }}
       />
-      <Tabs.Screen name="alertes" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="abonnement" options={{ href: null }} />
-      <Tabs.Screen name="pharmacie" options={{ href: null }} />
+      <Tabs.Screen name="alertes" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="pharmacie" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

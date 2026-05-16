@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon } from '@/src/components/common';
-import { useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Dashboard · Cliniques · Abonnements */
 export default function SuperAdminLayout(): React.JSX.Element {
@@ -31,10 +31,10 @@ export default function SuperAdminLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('card-outline'),
         }}
       />
-      <Tabs.Screen name="medecins-admin" options={{ href: null }} />
-      <Tabs.Screen name="menu" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="stripe-config" options={{ href: null }} />
+      <Tabs.Screen name="medecins-admin" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="stripe-config" options={hiddenTabScreenOptions} />
     </Tabs>
   );
 }

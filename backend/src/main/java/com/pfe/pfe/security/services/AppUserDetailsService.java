@@ -62,7 +62,7 @@ public class AppUserDetailsService implements UserDetailsService {
         
         if (appUserOpt.isPresent()) {
             AppUser user = appUserOpt.get();
-            return new CustomUserDetails(user.getUsername(), user.getPassword(), user.getRole().name());
+            return new CustomUserDetails(user.getUsername(), user.getPassword(), user.getRole().name(), user.getId());
         }
         
         // Chercher dans AdministrateurClinique par téléphone

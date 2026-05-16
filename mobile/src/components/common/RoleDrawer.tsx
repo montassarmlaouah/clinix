@@ -16,6 +16,7 @@ import { APP_NAME } from '@/src/constants/branding';
 import { getRoleMenu, type RoleMenuItem } from '@/src/constants/roleMenus';
 import { roleLabels } from '@/src/constants/roles';
 import { useAuth } from '@/src/hooks/useAuth';
+import { useCliniqueNom } from '@/src/hooks/useCliniqueNom';
 import { useAuthStore } from '@/src/store/auth.store';
 import { useDrawerStore } from '@/src/store/drawer.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
@@ -31,11 +32,16 @@ export function RoleDrawer(): React.JSX.Element {
   const role = useAuthStore((s) => s.role);
   const prenom = useAuthStore((s) => s.prenom);
   const nom = useAuthStore((s) => s.nom);
-  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const estCabinet = useAuthStore((s) => s.estCabinet);
+  const cliniqueNom = useCliniqueNom();
 
   const userName = [prenom, nom].filter(Boolean).join(' ').trim() || 'Utilisateur';
   const roleLabel = role ? (roleLabels[role] ?? role.replace('ROLE_', '')) : '';
-  const items = getRoleMenu(role).filter(
+  const clinicLine = cliniqueNom
+    ? `${APP_NAME} – ${cliniqueNom}`
+    : APP_NAME;
+  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const items = getRoleMenu(role, { estCabinet, cliniqueId }).filter(
     (i) => !i.route.endsWith('/menu') && !i.label.toLowerCase().includes('profil'),
   );
 
@@ -47,15 +53,19 @@ export function RoleDrawer(): React.JSX.Element {
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={closeDrawer}>
       <View style={styles.overlay}>
-        <View style={[styles.panel, { paddingTop: insets.top }]}>
+        <View
+          style={[
+            styles.panel,
+            { paddingTop: insets.top, paddingBottom: insets.bottom },
+          ]}
+        >
           <View style={styles.header}>
             <View style={styles.headerAvatar}>
               <ClinixLogo variant="icon" width={44} height={44} />
             </View>
             <View style={styles.headerText}>
-              <Text style={styles.clinicLine} numberOfLines={1}>
-                {APP_NAME}
-                {cliniqueId != null ? ` · Clinique ${cliniqueId}` : ''}
+              <Text style={styles.clinicLine} numberOfLines={2}>
+                {clinicLine}
               </Text>
               <Text style={styles.userLine} numberOfLines={1}>
                 {userName}
@@ -77,7 +87,6 @@ export function RoleDrawer(): React.JSX.Element {
               >
                 <Ionicons name={item.icon} size={22} color={LUNA_COLORS.secondary} />
                 <Text style={styles.rowLabel}>{item.label}</Text>
-                <Ionicons name="chevron-forward" size={18} color={LUNA_COLORS.textDisabled} />
               </Pressable>
             ))}
           </ScrollView>
@@ -93,16 +102,17 @@ export function RoleDrawer(): React.JSX.Element {
               <Ionicons name="log-out-outline" size={22} color={LUNA_COLORS.secondary} />
               <Text style={styles.footerLabel}>Déconnexion</Text>
             </Pressable>
-            <Pressable style={styles.footerRow} onPress={closeDrawer}>
-              <Ionicons name="close-circle-outline" size={22} color={LUNA_COLORS.secondary} />
-              <Text style={styles.footerLabel}>Fermer tout</Text>
-            </Pressable>
             <Pressable style={styles.helpRow} onPress={closeDrawer}>
               <Ionicons name="help-circle-outline" size={20} color={LUNA_COLORS.textDisabled} />
               <Text style={styles.helpLabel}>Aide & Formation</Text>
             </Pressable>
           </View>
         </View>
+        <Pressable
+          style={styles.backdrop}
+          onPress={closeDrawer}
+          accessibilityLabel="Fermer le menu"
+        />
       </View>
     </Modal>
   );
@@ -116,16 +126,19 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: LUNA_COLORS.overlay,
+    zIndex: 1,
   },
   panel: {
     width: '78%',
     maxWidth: 300,
+    height: '100%',
     backgroundColor: LUNA_COLORS.surface,
     shadowColor: LUNA_COLORS.darkest,
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.18,
     shadowRadius: 12,
     elevation: 10,
+    zIndex: 2,
   },
   header: {
     flexDirection: 'row',
@@ -164,6 +177,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
@@ -176,6 +190,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
     color: LUNA_COLORS.secondary,
+    textAlign: 'left',
   },
   footer: {
     borderTopWidth: 1,

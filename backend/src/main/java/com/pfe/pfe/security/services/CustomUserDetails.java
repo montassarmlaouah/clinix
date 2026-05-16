@@ -46,11 +46,11 @@ public class CustomUserDetails implements UserDetails {
     /**
      * Constructeur pour Super Admin (AppUser)
      */
-    public CustomUserDetails(String username, String password, String role) {
+    public CustomUserDetails(String username, String password, String role, Long appUserId) {
         this.username = username;
         this.password = password;
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
-        this.id = null;
+        this.id = appUserId != null ? String.valueOf(appUserId) : username;
         this.nom = "Super";
         this.prenom = "Admin";
         this.telephone = null;

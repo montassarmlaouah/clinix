@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pfe.pfe.billing.CliniqueSmsQuotaService;
 import com.pfe.pfe.dto.SmsSendOutcome;
 import com.pfe.pfe.dto.tunisiesms.TunisieSmsApiDtos.DlrItem;
 import com.pfe.pfe.dto.tunisiesms.TunisieSmsApiDtos.DlrRequest;
@@ -51,6 +52,7 @@ public class TunisieSmsService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final CliniqueSmsQuotaService cliniqueSmsQuotaService;
 
     /**
      * Annotation {@code @Qualifier} sur le paramètre : avec Lombok {@code @RequiredArgsConstructor},
@@ -58,9 +60,11 @@ public class TunisieSmsService {
      */
     public TunisieSmsService(
             @Qualifier("tunisieSmsRestTemplate") RestTemplate restTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            CliniqueSmsQuotaService cliniqueSmsQuotaService) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
+        this.cliniqueSmsQuotaService = cliniqueSmsQuotaService;
     }
 
     @Value("${tunisiesms.enabled:false}")
@@ -224,6 +228,11 @@ public class TunisieSmsService {
      * Comme {@link #sendSmsForClinique} mais avec la raison si aucun envoi ou échec API.
      */
     public SmsSendOutcome sendSmsForCliniqueWithOutcome(String cliniqueId, String phoneNumber, String message) {
+        return sendSmsForCliniqueWithOutcome(cliniqueId, phoneNumber, message, "NOTIFICATION");
+    }
+
+    public SmsSendOutcome sendSmsForCliniqueWithOutcome(
+            String cliniqueId, String phoneNumber, String message, String typeSms) {
         if (!enabled) {
             log.info("[TunisieSMS] Desactive — SMS non envoye vers {}", phoneNumber);
             return SmsSendOutcome.echec("TunisieSMS est désactivé (tunisiesms.enabled=false).");
@@ -237,8 +246,28 @@ public class TunisieSmsService {
             log.warn("[TunisieSMS] Aucune cle globale — SMS non envoye.");
             return SmsSendOutcome.echec("Clé API globale TunisieSMS absente (tunisiesms.api.key).");
         }
+
+        if (StringUtils.hasText(cliniqueId)) {
+            var quota = cliniqueSmsQuotaService.verifierQuota(cliniqueId);
+            if (!quota.autorise()) {
+                log.warn("[TunisieSMS] Quota SMS clinique {} — {}", cliniqueId, quota.message());
+                cliniqueSmsQuotaService.enregistrerEnvoi(
+                        cliniqueId, phoneNumber, message, "QUOTA_BLOCKED", typeSms);
+                return SmsSendOutcome.echec(quota.message());
+            }
+        }
+
         String tag = StringUtils.hasText(cliniqueId) ? "global-clinique:" + cliniqueId : "global";
-        return doSendWithOutcome(globalApiKey, globalSender, phoneNumber, message, tag);
+        SmsSendOutcome outcome = doSendWithOutcome(globalApiKey, globalSender, phoneNumber, message, tag);
+        if (StringUtils.hasText(cliniqueId)) {
+            cliniqueSmsQuotaService.enregistrerEnvoi(
+                    cliniqueId,
+                    phoneNumber,
+                    message,
+                    outcome.envoye() ? "SENT" : "FAILED",
+                    typeSms);
+        }
+        return outcome;
     }
 
     public void sendSms(String phoneNumber, String message) {

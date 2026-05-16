@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,25 +13,34 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { patientService, type Patient } from '@/src/api/services/patient.service';
 import { MEDECINS } from '@/src/api/endpoints';
 import { apiGet } from '@/src/api/client';
-import { EmptyState, LoadingOverlay } from '@/src/components/common';
+import { EmptyState, LoadingOverlay, LunaHeroHeader, LunaScreen } from '@/src/components/common';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
+import { hasMedecinClinique } from '@/src/utils/medecinContext';
 
 function getInitials(nom: string, prenom: string): string {
   return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase();
 }
 
 export default function MedecinPatientsScreen(): React.JSX.Element {
-  const router     = useRouter();
+  const router = useRouter();
+  const { scope: scopeParam } = useLocalSearchParams<{ scope?: string }>();
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
-  const medecinId  = useAuthStore((s) => s.userId);
+  const medecinId = useAuthStore((s) => s.userId);
+
+  const scope = useMemo<'clinique' | 'cabinet'>(() => {
+    if (scopeParam === 'clinique' || scopeParam === 'cabinet') return scopeParam;
+    if (hasMedecinClinique(cliniqueId)) return 'clinique';
+    return 'cabinet';
+  }, [scopeParam, cliniqueId]);
+
+  const title =
+    scope === 'clinique' ? 'Patients clinique' : 'Patients cabinet';
 
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [patients,   setPatients]   = useState<Patient[]>([]);
@@ -70,21 +79,22 @@ export default function MedecinPatientsScreen(): React.JSX.Element {
   if (loading) return <LoadingOverlay />;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Mes patients</Text>
-          <Text style={styles.headerCount}>{patients.length} patients</Text>
-        </View>
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+    <LunaScreen edges={[]}>
+      <LunaHeroHeader
+        title={title}
+        subtitle={`${patients.length} patient(s)`}
+        showBack={false}
+        right={
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Pressable onPress={() => router.push('/(medecin)/scanner' as never)} style={styles.iconBtn}>
-            <Ionicons name="scan-outline" size={22} color={LUNA_COLORS.secondary} />
+            <Ionicons name="scan-outline" size={22} color={LUNA_COLORS.textInverse} />
           </Pressable>
           <Pressable onPress={() => router.push('/(medecin)/patients/nouveau' as never)} style={styles.iconBtn}>
-            <Ionicons name="add-circle" size={28} color={LUNA_COLORS.secondary} />
+            <Ionicons name="add" size={22} color={LUNA_COLORS.textInverse} />
           </Pressable>
         </View>
-      </View>
+        }
+      />
 
       <View style={styles.searchBar}>
         <Ionicons name="search-outline" size={18} color={LUNA_COLORS.textSecondary} />
@@ -142,7 +152,7 @@ export default function MedecinPatientsScreen(): React.JSX.Element {
           />
         }
       />
-    </SafeAreaView>
+    </LunaScreen>
   );
 }
 

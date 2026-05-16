@@ -61,16 +61,24 @@ export function TabBarIcon({
   );
 }
 
-/** Icône onglet : contour si inactif, plein + blanc si actif */
+export interface CreateTabBarIconOptions {
+  filled?: TabIconName;
+  badge?: number;
+  /** Même rendu que l’accès rapide : toujours l’icône outline (évite les glyphes manquants sur web). */
+  outlineOnly?: boolean;
+}
+
+/** Icône onglet — par défaut outline seul (comme accès rapide). */
 export function createTabBarIcon(
   outline: TabIconName,
-  options?: { filled?: TabIconName; badge?: number },
+  options?: CreateTabBarIconOptions,
 ): NonNullable<BottomTabNavigationOptions['tabBarIcon']> {
+  const outlineOnly = options?.outlineOnly !== false;
   const filled = options?.filled ?? ICON_FILLED[outline] ?? outline;
   const badge = options?.badge;
   return ({ color, focused }) => (
     <TabBarIcon
-      name={focused ? filled : outline}
+      name={outlineOnly || !focused ? outline : filled}
       color={color}
       focused={focused}
       badge={badge}
@@ -80,8 +88,8 @@ export function createTabBarIcon(
 
 const styles = StyleSheet.create({
   wrap: {
-    width: 40,
-    height: 36,
+    width: 56,
+    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },
