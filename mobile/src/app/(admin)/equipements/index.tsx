@@ -400,10 +400,10 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
       <Modal visible={modal === 'panne'} transparent animationType="slide" onRequestClose={closeModal}>
         <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[styles.modalCard, { maxHeight: '80%' }]}>
-            <View style={[styles.mHeader, { backgroundColor: LUNA_COLORS.error }]}>
-              <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.textInverse} />
+            <View style={styles.mHeader}>
+              <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.error} />
               <Text style={styles.mTitle}>Signaler une Panne</Text>
-              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.textInverse} /></TouchableOpacity>
+              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.tertiary} /></TouchableOpacity>
             </View>
             <ScrollView style={styles.mBody} keyboardShouldPersistTaps="handled">
               <Text style={styles.fLabel}>Équipement</Text>
@@ -447,9 +447,9 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
         <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={[styles.modalCard, { maxHeight: '90%' }]}>
             <View style={styles.mHeader}>
-              <Ionicons name="add-circle-outline" size={22} color={LUNA_COLORS.textInverse} />
+              <Ionicons name="add-circle-outline" size={22} color={LUNA_COLORS.tertiary} />
               <Text style={styles.mTitle}>Ajouter un Équipement</Text>
-              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.textInverse} /></TouchableOpacity>
+              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.tertiary} /></TouchableOpacity>
             </View>
             <ScrollView style={styles.mBody} keyboardShouldPersistTaps="handled">
               <Text style={styles.fLabel}>Nom *</Text>
@@ -510,9 +510,9 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
         <Pressable style={styles.overlay} onPress={closeModal}>
           <Pressable style={[styles.modalCard, { margin: 24 }]} onPress={e => e.stopPropagation()}>
             <View style={styles.mHeader}>
-              <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.textInverse} />
+              <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.error} />
               <Text style={styles.mTitle}>Supprimer équipement</Text>
-              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.textInverse} /></TouchableOpacity>
+              <TouchableOpacity onPress={closeModal}><Ionicons name="close" size={22} color={LUNA_COLORS.tertiary} /></TouchableOpacity>
             </View>
             <View style={[styles.mBody, { alignItems: 'center', gap: 12 }]}>
               <Ionicons name="warning-outline" size={48} color={LUNA_COLORS.warning} />
@@ -571,11 +571,32 @@ const styles = StyleSheet.create({
   actBtn: { width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
   cellText: { fontSize: 12, color: LUNA_COLORS.textSecondary },
   overlay: { flex: 1, backgroundColor: LUNA_COLORS.overlay, justifyContent: 'center', padding: 16 },
-  modalCard: { backgroundColor: LUNA_COLORS.surface, borderRadius: 16, overflow: 'hidden' },
-  mHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, backgroundColor: LUNA_COLORS.dark },
-  mTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: LUNA_COLORS.textInverse },
+  modalCard: {
+    backgroundColor: LUNA_COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.primary,
+    overflow: 'hidden',
+  },
+  mHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 16,
+    backgroundColor: LUNA_COLORS.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(84, 172, 191, 0.45)',
+  },
+  mTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: LUNA_COLORS.darkest },
   mBody: { padding: 16 },
-  mFooter: { flexDirection: 'row', gap: 12, padding: 16, borderTopWidth: 1, borderTopColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
+  mFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: LUNA_COLORS.primary,
+    backgroundColor: LUNA_COLORS.surfaceLight,
+  },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
   detailLabel: { fontSize: 12, color: LUNA_COLORS.textSecondary },
   detailValue: { fontSize: 13, fontWeight: '600', color: LUNA_COLORS.textPrimary, flex: 1, textAlign: 'right' },

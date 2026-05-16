@@ -979,10 +979,10 @@ function FormModal({
       >
         <View style={styles.modalCard}>
           <View style={styles.mHeader}>
-            <Ionicons name={icon} size={s(22)} color={LUNA_COLORS.textInverse} />
+            <Ionicons name={icon} size={s(22)} color={LUNA_COLORS.tertiary} />
             <Text style={styles.mTitle}>{title}</Text>
             <Pressable onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={s(24)} color={LUNA_COLORS.textInverse} />
+              <Ionicons name="close" size={s(24)} color={LUNA_COLORS.tertiary} />
             </Pressable>
           </View>
           <ScrollView style={styles.mBody} keyboardShouldPersistTaps="handled">
@@ -1078,10 +1078,10 @@ function ConfirmModal({
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
           <View style={styles.mHeader}>
-            <Ionicons name="warning-outline" size={s(22)} color={LUNA_COLORS.textInverse} />
+            <Ionicons name="warning-outline" size={s(22)} color={LUNA_COLORS.tertiary} />
             <Text style={styles.mTitle}>{title}</Text>
             <Pressable onPress={onClose}>
-              <Ionicons name="close" size={s(24)} color={LUNA_COLORS.textInverse} />
+              <Ionicons name="close" size={s(24)} color={LUNA_COLORS.tertiary} />
             </Pressable>
           </View>
           <View style={[styles.mBody, { alignItems: 'center' }]}>
@@ -1327,6 +1327,9 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.surface,
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: LUNA_COLORS.primary,
     maxHeight: '92%',
   },
   mHeader: {
@@ -1334,16 +1337,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: s(spacing.md),
     padding: s(spacing.lg),
-    backgroundColor: LUNA_COLORS.dark,
+    backgroundColor: LUNA_COLORS.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(84, 172, 191, 0.45)',
   },
-  mTitle: { flex: 1, fontSize: s(fontSize.lg), fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse },
+  mTitle: { flex: 1, fontSize: s(fontSize.lg), fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   mBody: { padding: s(spacing.lg), maxHeight: s(400) },
   mFooter: {
     flexDirection: 'row',
     gap: s(spacing.md),
     padding: s(spacing.lg),
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.borderDark,
+    borderTopColor: LUNA_COLORS.primary,
+    backgroundColor: LUNA_COLORS.surfaceLight,
   },
   pickerSheet: {
     backgroundColor: LUNA_COLORS.surface,

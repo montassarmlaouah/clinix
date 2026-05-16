@@ -129,3 +129,77 @@ main {
   max-width: 11rem;
   width: auto;
 }
+
+/* Modales LUNA — palette simple bleu clair (#A7EBF2) */
+.modal-content.luna-glass {
+  border: 1px solid #a7ebf2;
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(2, 56, 89, 0.1);
+  overflow: hidden;
+  background: #fff;
+}
+
+.modal-content.luna-glass .modal-header {
+  background: #a7ebf2;
+  border-bottom: 1px solid rgba(84, 172, 191, 0.45);
+  padding: 1rem 1.25rem;
+}
+
+.modal-content.luna-glass .modal-header h5,
+.modal-content.luna-glass .modal-title,
+.modal-content.luna-glass .modal-header .section-title {
+  color: #011c40;
+  font-weight: 600;
+}
+
+.modal-content.luna-glass .modal-header .section-title i,
+.modal-content.luna-glass .modal-header i:not(.btn-close i) {
+  color: #26658c;
+}
+
+.modal-content.luna-glass .btn-close {
+  background: transparent;
+  border: none;
+  color: #26658c;
+  opacity: 1;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  transform: none;
+}
+
+.modal-content.luna-glass .btn-close:hover {
+  color: #023859;
+  background: transparent;
+  transform: none;
+}
+
+.modal-content.luna-glass .modal-body {
+  background: #ffffff;
+  padding: 1.25rem 1.5rem;
+}
+
+.modal-content.luna-glass .modal-footer {
+  background: #e8f7f9;
+  border-top: 1px solid #a7ebf2;
+  padding: 0.875rem 1.25rem;
+}
+
+.modal-content.luna-glass .modal-footer .btn-primary {
+  background: #54acbf;
+  border: none;
+  color: #fff;
+}
+
+.modal-content.luna-glass .modal-footer .btn-secondary,
+.modal-content.luna-glass .modal-footer .btn-luna-close {
+  background: #fff;
+  border: 1px solid #54acbf;
+  color: #023859;
+}
+
+.modal-content.luna-glass .modal-footer .btn-secondary:hover,
+.modal-content.luna-glass .modal-footer .btn-luna-close:hover {
+  background: #a7ebf2;
+  color: #011c40;
+}

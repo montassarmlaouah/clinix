@@ -4,18 +4,18 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-/** Styles modales LUNA (centrées, pied compact — pas de bouton géant). */
+/** Modales LUNA — palette simple bleu clair (#A7EBF2), fond blanc, pied léger. */
 export const lunaModalStyles = StyleSheet.create({
   overlayCenter: {
     flex: 1,
-    backgroundColor: LUNA_COLORS.overlay,
+    backgroundColor: 'rgba(1, 28, 64, 0.35)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
   },
   overlaySheet: {
     flex: 1,
-    backgroundColor: LUNA_COLORS.overlay,
+    backgroundColor: 'rgba(1, 28, 64, 0.35)',
     justifyContent: 'flex-end',
   },
   card: {
@@ -23,6 +23,8 @@ export const lunaModalStyles = StyleSheet.create({
     maxWidth: 480,
     backgroundColor: LUNA_COLORS.surface,
     borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.primary,
     overflow: 'hidden',
     maxHeight: '90%',
   },
@@ -31,6 +33,9 @@ export const lunaModalStyles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.surface,
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: LUNA_COLORS.primary,
     maxHeight: '92%',
   },
   header: {
@@ -39,29 +44,37 @@ export const lunaModalStyles = StyleSheet.create({
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: LUNA_COLORS.dark,
+    backgroundColor: LUNA_COLORS.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(84, 172, 191, 0.45)',
   },
   headerTitle: {
     flex: 1,
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse,
+    color: LUNA_COLORS.darkest,
+  },
+  headerIcon: {
+    color: LUNA_COLORS.tertiary,
   },
   body: {
     padding: spacing.lg,
     maxHeight: 420,
+    backgroundColor: LUNA_COLORS.surface,
   },
   footer: {
     flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.borderDark,
+    borderTopColor: LUNA_COLORS.primary,
+    backgroundColor: LUNA_COLORS.surfaceLight,
   },
   footerSingle: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.borderDark,
+    borderTopColor: LUNA_COLORS.primary,
+    backgroundColor: LUNA_COLORS.surfaceLight,
     alignItems: 'center',
   },
   btnGhost: {
@@ -69,13 +82,14 @@ export const lunaModalStyles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.secondary,
+    backgroundColor: LUNA_COLORS.surface,
     alignItems: 'center',
   },
   btnGhostTxt: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.darkest,
+    color: LUNA_COLORS.dark,
   },
   btnPrimary: {
     flex: 1,
@@ -94,7 +108,7 @@ export const lunaModalStyles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: LUNA_COLORS.tertiary,
+    backgroundColor: LUNA_COLORS.secondary,
     minWidth: 120,
     maxWidth: 200,
     alignItems: 'center',
@@ -114,7 +128,7 @@ export const lunaModalStyles = StyleSheet.create({
   detailLabel: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.textSecondary,
+    color: LUNA_COLORS.tertiary,
     marginTop: spacing.sm,
   },
   detailValue: {
@@ -130,10 +144,10 @@ export const lunaModalStyles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   input: {
-    backgroundColor: LUNA_COLORS.background,
+    backgroundColor: LUNA_COLORS.surface,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: 'rgba(84, 172, 191, 0.5)',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     fontSize: fontSize.base,
