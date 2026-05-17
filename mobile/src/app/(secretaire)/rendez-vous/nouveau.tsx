@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Input, LoadingOverlay } from '@/src/components/common';
+import { NewPatientModal } from '@/src/components/patients/NewPatientModal';
 import type { Medecin } from '@/src/api/services/rdv.service';
 import { rdvService } from '@/src/api/services/rdv.service';
 import { type Patient } from '@/src/api/services/patient.service';
@@ -410,6 +411,8 @@ export default function NouveauRdvScreen(): React.JSX.Element {
   const [loadingMed,   setLoadingMed]   = useState(false);
   const [loadingDispo, setLoadingDispo] = useState(false);
   const [submitting,   setSubmitting]   = useState(false);
+  const [showNewPatient, setShowNewPatient] = useState(false);
+  const [patientListKey, setPatientListKey] = useState(0);
 
   const [wizData, setWizData] = useState<WizardData>({
     patient:      null,
@@ -524,9 +527,10 @@ export default function NouveauRdvScreen(): React.JSX.Element {
         <View style={styles.stepContent}>
           {step === 1 && (
             <Step1Patient
+              key={patientListKey}
               selected={wizData.patient}
               onSelect={(p) => setWizData((d) => ({ ...d, patient: p }))}
-              onNewPatient={() => router.push('/(secretaire)/patients/nouveau')}
+              onNewPatient={() => setShowNewPatient(true)}
             />
           )}
           {step === 2 && (
@@ -570,6 +574,12 @@ export default function NouveauRdvScreen(): React.JSX.Element {
           />
         </View>
       ) : null}
+
+      <NewPatientModal
+        visible={showNewPatient}
+        onClose={() => setShowNewPatient(false)}
+        onCreated={() => setPatientListKey((k) => k + 1)}
+      />
     </SafeAreaView>
   );
 }

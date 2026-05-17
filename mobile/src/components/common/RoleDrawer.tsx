@@ -12,7 +12,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ClinixLogo } from '@/src/components/common/ClinixLogo';
-import { APP_NAME } from '@/src/constants/branding';
 import { getRoleMenu, type RoleMenuItem } from '@/src/constants/roleMenus';
 import { roleLabels } from '@/src/constants/roles';
 import { useAuth } from '@/src/hooks/useAuth';
@@ -37,9 +36,6 @@ export function RoleDrawer(): React.JSX.Element {
 
   const userName = [prenom, nom].filter(Boolean).join(' ').trim() || 'Utilisateur';
   const roleLabel = role ? (roleLabels[role] ?? role.replace('ROLE_', '')) : '';
-  const clinicLine = cliniqueNom
-    ? `${APP_NAME} – ${cliniqueNom}`
-    : APP_NAME;
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
   const items = getRoleMenu(role, { estCabinet, cliniqueId }).filter(
     (i) => !i.route.endsWith('/menu') && !i.label.toLowerCase().includes('profil'),
@@ -64,9 +60,14 @@ export function RoleDrawer(): React.JSX.Element {
               <ClinixLogo variant="icon" width={44} height={44} />
             </View>
             <View style={styles.headerText}>
-              <Text style={styles.clinicLine} numberOfLines={2}>
-                {clinicLine}
+              <Text style={styles.brandTitle} numberOfLines={1}>
+                CLINIX
               </Text>
+              {cliniqueNom ? (
+                <Text style={styles.clinicLine} numberOfLines={1}>
+                  {cliniqueNom}
+                </Text>
+              ) : null}
               <Text style={styles.userLine} numberOfLines={1}>
                 {userName}
               </Text>
@@ -157,10 +158,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   headerText: { flex: 1 },
-  clinicLine: {
-    fontSize: fontSize.base,
+  brandTitle: {
+    fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: LUNA_COLORS.darkest,
+  },
+  clinicLine: {
+    fontSize: fontSize.sm,
+    color: LUNA_COLORS.tertiary,
+    marginTop: 2,
   },
   userLine: {
     fontSize: fontSize.sm,

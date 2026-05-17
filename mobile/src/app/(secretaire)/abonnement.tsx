@@ -1,1 +1,1 @@
-export { default } from '@/src/app/(admin)/abonnement';
+export { default } from '@/src/components/screens/FacturationPatientScreen';

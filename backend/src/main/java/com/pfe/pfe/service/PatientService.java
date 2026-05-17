@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.pfe.pfe.dto.PatientDTO;
 import com.pfe.pfe.model.Clinique;
@@ -32,6 +33,7 @@ public class PatientService {
     private final DossierMedicalRepository dossierMedicalRepository;
     private final MedecinRepository medecinRepository;
     private final HospitalisationRepository hospitalisationRepository;
+    private final PatientMedecinService patientMedecinService;
     
     public Patient creerPatient(PatientDTO dto) {
         // Vérifier si le téléphone existe déjà
@@ -45,6 +47,9 @@ public class PatientService {
         patient.setTelephone(dto.getTelephone());
         // Patient créé sans compte applicatif pour le moment.
         patient.setMotDePasse(null);
+        if (dto.getDateNaissance() == null) {
+            throw new RuntimeException("La date de naissance est obligatoire");
+        }
         patient.setDateNaissance(dto.getDateNaissance());
         patient.setSexe(dto.getSexe());
         patient.setGroupeSanguin(dto.getGroupeSanguin());
@@ -74,40 +79,55 @@ public class PatientService {
         dossierMedical.setPatient(savedPatient);
         dossierMedical.setDateCreation(LocalDateTime.now());
         dossierMedicalRepository.save(dossierMedical);
-        
+
+        if (dto.getMedecinIds() != null || StringUtils.hasText(dto.getMedecinReferentId())) {
+            patientMedecinService.synchroniserMedecins(savedPatient, dto.getMedecinIds(), dto.getMedecinReferentId());
+        }
+        patientMedecinService.enrichirMedecins(savedPatient);
         return savedPatient;
     }
     
     public List<Patient> obtenirTousLesPatients() {
-        return patientRepository.findAll();
+        List<Patient> patients = patientRepository.findAll();
+        patientMedecinService.enrichirMedecins(patients);
+        return patients;
     }
 
     public List<Patient> obtenirPatientsParClinique(String cliniqueId) {
-        return patientRepository.findByCliniqueId(cliniqueId);
+        List<Patient> patients = patientRepository.findByCliniqueId(cliniqueId);
+        patientMedecinService.enrichirMedecins(patients);
+        return patients;
     }
 
     public List<Patient> obtenirPatientsParService(String serviceId) {
-        return hospitalisationRepository
+        List<Patient> patients = hospitalisationRepository
                 .findByChambreServiceIdAndStatut(serviceId, Hospitalisation.StatutHospitalisation.EN_COURS)
                 .stream()
                 .map(Hospitalisation::getPatient)
                 .filter(patient -> patient != null && Boolean.TRUE.equals(patient.getActif()))
                 .distinct()
                 .toList();
+        patientMedecinService.enrichirMedecins(patients);
+        return patients;
     }
     
     public Patient obtenirPatientParId(String id) {
-        return patientRepository.findById(id)
+        Patient patient = patientRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Patient non trouvé"));
+        patientMedecinService.enrichirMedecins(patient);
+        return patient;
     }
     
     public Patient obtenirPatientParNumero(String numeroPatient) {
-        return patientRepository.findByNumeroPatient(numeroPatient)
+        Patient patient = patientRepository.findByNumeroPatient(numeroPatient)
             .orElseThrow(() -> new RuntimeException("Patient non trouvé"));
+        patientMedecinService.enrichirMedecins(patient);
+        return patient;
     }
     
     public Patient mettreAJourPatient(String id, PatientDTO dto) {
-        Patient patient = obtenirPatientParId(id);
+        Patient patient = patientRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Patient non trouvé"));
         
         patient.setNom(dto.getNom());
         patient.setPrenom(dto.getPrenom());
@@ -117,7 +137,13 @@ public class PatientService {
         patient.setAdresse(dto.getAdresse());
         patient.setTypeAdmission(dto.getTypeAdmission());
         
-        return patientRepository.save(patient);
+        Patient saved = patientRepository.save(patient);
+
+        if (dto.getMedecinIds() != null || StringUtils.hasText(dto.getMedecinReferentId())) {
+            patientMedecinService.synchroniserMedecins(saved, dto.getMedecinIds(), dto.getMedecinReferentId());
+        }
+        patientMedecinService.enrichirMedecins(saved);
+        return saved;
     }
     
     public void supprimerPatient(String id) {
@@ -135,10 +161,12 @@ public class PatientService {
 
         Optional<Patient> existing = patientRepository.findByTelephone(dto.getTelephone());
         if (existing.isPresent()) {
-            // Si le patient existe déjà, on l'associe juste au médecin
             Patient p = existing.get();
             p.setMedecinCabinet(medecin);
-            return patientRepository.save(p);
+            Patient saved = patientRepository.save(p);
+            patientMedecinService.ajouterMedecin(saved, medecin, true);
+            patientMedecinService.enrichirMedecins(saved);
+            return saved;
         }
 
         Patient patient = new Patient();
@@ -147,6 +175,9 @@ public class PatientService {
         patient.setTelephone(dto.getTelephone());
         // Patient créé sans compte applicatif pour le moment.
         patient.setMotDePasse(null);
+        if (dto.getDateNaissance() == null) {
+            throw new RuntimeException("La date de naissance est obligatoire");
+        }
         patient.setDateNaissance(dto.getDateNaissance());
         patient.setSexe(dto.getSexe());
         patient.setGroupeSanguin(dto.getGroupeSanguin());
@@ -171,11 +202,15 @@ public class PatientService {
         dossier.setDateCreation(LocalDateTime.now());
         dossierMedicalRepository.save(dossier);
 
+        patientMedecinService.ajouterMedecin(saved, medecin, true);
+        patientMedecinService.enrichirMedecins(saved);
         return saved;
     }
 
     public List<Patient> listerPatientsCabinet(String medecinId) {
-        return patientRepository.findByMedecinCabinetId(medecinId);
+        List<Patient> patients = patientRepository.findByMedecinCabinetId(medecinId);
+        patientMedecinService.enrichirMedecins(patients);
+        return patients;
     }
 
     public Patient verifierParSecretaire(String id) {

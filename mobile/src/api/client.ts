@@ -141,8 +141,9 @@ export async function apiFetch<T>(
   if (!response.ok) {
     let errorBody: Partial<ApiError & { message?: string }> = {};
     try { errorBody = await response.json(); } catch { /* pas de body JSON */ }
+    const bodyErr = errorBody as { error?: string };
     throw {
-      message: errorBody.message ?? `Erreur HTTP ${response.status}`,
+      message: errorBody.message ?? bodyErr.error ?? `Erreur HTTP ${response.status}`,
       status: response.status,
       errors: errorBody.errors,
     } as ApiError;
@@ -237,6 +238,24 @@ export const apiPatch = <T>(endpoint: string, body?: unknown, options?: RequestI
 
 export const apiDelete = <T = void>(endpoint: string, options?: RequestInit): Promise<T> =>
   apiFetch<T>(endpoint, { ...options, method: 'DELETE' });
+
+/** Téléchargement binaire (PDF facture, etc.) */
+export async function apiDownloadFile(
+  endpoint: string,
+  destFileName: string,
+): Promise<string> {
+  const token = readToken();
+  const FileSystem = await import('expo-file-system/legacy');
+  const dest = `${FileSystem.cacheDirectory}${destFileName}`;
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const result = await FileSystem.downloadAsync(`${BASE_URL}${endpoint}`, dest, { headers });
+  if (result.status !== 200) {
+    throw { message: `Erreur téléchargement (${result.status})`, status: result.status } as ApiError;
+  }
+  return result.uri;
+}
 
 // ── Helpers export pour login/logout ──────────────────────────────────────────
 // Token géré par le Zustand store — plus besoin d'exporter writeToken/removeToken

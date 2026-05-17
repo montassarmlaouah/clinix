@@ -16,19 +16,25 @@ export const hiddenTabScreenOptions: BottomTabNavigationOptions = {
   tabBarButton: () => null,
 };
 
-/** Style d'onglets LUNA — 2–3 icônes, actif blanc, inactif atténué */
+/** Barre du bas — fond clair, icône active en teal (comme maquette mobile) */
 export function lunaTabBarOptions(): BottomTabNavigationOptions {
   return {
     headerShown: false,
     tabBarShowLabel: false,
-    tabBarActiveTintColor: '#FFFFFF',
-    tabBarInactiveTintColor: 'rgba(255,255,255,0.45)',
+    tabBarActiveTintColor: LUNA_COLORS.secondary,
+    tabBarInactiveTintColor: '#9CA3AF',
     tabBarStyle: {
-      backgroundColor: LUNA_COLORS.secondary,
-      borderTopWidth: 0,
+      backgroundColor: '#F8FAFB',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(2,56,89,0.08)',
       height: 64,
       paddingTop: 6,
       paddingBottom: 6,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: -2 },
+      shadowRadius: 8,
     },
     tabBarItemStyle: {
       paddingVertical: 4,

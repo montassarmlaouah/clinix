@@ -218,76 +218,22 @@
         </table>
       </div>
 
-      <!-- Tableau général des équipements -->
-      <div class="table-container luna-shadow">
-        <table class="licences-table">
-          <thead>
-            <tr>
-              <th>Équipement</th>
-              <th>Catégorie</th>
-              <th>Quantité</th>
-              <th>Statut stock</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let eq of filteredEquipements" class="luna-row">
-              <td>
-                <div class="equipement-info">
-                  <div class="equipement-icon">
-                    <i class="bi bi-gear"></i>
-                  </div>
-                  <div class="equipement-details">
-                    <div class="equipement-name">{{ eq.nom }}</div>
-                    <div class="equipement-meta">Code: {{ eq.code || 'N/A' }}</div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <span class="badge-luna badge-info">
-                  {{ getCategorieLabel(eq.categorie) }}
-                </span>
-              </td>
-              <td>
-                <div class="quantite-display">
-                  <span class="quantite-value">{{ eq.quantite }}</span>
-                  <span class="quantite-unit">unités</span>
-                </div>
-              </td>
-              <td>
-                <span class="status-pill" [ngClass]="getStockStatusClass(eq.quantite)">
-                  <i class="bi" [ngClass]="getStockStatusIcon(eq.quantite)"></i>
-                  {{ getStockStatusText(eq.quantite) }}
-                </span>
-              </td>
-              <td>
-                <div class="action-group">
-                  <button class="btn-action btn-view" title="Voir détails" (click)="viewEquipement(eq)">
-                    <i class="bi bi-eye"></i>
-                  </button>
-                  <button class="btn-action btn-warning" title="Signaler panne" (click)="openPanneModal(eq)" *ngIf="canSignalerPanne()">
-                    <i class="bi bi-exclamation-circle"></i>
-                  </button>
-                  <button class="btn-action btn-maint" title="Planifier maintenance" (click)="openMaintenanceModal(eq)">
-                    <i class="bi bi-wrench"></i>
-                  </button>
-                  <button class="btn-action btn-sync" title="Modifier" (click)="editerEquipement(eq)" *ngIf="canDoCrudEquipement()">
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
-                  <button class="btn-action btn-delete" title="Supprimer" (click)="openDeleteModal(eq.id, eq.nom)" *ngIf="canDoCrudEquipement()">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr *ngIf="paginatedEquipements.length === 0">
-              <td colspan="5" class="empty-state">
-                <i class="bi bi-inbox"></i>
-                <p>Aucun équipement trouvé</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Liste équipements (cartes) -->
+      <div class="luna-list-cards">
+        <div class="luna-list-card" *ngFor="let eq of paginatedEquipements">
+          <div class="luna-list-thumb"><i class="bi bi-gear"></i></div>
+          <div class="luna-list-body">
+            <div class="luna-list-title">{{ eq.nom }}</div>
+            <div class="luna-list-sub">{{ getCategorieLabel(eq.categorie) }} · Code {{ eq.code || 'N/A' }}</div>
+            <div class="luna-list-accent">{{ eq.quantite }} unités · {{ getStockStatusText(eq.quantite) }}</div>
+          </div>
+          <button type="button" class="luna-list-edit" title="Modifier" (click)="editerEquipement(eq)" *ngIf="canDoCrudEquipement()">
+            <i class="bi bi-pencil"></i>
+          </button>
+        </div>
+        <div class="empty-state" *ngIf="paginatedEquipements.length === 0">
+          <i class="bi bi-inbox"></i><p>Aucun équipement trouvé</p>
+        </div>
       </div>
 
       <!-- Pagination -->
@@ -1235,22 +1181,6 @@
                     (click)="completarRepairAndStartEquipment(selectedEquipementForRepair)">
               <i class="bi bi-power"></i> Réparation Complète &amp; Mettre en Marche
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal Succès -->
-    <div class="modal fade show" *ngIf="showSuccessModal" style="display: block; background: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content luna-glass">
-          <div class="modal-body text-center">
-            <div class="mb-3">
-              <i class="bi bi-check-circle modal-success-icon"></i>
-            </div>
-            <h4>Succès</h4>
-            <p>{{ successMessage }}</p>
-            <button class="btn btn-primary mt-3" (click)="closeSuccessModal()">OK</button>
           </div>
         </div>
       </div>

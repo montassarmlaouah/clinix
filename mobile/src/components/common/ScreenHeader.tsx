@@ -1,6 +1,8 @@
 import React from 'react';
 
 import { LunaHeroHeader } from '@/src/components/common/LunaHeroHeader';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
+import { usePageHeaderStore } from '@/src/store/pageHeader.store';
 
 interface ScreenHeaderProps {
   title: string;
@@ -21,7 +23,23 @@ export function ScreenHeader({
   right,
   showBack = true,
   showBrand = true,
-}: ScreenHeaderProps): React.JSX.Element {
+}: ScreenHeaderProps): React.JSX.Element | null {
+  const layoutHeaderEnabled = usePageHeaderStore((s) => s.layoutHeaderEnabled);
+
+  usePageHeader({
+    title,
+    subtitle,
+    showBack,
+    onBack,
+    showBrand,
+    showMenu: !showBack,
+    showNotifications: true,
+    showProfil: true,
+    right,
+  });
+
+  if (layoutHeaderEnabled) return null;
+
   return (
     <LunaHeroHeader
       title={title}

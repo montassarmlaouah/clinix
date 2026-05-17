@@ -32,7 +32,8 @@ export const ROLE_TAB_ROUTES: Record<string, readonly string[]> = {
   ROLE_SECRETAIRE: [
     '/(secretaire)/index',
     '/(secretaire)/rendez-vous',
-    '/(secretaire)/patients',
+    '/(secretaire)/abonnement',
+    '/(secretaire)/profil',
   ],
   ROLE_MEDECIN: [
     '/(medecin)/index',
@@ -67,7 +68,6 @@ export const ROLE_TAB_ROUTES: Record<string, readonly string[]> = {
   ROLE_TECHNICIEN_MAINTENANCE: [
     '/(technicien)/index',
     '/(technicien)/equipements',
-    '/(technicien)/pannes',
   ],
 };
 

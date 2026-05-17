@@ -24,6 +24,7 @@ import { rdvService } from '@/src/api/services/rdv.service';
 import { apiGet } from '@/src/api/client';
 import { PATIENTS } from '@/src/api/endpoints';
 import { type Patient } from '@/src/api/services/patient.service';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
@@ -307,6 +308,8 @@ function UrgentModal({ visible, cliniqueId, onClose, onCreated }: UrgentModalPro
 export default function AgendaScreen(): React.JSX.Element {
   const userId     = useAuthStore((s) => s.userId);
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
+
+  usePageHeader({ title: 'Agenda', subtitle: todayLabel() });
 
   const [rdvs,          setRdvs]          = useState<RendezVous[]>([]);
   const [loading,       setLoading]        = useState(true);

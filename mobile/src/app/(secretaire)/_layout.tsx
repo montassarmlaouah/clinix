@@ -1,39 +1,47 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { createTabBarIcon } from '@/src/components/common';
+import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icônes — Accueil · Agenda · Patients */
+/** Barre du bas alignée header.html : Dashboard · Agenda · Facturation · Profil */
 export default function SecretaireLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
   return (
+    <RoleTabsShell>
     <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Accueil',
-          tabBarIcon: createTabBarIcon('home-outline'),
+          title: 'Dashboard',
+          tabBarIcon: createTabBarIcon('speedometer-outline'),
         }}
       />
       <Tabs.Screen
         name="rendez-vous"
         options={{
-          title: 'Agenda',
+          title: 'Rendez-vous',
           tabBarIcon: createTabBarIcon('calendar-outline'),
         }}
       />
       <Tabs.Screen
-        name="patients"
+        name="abonnement"
         options={{
-          title: 'Patients',
-          tabBarIcon: createTabBarIcon('people-outline'),
+          title: 'Facturation',
+          tabBarIcon: createTabBarIcon('receipt-outline'),
         }}
       />
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: 'Profil',
+          tabBarIcon: createTabBarIcon('person-circle-outline'),
+        }}
+      />
+      <Tabs.Screen name="patients" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="transferts" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="admissions" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="admissions/creer" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="patients/nouveau" options={hiddenTabScreenOptions} />
@@ -46,9 +54,9 @@ export default function SecretaireLayout(): React.JSX.Element {
       <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="tarifs" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
     </Tabs>
+    </RoleTabsShell>
   );
 }

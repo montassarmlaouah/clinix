@@ -284,6 +284,20 @@ export class PatientComponent implements OnInit {
     });
   }
 
+  getPatientAge(patient: Patient): number {
+    if (patient.age != null && !Number.isNaN(patient.age)) {
+      return patient.age;
+    }
+    if (!patient.dateNaissance) return -1;
+    const birth = new Date(patient.dateNaissance);
+    if (Number.isNaN(birth.getTime())) return -1;
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    const m = now.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+    return age >= 0 ? age : -1;
+  }
+
   // Méthodes de filtrage et pagination
   filterPatients(): void {
     let filtered = [...this.patients];
@@ -303,6 +317,8 @@ export class PatientComponent implements OnInit {
     if (this.selectedTypeAdmission !== 'all') {
       filtered = filtered.filter(patient => patient.typeAdmission === this.selectedTypeAdmission);
     }
+
+    filtered.sort((a, b) => this.getPatientAge(b) - this.getPatientAge(a));
 
     this.filteredPatients = filtered;
     this.totalPages = Math.ceil(this.filteredPatients.length / this.itemsPerPage) || 1;

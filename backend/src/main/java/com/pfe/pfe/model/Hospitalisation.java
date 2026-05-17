@@ -1,5 +1,7 @@
 package com.pfe.pfe.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,14 +33,17 @@ public class Hospitalisation {
     
     @ManyToOne
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnoreProperties({"dossierMedical", "medecinCabinet", "roles", "motDePasse", "clinique", "service"})
     private Patient patient;
     
     @ManyToOne
     @JoinColumn(name = "medecin_id", nullable = false)
+    @JsonIgnoreProperties({"clinique", "service", "roles", "motDePasse", "patients"})
     private Medecin medecin;
     
     @ManyToOne
     @JoinColumn(name = "chambre_id")
+    @JsonIgnoreProperties({"materielIds", "equipements"})
     private Chambre chambre;
     
     public enum StatutHospitalisation {

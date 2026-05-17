@@ -73,7 +73,7 @@ public class SecurityConfig {
                 // Test rapide : backend joignable sans JWT (navigateur GET)
                 .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                 // Profil : JWT obligatoire (avant le permitAll général /auth/**)
-                .requestMatchers("/auth/profile").authenticated()
+                .requestMatchers("/auth/profile", "/auth/change-password").authenticated()
                 // Endpoints publics sous /auth (login, codes, etc.)
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
@@ -162,6 +162,9 @@ public class SecurityConfig {
 
                 // Équipements — le reste (GET/POST/PATCH/DELETE) : admin clinique uniquement
                 .requestMatchers("/api/equipements/**").hasRole("ADMIN_CLINIQUE")
+
+                // Facturation patient (sortie, CNAM, PDF)
+                .requestMatchers("/api/facturation-patient/**").hasAnyRole("SECRETAIRE", "ADMIN_CLINIQUE")
 
                 .anyRequest().authenticated()
         );

@@ -1,289 +1,230 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   FlatList,
   Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card, EmptyState, LoadingOverlay } from '@/src/components/common';
-import { type Patient } from '@/src/api/services/patient.service';
-import { PATIENTS } from '@/src/api/endpoints';
 import { apiGet } from '@/src/api/client';
+import { HOSPITALISATIONS, PATIENTS } from '@/src/api/endpoints';
+import { type Patient } from '@/src/api/services/patient.service';
+import { EmptyState, LoadingOverlay } from '@/src/components/common';
+import { LunaPatientRowCard } from '@/src/components/patients/LunaPatientRowCard';
+import { NewPatientModal } from '@/src/components/patients/NewPatientModal';
+import { WardFilterChip } from '@/src/components/patients/WardFilterChip';
 import { useAuthStore } from '@/src/store/auth.store';
+import { usePageHeaderStore } from '@/src/store/pageHeader.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import {
+  buildPatientRows,
+  collectServiceFilters,
+  filterPatientRows,
+  sortPatientsByAge,
+  type HospitalisationLite,
+} from '@/src/utils/patientDisplay';
 
-// ── Helper ────────────────────────────────────────────────────────────────────
-function getInitials(nom: string, prenom: string): string {
-  return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase();
-}
-
-// ── Carte patient ─────────────────────────────────────────────────────────────
-function PatientCard({ patient, onPress }: { patient: Patient; onPress: () => void }) {
-  return (
-    <Pressable onPress={onPress}>
-      <Card style={styles.card}>
-        <View style={styles.cardRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarTxt}>
-              {getInitials(patient.nom, patient.prenom)}
-            </Text>
-          </View>
-          <View style={styles.cardInfo}>
-            <Text style={styles.patientName}>
-              {patient.prenom} {patient.nom}
-            </Text>
-            <Text style={styles.patientPhone}>{patient.telephone}</Text>
-            {patient.cin ? (
-              <Text style={styles.patientCin}>CIN : {patient.cin}</Text>
-            ) : null}
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={LUNA_COLORS.textSecondary} />
-        </View>
-      </Card>
-    </Pressable>
-  );
-}
-
-// ── Écran ─────────────────────────────────────────────────────────────────────
 export default function PatientsScreen(): React.JSX.Element {
-  const router     = useRouter();
+  const router = useRouter();
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
 
   const [allPatients, setAllPatients] = useState<Patient[]>([]);
-  const [patients,    setPatients]    = useState<Patient[]>([]);
-  const [query,       setQuery]       = useState('');
-  const [loading,     setLoading]     = useState(true);
-  const [refreshing,  setRefreshing]  = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hospitalisations, setHospitalisations] = useState<HospitalisationLite[]>([]);
+  const [query, setQuery] = useState('');
+  const [serviceFilter, setServiceFilter] = useState('ALL');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
-  // Chargement initial — tous les patients de la clinique
   const loadAll = useCallback(async () => {
     if (!cliniqueId) return;
     try {
-      const data = await apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId));
-      setAllPatients(data);
-      setPatients(data);
+      const [patients, hosp] = await Promise.all([
+        apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId)),
+        apiGet<HospitalisationLite[]>(HOSPITALISATIONS.EN_COURS).catch(() => [] as HospitalisationLite[]),
+      ]);
+      setAllPatients(Array.isArray(patients) ? patients : []);
+      setHospitalisations(Array.isArray(hosp) ? hosp : []);
     } catch {
-      /* garder la liste précédente */
+      /* liste précédente conservée */
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, [cliniqueId]);
 
-  // Recharge à chaque fois que l'écran revient au premier plan
   useFocusEffect(
     useCallback(() => {
       setQuery('');
-      loadAll();
-    }, [loadAll])
+      setServiceFilter('ALL');
+      void loadAll();
+    }, [loadAll]),
   );
 
-  const handleRefresh = () => { setRefreshing(true); setQuery(''); loadAll(); };
+  const rows = useMemo(() => {
+    const built = buildPatientRows(allPatients, hospitalisations);
+    const sorted = sortPatientsByAge(built, true);
+    return filterPatientRows(sorted, query, serviceFilter);
+  }, [allPatients, hospitalisations, query, serviceFilter]);
 
-  // Recherche locale (l'endpoint /recherche n'existe pas dans le backend)
-  function handleSearch(text: string) {
-    setQuery(text);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const q = text.trim().toLowerCase();
-    if (q.length < 2) {
-      setPatients(allPatients);
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      const filtered = allPatients.filter((p) =>
-        (p.nom?.toLowerCase().includes(q) ?? false) ||
-        (p.prenom?.toLowerCase().includes(q) ?? false) ||
-        (p.telephone?.toLowerCase().includes(q) ?? false)
-      );
-      setPatients(filtered);
-    }, 300);
-  }
+  const serviceOptions = useMemo(() => {
+    const allRows = buildPatientRows(allPatients, hospitalisations);
+    const services = collectServiceFilters(allRows);
+    return [
+      { value: 'ALL', label: `TOUS LES SERVICES (${allPatients.length})` },
+      ...services.map((s) => ({
+        value: s,
+        label: `${s} (${allRows.filter((r) => r.serviceLabel === s).length})`,
+      })),
+    ];
+  }, [allPatients, hospitalisations]);
+
+  const setHeader = usePageHeaderStore((s) => s.setHeader);
+
+  useFocusEffect(
+    useCallback(() => {
+      setHeader({
+        title: 'Patients',
+        showBrand: false,
+        showNotifications: false,
+        showProfil: false,
+        showMenu: true,
+        showBack: false,
+        center: (
+          <WardFilterChip
+            label="Service"
+            options={serviceOptions}
+            value={serviceFilter}
+            onChange={setServiceFilter}
+          />
+        ),
+        right: (
+          <Pressable
+            style={styles.searchBtn}
+            onPress={() => setSearchOpen((v) => !v)}
+            accessibilityLabel="Rechercher"
+          >
+            <Ionicons name="search" size={22} color={LUNA_COLORS.textInverse} />
+          </Pressable>
+        ),
+      });
+      return () => {
+        setHeader({ title: '', center: undefined, right: undefined });
+      };
+    }, [serviceFilter, serviceOptions, setHeader]),
+  );
 
   if (loading) return <LoadingOverlay />;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* En-tête */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Patients</Text>
-        <Text style={styles.headerCount}>{patients.length} enregistrés</Text>
-      </View>
+    <View style={styles.root}>
+      {searchOpen ? (
+        <View style={styles.searchBar}>
+          <Ionicons name="search-outline" size={18} color={LUNA_COLORS.textSecondary} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Nom, chambre, médecin…"
+            placeholderTextColor={LUNA_COLORS.textDisabled}
+            style={styles.searchInput}
+            autoFocus
+          />
+          {query.length > 0 ? (
+            <Pressable onPress={() => setQuery('')}>
+              <Ionicons name="close-circle" size={18} color={LUNA_COLORS.textSecondary} />
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
 
-      {/* SearchBar sticky */}
-      <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={18} color={LUNA_COLORS.textSecondary} />
-        <TextInput
-          value={query}
-          onChangeText={handleSearch}
-          placeholder="Rechercher par nom, prénom…"
-          placeholderTextColor={LUNA_COLORS.textDisabled}
-          style={styles.searchInput}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-        />
-        {query.length > 0 ? (
-          <Pressable onPress={() => { setQuery(''); loadAll(); }}>
-            <Ionicons name="close-circle" size={18} color={LUNA_COLORS.textSecondary} />
-          </Pressable>
-        ) : null}
-      </View>
-
-      {/* Liste */}
       <FlatList
-        data={patients}
-        keyExtractor={(p) => String(p.id)}
+        data={rows}
+        keyExtractor={(r) => String(r.patient.id)}
         renderItem={({ item }) => (
-          <PatientCard
-            patient={item}
-            onPress={() => router.push(`/(secretaire)/patients/${item.id}` as never)}
+          <LunaPatientRowCard
+            row={item}
+            onPress={() => router.push(`/(secretaire)/patients/${item.patient.id}` as never)}
           />
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={rows.length === 0 ? styles.listEmpty : styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={handleRefresh}
+            onRefresh={() => {
+              setRefreshing(true);
+              void loadAll();
+            }}
             tintColor={LUNA_COLORS.secondary}
-            colors={[LUNA_COLORS.secondary]}
           />
         }
         ListEmptyComponent={
           <EmptyState
             icon="people-outline"
-            title="Aucun patient trouvé"
-            subtitle={
-              query.trim().length > 0
-                ? 'Aucun résultat pour votre recherche.'
-                : 'Aucun patient enregistré dans cette clinique.'
-            }
+            title="Aucun patient"
+            subtitle="Aucun patient ne correspond à ce filtre."
           />
         }
       />
 
-      {/* FAB — Nouveau patient */}
       <Pressable
         style={styles.fab}
-        onPress={() => router.push('/(secretaire)/patients/nouveau')}
-        accessibilityRole="button"
-        accessibilityLabel="Ajouter un patient"
+        onPress={() => setShowNewModal(true)}
+        accessibilityLabel="Nouveau patient"
       >
         <Ionicons name="add" size={26} color={LUNA_COLORS.textInverse} />
       </Pressable>
-    </SafeAreaView>
+
+      <NewPatientModal
+        visible={showNewModal}
+        onClose={() => setShowNewModal(false)}
+        onCreated={loadAll}
+      />
+    </View>
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: {
-    flex:            1,
-    backgroundColor: LUNA_COLORS.background,
+  root: { flex: 1, backgroundColor: LUNA_COLORS.background },
+  searchBtn: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  header: {
-    paddingHorizontal: spacing.xxl,
-    paddingVertical:   spacing.lg,
-    backgroundColor:   LUNA_COLORS.surface,
-    ...(shadows.sm as object),
-  },
-  headerTitle: {
-    fontSize:   fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color:      LUNA_COLORS.darkest,
-  },
-  headerCount: {
-    fontSize:  fontSize.sm,
-    color:     LUNA_COLORS.textSecondary,
-    marginTop: 2,
-  },
-
-  // SearchBar
   searchBar: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:               spacing.sm,
-    backgroundColor:   LUNA_COLORS.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: LUNA_COLORS.surface,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.border,
-    paddingHorizontal: spacing.xxl,
-    paddingVertical:   spacing.md,
+    borderBottomColor: LUNA_COLORS.borderDark,
   },
   searchInput: {
-    flex:               1,
-    fontSize:           fontSize.base,
-    color:              LUNA_COLORS.textPrimary,
-    paddingVertical:    spacing.xs,
-    includeFontPadding: false,
-  },
-
-  // Liste
-  listContent: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop:        spacing.md,
-    paddingBottom:     100,
-  },
-  card: {
-    marginBottom: spacing.md,
-    padding:      spacing.lg,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           spacing.md,
-  },
-  avatar: {
-    width:           44,
-    height:          44,
-    borderRadius:    22,
-    backgroundColor: LUNA_COLORS.secondary,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  avatarTxt: {
-    color:      LUNA_COLORS.textInverse,
-    fontWeight: fontWeight.bold,
-    fontSize:   fontSize.base,
-  },
-  cardInfo: {
     flex: 1,
+    fontSize: 15,
+    color: LUNA_COLORS.textPrimary,
   },
-  patientName: {
-    fontSize:   fontSize.base,
-    fontWeight: fontWeight.semibold,
-    color:      LUNA_COLORS.darkest,
-  },
-  patientPhone: {
-    fontSize:  fontSize.sm,
-    color:     LUNA_COLORS.textSecondary,
-    marginTop: 2,
-  },
-  patientCin: {
-    fontSize:  fontSize.xs,
-    color:     LUNA_COLORS.tertiary,
-    marginTop: 2,
-  },
-
-  // FAB
+  list: { paddingBottom: 100 },
+  listEmpty: { flexGrow: 1, paddingBottom: 100 },
   fab: {
-    position:        'absolute',
-    bottom:          spacing.xxl,
-    right:           spacing.xxl,
-    width:           56,
-    height:          56,
-    borderRadius:    28,
+    position: 'absolute',
+    bottom: spacing.xxl,
+    right: spacing.xxl,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: LUNA_COLORS.secondary,
-    alignItems:      'center',
-    justifyContent:  'center',
+    alignItems: 'center',
+    justifyContent: 'center',
     ...(shadows.lg as object),
   },
 });

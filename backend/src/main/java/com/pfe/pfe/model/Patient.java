@@ -2,8 +2,11 @@ package com.pfe.pfe.model;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pfe.pfe.dto.MedecinAttributionDto;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -11,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -50,9 +54,27 @@ public class Patient extends User {
     private DossierMedical dossierMedical;
 
     /** Médecin de cabinet (pour les patients sans clinique — médecine libérale). */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "medecin_cabinet_id")
     private Medecin medecinCabinet;
+
+    /** Médecins de la clinique associés au patient (plusieurs). */
+    @JsonIgnore
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PatientMedecin> medecinsSuivis = new ArrayList<>();
+
+    @Transient
+    private List<String> medecinIds = new ArrayList<>();
+
+    @Transient
+    private String medecinReferentId;
+
+    @Transient
+    private String medecinReferentNom;
+
+    @Transient
+    private List<MedecinAttributionDto> medecins = new ArrayList<>();
     
     /**
      * Calcule l'âge du patient en années à partir de sa date de naissance

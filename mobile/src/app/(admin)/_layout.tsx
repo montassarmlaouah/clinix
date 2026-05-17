@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { createTabBarIcon } from '@/src/components/common';
+import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { ADMIN_TAB_SCREENS } from '@/src/constants/roleTabs';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
@@ -10,6 +10,7 @@ export default function AdminLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
   return (
+    <RoleTabsShell>
     <Tabs screenOptions={screenOptions} initialRouteName="dashboard">
       {ADMIN_TAB_SCREENS.map(({ name, icon }) => (
         <Tabs.Screen
@@ -34,5 +35,6 @@ export default function AdminLayout(): React.JSX.Element {
       <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
     </Tabs>
+    </RoleTabsShell>
   );
 }

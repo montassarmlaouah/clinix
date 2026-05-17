@@ -11,7 +11,8 @@ const AUTH = '/auth';
 export const AUTH_ENDPOINTS = {
   LOGIN:        `${AUTH}/login`,
   // REFRESH TOKEN N'EXISTE PAS DANS LE BACKEND — supprimé
-  PROFILE:      `${AUTH}/profile`,
+  PROFILE:        `${AUTH}/profile`,
+  CHANGE_PASSWORD:`${AUTH}/change-password`,
   FORGOT_SEND:  `${AUTH}/forgot-password/send-code`,
   FORGOT_VERIFY:`${AUTH}/forgot-password/verify-code`,
   FORGOT_RESET: `${AUTH}/forgot-password/reset`,
@@ -142,6 +143,13 @@ export const NOTIFICATIONS = {
 // ── Personnel ─────────────────────────────────────────────────────────────────
 export const PERSONNEL = {
   CREATE:      `${API}/personnel`,
+  VERIFIER_TELEPHONE: (telephone: string, medecinExistantId?: string) => {
+    let url = `${API}/personnel/verifier-telephone?telephone=${encodeURIComponent(telephone)}`;
+    if (medecinExistantId?.trim()) {
+      url += `&medecinExistantId=${encodeURIComponent(medecinExistantId.trim())}`;
+    }
+    return url;
+  },
   MEDECINS_RECHERCHE_RATTACHEMENT: (q: string, cin?: string) => {
     let url = `${API}/personnel/medecins/recherche-rattachement?q=${encodeURIComponent(q)}`;
     if (cin?.trim()) url += `&cin=${encodeURIComponent(cin.trim())}`;
@@ -491,6 +499,20 @@ export const DOSSIERS = {
   BY_ID:      (id: string | number) => `${API}/dossiers-medicaux/${id}`,
   UPDATE:     (id: string | number) => `${API}/dossiers-medicaux/${id}`,
   NOTES_CONF: (id: string | number) => `${API}/dossiers-medicaux/${id}/notes-confidentielles`,
+} as const;
+
+// ── Facturation patient (CNAM, sortie, PDF) ───────────────────────────────────
+export const FACTURATION_PATIENT = {
+  PRESTATIONS: (cliniqueId: string | number) =>
+    `${API}/facturation-patient/prestations/clinique/${cliniqueId}`,
+  PAR_CLINIQUE: (cliniqueId: string | number) =>
+    `${API}/facturation-patient/clinique/${cliniqueId}`,
+  BY_ID: (id: string | number) => `${API}/facturation-patient/${id}`,
+  GENERER: `${API}/facturation-patient/generer`,
+  EMETTRE: (id: string | number) => `${API}/facturation-patient/${id}/emettre`,
+  VALIDER_PAIEMENT: (id: string | number) => `${API}/facturation-patient/${id}/valider-paiement`,
+  TELETRANSMETTRE: (id: string | number) => `${API}/facturation-patient/${id}/teletransmettre`,
+  PDF: (id: string | number) => `${API}/facturation-patient/${id}/pdf`,
 } as const;
 
 // ── Re-exports groupés ────────────────────────────────────────────────────────

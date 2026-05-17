@@ -12,9 +12,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
 import { Button, Card, Input } from '@/src/components/common';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { patientService, type Patient, type UpdatePatientPayload } from '@/src/api/services/patient.service';
 import { apiGet, apiPut } from '@/src/api/client';
 import { MEDECINS, CHAMBRES } from '@/src/api/endpoints';
@@ -59,8 +58,16 @@ export default function EditPatientScreen(): React.JSX.Element {
 
   // Médecin référent
   const [medecins,                setMedecins]                = useState<MedecinOption[]>([]);
+  const [medecinIds,              setMedecinIds]              = useState<string[]>([]);
   const [medecinReferentId,       setMedecinReferentId]       = useState<string | number | null>(null);
   const [loadingMedecins,         setLoadingMedecins]         = useState(false);
+
+  usePageHeader({
+    title: patient ? `${patient.prenom} ${patient.nom}` : 'Patient',
+    subtitle: 'Médecins · dossier',
+    showBack: true,
+    onBack: () => router.back(),
+  });
 
   // Chambre
   const [chambreId,               setChambreId]               = useState<string | null>(null);
@@ -88,7 +95,17 @@ export default function EditPatientScreen(): React.JSX.Element {
         setGroupeSanguin(p.groupeSanguin ?? '');
         setTypeAdmission(p.typeAdmission ?? '');
         setNumeroSecuriteSociale(p.numeroSecuriteSociale ?? '');
-        setMedecinReferentId(p.medecinReferentId ?? null);
+        const ids = p.medecinIds?.length
+          ? p.medecinIds.map(String)
+          : p.medecins?.map((m) => String(m.id)) ?? [];
+        setMedecinIds(ids);
+        setMedecinReferentId(
+          p.medecinReferentId != null
+            ? String(p.medecinReferentId)
+            : p.medecins?.find((m) => m.principal)?.id != null
+              ? String(p.medecins!.find((m) => m.principal)!.id)
+              : ids[0] ?? null,
+        );
         setChambreId(p.chambreId ?? null);
         setChambreNumero(p.chambreNumero ?? null);
       })
@@ -163,6 +180,7 @@ export default function EditPatientScreen(): React.JSX.Element {
                 typeAdmission: typeAdmission.trim() || undefined,
                 numeroSecuriteSociale: numeroSecuriteSociale.trim() || undefined,
                 medecinReferentId: medecinReferentId != null ? String(medecinReferentId) : null,
+                medecinIds,
                 chambreId: '', // empty string triggers discharge in backend
               };
               await patientService.updatePatient(id, payload);
@@ -203,10 +221,9 @@ export default function EditPatientScreen(): React.JSX.Element {
         typeAdmission:          typeAdmission.trim() || undefined,
         numeroSecuriteSociale:  numeroSecuriteSociale.trim() || undefined,
         medecinReferentId:      medecinReferentId != null ? String(medecinReferentId) : null,
+        medecinIds,
         chambreId:              chambreId,
       };
-
-      console.log('BODY ENVOYÉ (UPDATE):', JSON.stringify(payload, null, 2));
 
       await patientService.updatePatient(id, payload);
       Alert.alert('Succès', 'Dossier mis à jour.', [
@@ -219,7 +236,25 @@ export default function EditPatientScreen(): React.JSX.Element {
     }
   }
 
-  const selectedMedecin = medecins.find((m) => m.id === medecinReferentId) ?? null;
+  function toggleMedecin(mId: string | number) {
+    const idStr = String(mId);
+    setMedecinIds((prev) => {
+      if (prev.includes(idStr)) {
+        const next = prev.filter((x) => x !== idStr);
+        if (medecinReferentId === idStr) setMedecinReferentId(next[0] ?? null);
+        return next;
+      }
+      const next = [...prev, idStr];
+      if (!medecinReferentId) setMedecinReferentId(idStr);
+      return next;
+    });
+  }
+
+  function setReferent(mId: string | number) {
+    const idStr = String(mId);
+    if (!medecinIds.includes(idStr)) setMedecinIds((prev) => [...prev, idStr]);
+    setMedecinReferentId(idStr);
+  }
 
   if (loadingPatient) {
     return (
@@ -230,18 +265,7 @@ export default function EditPatientScreen(): React.JSX.Element {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* En-tête */}
-      <View style={styles.navBar}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
-          <Ionicons name="arrow-back" size={24} color={LUNA_COLORS.dark} />
-        </Pressable>
-        <Text style={styles.navTitle} numberOfLines={1}>
-          {patient ? `${patient.prenom} ${patient.nom}` : 'Modifier patient'}
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <View style={styles.safe}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         keyboardShouldPersistTaps="handled"
@@ -388,54 +412,52 @@ export default function EditPatientScreen(): React.JSX.Element {
             </TouchableOpacity>
           )}
 
-          {/* Médecin référent */}
-          <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>Médecin référent</Text>
+          {/* Médecins (plusieurs + référent) */}
+          <Text style={[styles.sectionTitle, { marginTop: spacing.lg }]}>
+            Médecins suivants
+          </Text>
+          <Text style={styles.hint}>
+            Cochez un ou plusieurs médecins. Appuyez sur l&apos;étoile pour le médecin référent.
+          </Text>
 
           {loadingMedecins ? (
             <ActivityIndicator color={LUNA_COLORS.primary} style={{ marginVertical: spacing.md }} />
           ) : (
-            <>
-              {selectedMedecin && (
-                <View style={styles.selectedMedecinCard}>
-                  <Ionicons name="checkmark-circle" size={18} color={LUNA_COLORS.success} />
-                  <Text style={styles.selectedMedecinText}>
-                    Dr {selectedMedecin.prenom} {selectedMedecin.nom} — {selectedMedecin.specialite}
-                  </Text>
-                  <TouchableOpacity onPress={() => setMedecinReferentId(null)} hitSlop={8}>
-                    <Ionicons name="close-circle" size={18} color={LUNA_COLORS.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              <View style={styles.medecinList}>
-                {medecins.map((m) => (
-                  <TouchableOpacity
-                    key={m.id}
-                    style={[
-                      styles.medecinItem,
-                      medecinReferentId === m.id && styles.medecinItemActive,
-                    ]}
-                    onPress={() => setMedecinReferentId(medecinReferentId === m.id ? null : m.id)}
-                    activeOpacity={0.8}
+            <View style={styles.medecinList}>
+              {medecins.map((m) => {
+                const mid = String(m.id);
+                const selected = medecinIds.includes(mid);
+                const isRef = medecinReferentId === mid;
+                return (
+                  <View
+                    key={mid}
+                    style={[styles.medecinItem, selected && styles.medecinItemActive]}
                   >
-                    <View style={styles.medecinAvatar}>
-                      <Text style={styles.medecinAvatarText}>
-                        {m.prenom.charAt(0)}{m.nom.charAt(0)}
-                      </Text>
-                    </View>
-                    <View style={styles.medecinInfo}>
-                      <Text style={styles.medecinNom}>Dr {m.prenom} {m.nom}</Text>
-                      <Text style={styles.medecinSpec}>{m.specialite}</Text>
-                    </View>
-                    {medecinReferentId === m.id && (
-                      <Ionicons name="checkmark-circle" size={20} color={LUNA_COLORS.primary} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-                {medecins.length === 0 && (
-                  <Text style={styles.emptyText}>Aucun médecin disponible dans cette clinique.</Text>
-                )}
-              </View>
-            </>
+                    <TouchableOpacity onPress={() => toggleMedecin(m.id)} style={styles.medecinRowTap}>
+                      <Ionicons
+                        name={selected ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={LUNA_COLORS.secondary}
+                      />
+                      <View style={styles.medecinInfo}>
+                        <Text style={styles.medecinNom}>Dr {m.prenom} {m.nom}</Text>
+                        <Text style={styles.medecinSpec}>{m.specialite}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => setReferent(m.id)} hitSlop={8}>
+                      <Ionicons
+                        name={isRef ? 'star' : 'star-outline'}
+                        size={22}
+                        color={isRef ? LUNA_COLORS.accentGold : LUNA_COLORS.textDisabled}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+              {medecins.length === 0 && (
+                <Text style={styles.emptyText}>Aucun médecin disponible dans cette clinique.</Text>
+              )}
+            </View>
           )}
         </Card>
 
@@ -512,7 +534,7 @@ export default function EditPatientScreen(): React.JSX.Element {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -580,6 +602,17 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.errorLight,
   },
   dischargeBtnText: { fontSize: fontSize.sm, color: LUNA_COLORS.error, fontWeight: fontWeight.semibold },
+  hint: {
+    fontSize: fontSize.sm,
+    color: LUNA_COLORS.textDisabled,
+    marginBottom: spacing.sm,
+  },
+  medecinRowTap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
   // Médecin référent
   selectedMedecinCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,

@@ -16,6 +16,7 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 import { DashboardQuickLinks } from '@/src/components/common/DashboardQuickLinks';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -60,6 +61,8 @@ function MetricCard({
 export default function SecretaireDashboard(): React.JSX.Element {
   const router     = useRouter();
   const { cliniqueId, prenom, nom } = useAuthStore();
+
+  usePageHeader({ title: 'Accueil', subtitle: 'Tableau de bord secrétaire' });
   const [data, setData]         = useState<DashboardData | null>(null);
   const [loading, setLoading]   = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -186,68 +189,18 @@ export default function SecretaireDashboard(): React.JSX.Element {
         </View>
       )}
 
-      {/* Quick actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Accès rapides</Text>
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => router.push('/(secretaire)/transferts')}
-            accessibilityRole="button"
-          >
-            <Ionicons name="swap-horizontal-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Transferts entrants</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => router.push('/(secretaire)/patients' as never)}
-            accessibilityRole="button"
-          >
-            <Ionicons name="medkit-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Gestion patients</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => router.push('/(secretaire)/admissions/creer')}
-            accessibilityRole="button"
-          >
-            <Ionicons name="person-add-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Nouvelle admission</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => router.push('/(secretaire)/rendez-vous')}
-            accessibilityRole="button"
-          >
-            <Ionicons name="calendar-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Agenda</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/(secretaire)/chambres' as never)}>
-            <Ionicons name="bed-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Chambres</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/(secretaire)/demandes-operation' as never)}>
-            <Ionicons name="medical-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Opérations</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/(secretaire)/demandes-medicament' as never)}>
-            <Ionicons name="medkit-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Médicaments</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/(secretaire)/conges-medecin' as never)}>
-            <Ionicons name="calendar-outline" size={20} color={LUNA_COLORS.secondary} />
-            <Text style={styles.actionBtnText}>Congés médecins</Text>
-          </TouchableOpacity>
-        </View>
-
-        <DashboardQuickLinks maxItems={6} />
+        <DashboardQuickLinks
+          maxItems={8}
+          pinnedRoutes={[
+            '/(secretaire)/patients',
+            '/(secretaire)/chambres',
+            '/(secretaire)/rendez-vous',
+            '/(secretaire)/conges-medecin',
+            '/(secretaire)/demandes-operation',
+            '/(secretaire)/abonnement',
+          ]}
+        />
       </View>
     </ScrollView>
   );

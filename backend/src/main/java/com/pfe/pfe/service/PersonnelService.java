@@ -89,7 +89,7 @@ public class PersonnelService {
             throw new RuntimeException("Numéro de téléphone invalide (format tunisien attendu, ex. 216XXXXXXXX)");
         }
         if (userRepository.findByTelephone(telephone).isPresent()) {
-            throw new RuntimeException("Un utilisateur avec ce numéro de téléphone existe déjà");
+            throw new RuntimeException(messageTelephoneDejaUtilise(telephone));
         }
 
         if (StringUtils.hasText(dto.getNumeroPieceIdentite())) {
@@ -620,6 +620,60 @@ public class PersonnelService {
                     .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
             default -> throw new RuntimeException("Rôle non reconnu: " + roleNom);
         };
+    }
+
+    /**
+     * Vérifie si un numéro peut être utilisé pour un nouveau compte personnel.
+     * En rattachement médecin, le téléphone du médecin sélectionné reste autorisé.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, Object> verifierTelephoneDisponible(String rawTelephone, String medecinExistantId) {
+        String telephone = tunisieSmsService.normalizeInternationalTunisia(rawTelephone);
+        Map<String, Object> out = new HashMap<>();
+        if (!StringUtils.hasText(telephone) || telephone.length() < 11) {
+            out.put("disponible", false);
+            out.put("message", "Numéro invalide (8 chiffres tunisiens attendus, ex. 98XXXXXX)");
+            return out;
+        }
+        out.put("telephoneNormalise", telephone);
+
+        if (StringUtils.hasText(medecinExistantId)) {
+            Optional<Medecin> medecin = medecinRepository.findById(medecinExistantId.trim());
+            if (medecin.isPresent() && telephone.equals(medecin.get().getTelephone())) {
+                out.put("disponible", true);
+                out.put("message", "Téléphone du médecin rattaché");
+                return out;
+            }
+        }
+
+        Optional<User> existing = userRepository.findByTelephone(telephone);
+        if (existing.isEmpty()) {
+            out.put("disponible", true);
+            return out;
+        }
+
+        User u = existing.get();
+        out.put("disponible", false);
+        out.put("message", messageTelephoneDejaUtilise(telephone));
+        out.put("nom", u.getNom());
+        out.put("prenom", u.getPrenom());
+        out.put("roles", u.getRoles().stream().map(Role::getNom).toList());
+        return out;
+    }
+
+    private String messageTelephoneDejaUtilise(String telephone) {
+        return userRepository.findByTelephone(telephone)
+            .map(u -> {
+                String nomAffiche = ((u.getPrenom() != null ? u.getPrenom() : "") + " "
+                        + (u.getNom() != null ? u.getNom() : "")).trim();
+                String roles = u.getRoles().stream().map(Role::getNom).reduce((a, b) -> a + ", " + b).orElse("compte");
+                if (nomAffiche.isEmpty()) {
+                    return "Ce numéro est déjà enregistré (" + roles + "). Utilisez un autre numéro ou rattachez un médecin existant.";
+                }
+                return "Ce numéro est déjà utilisé par " + nomAffiche + " (" + roles + "). "
+                        + "Utilisez un autre numéro ou, pour un médecin déjà inscrit, utilisez « Rattacher un médecin existant ».";
+            })
+            .orElse("Un utilisateur avec ce numéro de téléphone existe déjà");
     }
 
     public List<Map<String, Object>> rechercherMedecinsPourRattachement(String q, String cin) {

@@ -53,6 +53,7 @@ export class Header implements OnInit {
       '/dashboard': { title: 'Dashboard', subtitle: 'Vue d\'ensemble du système' },
       '/clinique': { title: 'Gestion des Cliniques', subtitle: 'Créer, modifier et gérer toutes les cliniques' },
       '/mon-abonnement': { title: 'Abonnements & Stripe', subtitle: 'Offres, Stripe Checkout et configuration réservée au super admin' },
+      '/facturation-patient': { title: 'Facturation patient', subtitle: 'Sortie, codes CNAM, PDF et validation du paiement' },
       '/tarifs-abonnement': { title: 'Forfaits clinique', subtitle: 'Choisir un abonnement (mensuel / annuel) défini par le super admin' },
       '/abonnement-paiement': { title: 'Paiement Stripe (test)', subtitle: 'Récapitulatif du forfait et redirection vers Stripe Checkout' },
       '/cabinets-medecins': { title: 'Cabinets médecins', subtitle: 'Créer et gérer les cabinets (spécialité, coordonnées, localisation)' },

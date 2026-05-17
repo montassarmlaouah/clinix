@@ -68,6 +68,11 @@
         <span *ngIf="!isSidebarCollapsed">Gestion des équipements</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
+      <a routerLink="/facturation-patient" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-receipt"></i>
+        <span *ngIf="!isSidebarCollapsed">Facturation patient</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
       <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
         <i class="bi bi-credit-card-2-front"></i>
         <span *ngIf="!isSidebarCollapsed">Mon abonnement</span>
@@ -112,9 +117,9 @@
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       
-      <a routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-credit-card-2-front"></i>
-        <span *ngIf="!isSidebarCollapsed">Facturation  patient</span>
+      <a routerLink="/facturation-patient" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-receipt"></i>
+        <span *ngIf="!isSidebarCollapsed">Facturation patient</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       

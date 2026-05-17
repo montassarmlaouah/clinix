@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +29,7 @@ import com.pfe.pfe.model.Secretaire;
 import com.pfe.pfe.model.TechnicienMaintenance;
 import com.pfe.pfe.model.User;
 import com.pfe.pfe.repository.AdministrateurCliniqueRepository;
+import com.pfe.pfe.repository.CliniqueRepository;
 import com.pfe.pfe.repository.ChefPersonnelRepository;
 import com.pfe.pfe.repository.InfirmierRepository;
 import com.pfe.pfe.repository.MedecinRepository;
@@ -65,7 +68,9 @@ public class UserProfileController {
     private final ChefPersonnelRepository chefPersonnelRepository;
     private final TechnicienMaintenanceRepository technicienMaintenanceRepository;
     private final UserRepository userRepository;
+    private final CliniqueRepository cliniqueRepository;
     private final TunisieSmsService tunisieSmsService;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping("/profile")
     public ResponseEntity<Map<String, Object>> getProfile() {
@@ -84,6 +89,7 @@ public class UserProfileController {
                 return ResponseEntity.notFound().build();
             }
 
+            enrichCliniqueNom(profile);
             return ResponseEntity.ok(profile);
 
         } catch (Exception e) {
@@ -248,6 +254,78 @@ public class UserProfileController {
         }
 
         return null;
+    }
+
+    private void enrichCliniqueNom(Map<String, Object> profile) {
+        if (profile.get("cliniqueNom") != null) {
+            return;
+        }
+        Object cid = profile.get("cliniqueId");
+        if (cid == null) {
+            return;
+        }
+        cliniqueRepository.findById(cid.toString()).ifPresent(c -> profile.put("cliniqueNom", c.getNom()));
+    }
+
+    /**
+     * Changement de mot de passe pour l'utilisateur connecté (JWT).
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, Object>> changePassword(@RequestBody Map<String, String> body) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Non authentifié"));
+            }
+            String username = auth.getName();
+
+            if ("super.admin".equals(username) || "super.admin2".equals(username)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Le mot de passe super administrateur ne peut pas être modifié ici."
+                ));
+            }
+
+            String ancien = body != null ? body.get("ancienMotDePasse") : null;
+            String nouveau = body != null ? body.get("nouveauMotDePasse") : null;
+            String confirmation = body != null ? body.get("confirmationMotDePasse") : null;
+
+            if (!StringUtils.hasText(ancien) || !StringUtils.hasText(nouveau) || !StringUtils.hasText(confirmation)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Tous les champs sont obligatoires."));
+            }
+            if (!nouveau.equals(confirmation)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "La confirmation ne correspond pas au nouveau mot de passe."));
+            }
+            if (nouveau.length() < 6) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Le mot de passe doit contenir au moins 6 caractères."));
+            }
+
+            Optional<User> userOpt = userRepository.findByTelephone(username);
+            if (userOpt.isEmpty() && StringUtils.hasText(username)) {
+                String normalized = tunisieSmsService.normalizeInternationalTunisia(username);
+                if (!normalized.equals(username)) {
+                    userOpt = userRepository.findByTelephone(normalized);
+                }
+            }
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Utilisateur introuvable"));
+            }
+
+            User user = userOpt.get();
+            String stored = user.getMotDePasse();
+            if (!StringUtils.hasText(stored) || !passwordEncoder.matches(ancien, stored)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Ancien mot de passe incorrect."));
+            }
+
+            user.setMotDePasse(passwordEncoder.encode(nouveau));
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("message", "Mot de passe modifié avec succès"));
+        } catch (Exception e) {
+            log.error("Erreur changement mot de passe", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Erreur lors du changement de mot de passe: " + e.getMessage()
+            ));
+        }
     }
 
     /**

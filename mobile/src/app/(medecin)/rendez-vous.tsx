@@ -16,6 +16,7 @@ import {
 
 import { apiGet, apiPatch, apiPost } from '@/src/api/client';
 import { MEDECINS, PATIENTS, RDV } from '@/src/api/endpoints';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { hasMedecinClinique } from '@/src/utils/medecinContext';
 import { LUNA_COLORS } from '@/src/theme/colors';
@@ -83,6 +84,8 @@ export default function MedecinRendezVousScreen(): React.JSX.Element {
 
   const title =
     scope === 'clinique' ? 'Rendez-vous clinique' : 'Rendez-vous cabinet';
+
+  usePageHeader({ title, subtitle: 'Agenda médical' });
 
   const [items, setItems]       = useState<RendezVous[]>([]);
   const [loading, setLoading]   = useState(true);

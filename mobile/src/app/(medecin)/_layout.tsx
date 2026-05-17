@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { apiGet } from '@/src/api/client';
 import { MESSAGES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
-import { createTabBarIcon } from '@/src/components/common';
+import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 interface Contact {
@@ -42,6 +42,7 @@ export default function MedecinLayout(): React.JSX.Element {
   }, [userId]);
 
   return (
+    <RoleTabsShell>
     <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
@@ -107,5 +108,6 @@ export default function MedecinLayout(): React.JSX.Element {
       <Tabs.Screen name="patients/nouveau" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="operations/nouveau" options={hiddenTabScreenOptions} />
     </Tabs>
+    </RoleTabsShell>
   );
 }

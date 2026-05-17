@@ -6,13 +6,15 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ClinixLogo } from '@/src/components/common/ClinixLogo';
 import { APP_TAGLINE, getProfilRoute } from '@/src/constants/branding';
 import { roleLabels } from '@/src/constants/roles';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { useDrawerStore } from '@/src/store/drawer.store';
+import { usePageHeaderStore } from '@/src/store/pageHeader.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-interface LunaHeroHeaderProps {
+export interface LunaHeroHeaderProps {
   title: string;
   subtitle?: string;
   showBrand?: boolean;
@@ -23,11 +25,12 @@ interface LunaHeroHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   right?: React.ReactNode;
+  center?: React.ReactNode;
   children?: React.ReactNode;
 }
 
-/** Barre supérieure type web : menu · logo · notifications · profil */
-export function LunaHeroHeader({
+/** Rendu visuel de la barre supérieure (sans hook store). */
+export function LunaHeroHeaderView({
   title,
   subtitle,
   showBrand = true,
@@ -37,6 +40,7 @@ export function LunaHeroHeader({
   showBack = false,
   onBack,
   right,
+  center,
   children,
 }: LunaHeroHeaderProps): React.JSX.Element {
   const router = useRouter();
@@ -61,7 +65,7 @@ export function LunaHeroHeader({
           >
             <Ionicons name="arrow-back" size={24} color={LUNA_COLORS.textInverse} />
           </Pressable>
-        ) : showMenu && showBrand ? (
+        ) : showMenu ? (
           <Pressable
             style={styles.iconBtn}
             onPress={openDrawer}
@@ -74,13 +78,49 @@ export function LunaHeroHeader({
           <View style={styles.iconPlaceholder} />
         )}
 
-        {showBrand ? (
-          <Pressable onPress={openDrawer} style={styles.logoTap} accessibilityLabel="CLINIX">
-            <ClinixLogo variant="icon" width={32} height={32} />
-          </Pressable>
-        ) : null}
-
-        <View style={styles.spacer} />
+        {center ? (
+          <View style={styles.centerSlot}>{center}</View>
+        ) : showBrand ? (
+          <>
+            <Pressable onPress={openDrawer} style={styles.logoTap} accessibilityLabel="CLINIX">
+              <ClinixLogo variant="icon" width={32} height={32} />
+            </Pressable>
+            <View style={styles.titleRow}>
+              <View style={styles.textCol}>
+                <Text style={styles.pageTitle} numberOfLines={1}>
+                  {title}
+                </Text>
+                {line2 ? (
+                  <Text style={styles.pageSub} numberOfLines={1}>
+                    {line2}
+                  </Text>
+                ) : showBrand && !subtitle && userLine ? (
+                  <Text style={styles.pageSub} numberOfLines={1}>
+                    {userLine}
+                  </Text>
+                ) : null}
+                {showBrand && !subtitle && !line2 ? (
+                  <Text style={styles.tagline} numberOfLines={1}>
+                    {APP_TAGLINE}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          </>
+        ) : (
+          <View style={styles.titleRow}>
+            <View style={styles.textCol}>
+              <Text style={styles.pageTitle} numberOfLines={1}>
+                {title}
+              </Text>
+              {line2 ? (
+                <Text style={styles.pageSub} numberOfLines={1}>
+                  {line2}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        )}
 
         {right ? <View style={styles.rightSlot}>{right}</View> : null}
 
@@ -105,45 +145,45 @@ export function LunaHeroHeader({
         ) : null}
       </View>
 
-      <View style={styles.titleRow}>
-        <View style={styles.textCol}>
-          <Text style={styles.pageTitle} numberOfLines={1}>
-            {title}
-          </Text>
-          {line2 ? (
-            <Text style={styles.pageSub} numberOfLines={1}>
-              {line2}
-            </Text>
-          ) : showBrand && !subtitle && userLine ? (
-            <Text style={styles.pageSub} numberOfLines={1}>
-              {userLine}
-            </Text>
-          ) : null}
-          {showBrand && !subtitle && !line2 ? (
-            <Text style={styles.tagline} numberOfLines={1}>
-              {APP_TAGLINE}
-            </Text>
-          ) : null}
-        </View>
-      </View>
-
       {children ? <View style={styles.children}>{children}</View> : null}
     </View>
   );
+}
+
+/** Barre supérieure type web : menu · logo · notifications · profil */
+export function LunaHeroHeader(props: LunaHeroHeaderProps): React.JSX.Element | null {
+  const layoutHeaderEnabled = usePageHeaderStore((s) => s.layoutHeaderEnabled);
+
+  usePageHeader({
+    title: props.title,
+    subtitle: props.subtitle,
+    showMenu: (props.showMenu ?? true) && !(props.showBack ?? false),
+    showBack: props.showBack,
+    onBack: props.onBack,
+    showBrand: props.showBrand,
+    showNotifications: props.showNotifications,
+    showProfil: props.showProfil,
+    right: props.right,
+    center: props.center,
+  });
+
+  if (layoutHeaderEnabled) return null;
+
+  return <LunaHeroHeaderView {...props} />;
 }
 
 const styles = StyleSheet.create({
   wrap: {
     backgroundColor: LUNA_COLORS.secondary,
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
   },
   navRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.xs,
-    minHeight: 48,
+    minHeight: 44,
   },
   iconBtn: {
     width: 44,
@@ -154,12 +194,15 @@ const styles = StyleSheet.create({
   },
   iconPlaceholder: { width: 44 },
   logoTap: {
+    marginTop: 6,
     marginLeft: spacing.xs,
   },
   spacer: { flex: 1 },
   titleRow: {
-    paddingTop: spacing.xs,
-    paddingHorizontal: spacing.xs,
+    flex: 1,
+    minWidth: 0,
+    paddingLeft: spacing.xs,
+    paddingTop: 2,
   },
   textCol: { flex: 1 },
   pageTitle: {
@@ -179,6 +222,12 @@ const styles = StyleSheet.create({
   },
   rightSlot: {
     marginRight: spacing.xs,
+  },
+  centerSlot: {
+    flex: 1,
+    minWidth: 0,
+    marginHorizontal: spacing.xs,
+    justifyContent: 'center',
   },
   children: { marginTop: spacing.md },
 });

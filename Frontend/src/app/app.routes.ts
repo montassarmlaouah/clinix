@@ -38,6 +38,13 @@ export const routes: Routes = [
         data: { role: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_CLINIQUE', 'ADMIN_CLINIQUE', 'ROLE_SECRETAIRE', 'SECRETAIRE'] }
       },
       {
+        path: 'facturation-patient',
+        loadComponent: () =>
+          import('./facturation-patient/facturation-patient').then(m => m.FacturationPatientComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['ROLE_ADMIN_CLINIQUE', 'ADMIN_CLINIQUE', 'ROLE_SECRETAIRE', 'SECRETAIRE'] }
+      },
+      {
         path: 'tarifs-abonnement',
         loadComponent: () => import('./abonnement-tarifs/abonnement-tarifs').then(m => m.AbonnementTarifsComponent),
         canActivate: [RoleGuard],

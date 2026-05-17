@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { apiGet } from '@/src/api/client';
 import { ADMINISTRATIONS } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
-import { createTabBarIcon } from '@/src/components/common';
+import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · Patients · Soins */
@@ -39,6 +39,7 @@ export default function InfirmierLayout(): React.JSX.Element {
   }, [infirmierId]);
 
   return (
+    <RoleTabsShell>
     <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
@@ -83,5 +84,6 @@ export default function InfirmierLayout(): React.JSX.Element {
       <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
     </Tabs>
+    </RoleTabsShell>
   );
 }

@@ -40,6 +40,7 @@ export class EquipementsComponent implements OnInit {
 
   showDeleteModal: boolean = false;
   showDetailsModal: boolean = false;
+  showSuccessModal: boolean = false;
   selectedEquipement: Equipement | null = null;
   selectedEquipementName: string = '';
   equipementToDeleteId: string | null = null;
@@ -122,6 +123,11 @@ export class EquipementsComponent implements OnInit {
 
   private afficherSuccesCrud(message: string): void {
     this.lunaSuccess.show(message);
+  }
+
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
+    this.successMessage = '';
   }
 
   ngOnInit() {

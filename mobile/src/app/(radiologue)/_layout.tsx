@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { apiGet } from '@/src/api/client';
 import { IMAGERIES } from '@/src/api/endpoints';
-import { createTabBarIcon } from '@/src/components/common';
+import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
 /** Barre du bas : 3 icônes — Accueil · File · Examens */
@@ -34,6 +34,7 @@ export default function RadiologueLayout(): React.JSX.Element {
   }, []);
 
   return (
+    <RoleTabsShell>
     <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
@@ -63,5 +64,6 @@ export default function RadiologueLayout(): React.JSX.Element {
       <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
     </Tabs>
+    </RoleTabsShell>
   );
 }

@@ -32,6 +32,8 @@ const ICON_FILLED: Partial<Record<TabIconName, TabIconName>> = {
   'medkit-outline': 'medkit',
   'folder-open-outline': 'folder-open',
   'warning-outline': 'warning',
+  'stats-chart-outline': 'stats-chart',
+  'person-circle-outline': 'person-circle',
 };
 
 interface TabBarIconProps {

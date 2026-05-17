@@ -3,6 +3,8 @@ import { type ViewStyle } from 'react-native';
 
 import { LunaHeroHeader } from '@/src/components/common/LunaHeroHeader';
 import { LunaScreen } from '@/src/components/common/LunaScreen';
+import { usePageHeader } from '@/src/hooks/usePageHeader';
+import { usePageHeaderStore } from '@/src/store/pageHeader.store';
 
 export interface AppPageShellProps {
   title: string;
@@ -37,21 +39,37 @@ export function AppPageShell({
   children,
   style,
 }: AppPageShellProps): React.JSX.Element {
+  const layoutHeaderEnabled = usePageHeaderStore((s) => s.layoutHeaderEnabled);
+
+  usePageHeader({
+    title,
+    subtitle,
+    showBack,
+    onBack,
+    showBrand,
+    showMenu: showMenu ?? !showBack,
+    showNotifications,
+    showProfil,
+    right,
+  });
+
   return (
     <LunaScreen edges={[]} style={style}>
-      <LunaHeroHeader
-        title={title}
-        subtitle={subtitle}
-        showBack={showBack}
-        onBack={onBack}
-        showBrand={showBrand}
-        showMenu={showMenu ?? !showBack}
-        showNotifications={showNotifications}
-        showProfil={showProfil}
-        right={right}
-      >
-        {headerChildren}
-      </LunaHeroHeader>
+      {!layoutHeaderEnabled ? (
+        <LunaHeroHeader
+          title={title}
+          subtitle={subtitle}
+          showBack={showBack}
+          onBack={onBack}
+          showBrand={showBrand}
+          showMenu={showMenu ?? !showBack}
+          showNotifications={showNotifications}
+          showProfil={showProfil}
+          right={right}
+        >
+          {headerChildren}
+        </LunaHeroHeader>
+      ) : null}
       {children}
     </LunaScreen>
   );

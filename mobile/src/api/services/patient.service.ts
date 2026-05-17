@@ -22,6 +22,8 @@ export interface Patient {
   numeroSecuriteSociale?:  string;
   medecinReferentId?:      string | number;
   medecinReferentNom?:     string;
+  medecinIds?:             string[];
+  medecins?:               { id: string; nom: string; prenom: string; specialite?: string; principal?: boolean }[];
   chambreId?:              string | null;
   chambreNumero?:          string | null;
   age?:                    number;
@@ -41,6 +43,7 @@ export interface CreatePatientPayload {
   // Champs UI historiques — le backend peut les ignorer
   numeroSecuriteSociale?: string;
   medecinReferentId?:     string | number | null;
+  medecinIds?:            string[];
   chambreId?:             string | null;
 }
 
@@ -57,6 +60,7 @@ export interface UpdatePatientPayload {
   // Champs UI historiques — le backend peut les ignorer
   numeroSecuriteSociale?: string;
   medecinReferentId?:     string | number | null;
+  medecinIds?:            string[];
   chambreId?:             string | null;
 }
 

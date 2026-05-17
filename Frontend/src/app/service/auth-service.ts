@@ -357,6 +357,7 @@ export class AuthService {
       { prefix: '/services-medicaux', roles: ['ADMIN_CLINIQUE', 'SUPER_ADMIN'] },
       { prefix: '/mon-planning', roles: ['INFIRMIER'] },
       { prefix: '/congie', roles: ['INFIRMIER', 'CHEF_PERSONNEL'] },
+      { prefix: '/facturation-patient', roles: ['ADMIN_CLINIQUE', 'SECRETAIRE'] },
       { prefix: '/mon-abonnement', roles: ['ADMIN_CLINIQUE', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE', 'PHARMACIEN', 'RADIOLOGUE', 'TECHNICIEN_MAINTENANCE'] },
       { prefix: '/tarifs-abonnement', roles: ['ADMIN_CLINIQUE', 'MEDECIN', 'INFIRMIER', 'SECRETAIRE', 'PHARMACIEN', 'RADIOLOGUE'] },
       { prefix: '/demandes-operation', roles: ['MEDECIN', 'SECRETAIRE', 'INFIRMIER', 'ADMIN_CLINIQUE'] },

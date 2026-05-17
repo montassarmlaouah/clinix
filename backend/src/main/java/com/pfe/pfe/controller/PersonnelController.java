@@ -109,6 +109,16 @@ public class PersonnelController {
     }
 
     /**
+     * Vérifie la disponibilité d'un numéro avant création (mobile / web).
+     */
+    @GetMapping("/verifier-telephone")
+    public ResponseEntity<Map<String, Object>> verifierTelephone(
+            @RequestParam String telephone,
+            @RequestParam(required = false) String medecinExistantId) {
+        return ResponseEntity.ok(personnelService.verifierTelephoneDisponible(telephone, medecinExistantId));
+    }
+
+    /**
      * Indique si un code PDF doit encore être confirmé (mode PDF_CODE).
      */
     @GetMapping("/code-invitation-en-attente")

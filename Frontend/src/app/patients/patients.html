@@ -47,76 +47,21 @@
       </button>
     </div>
 
-    <div class="table-container luna-shadow" *ngIf="!isLoading; else loadingState">
-      <table class="licences-table">
-        <thead>
-          <tr>
-            <th>Patient</th>
-            <th>Contact</th>
-            <th>Type</th>
-            <th>Vérification</th>
-            <th>Date naissance</th>
-            <th>Numéro patient</th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let patient of paginatedPatients" class="luna-row">
-            <td>
-              <div class="patient-info">
-                <div class="patient-avatar">
-                  <i class="fas fa-user-injured"></i>
-                </div>
-                <div class="patient-details">
-                  <div class="patient-name">{{ patient.nom || 'Non renseigné' }} {{ patient.prenom || '' }}</div>
-                  <div class="patient-meta">Patient</div>
-                </div>
-              </div>
-            </td>
-            <td>
-              <div class="contact-info">
-                <div class="contact-phone">
-                  <i class="fas fa-phone"></i> {{ patient.telephone || 'N/A' }}
-                </div>
-              </div>
-            </td>
-            <td>
-              <span class="status-pill" [ngClass]="patient.typeAdmission === 'URGENT' ? 'badge-warning' : 'badge-success'">
-                <i class="fas" [ngClass]="patient.typeAdmission === 'URGENT' ? 'fa-exclamation-triangle' : 'fa-check-circle'"></i>
-                {{ patient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}
-              </span>
-            </td>
-            <td>
-              <span class="status-pill" [ngClass]="patient.verifieParSecretaire ? 'badge-success' : 'badge-warning'">
-                <i class="fas" [ngClass]="patient.verifieParSecretaire ? 'fa-check-circle' : 'fa-hourglass-half'"></i>
-                {{ patient.verifieParSecretaire ? 'Vérifié' : 'En attente' }}
-              </span>
-            </td>
-            <td class="date-cell">{{ patient.dateNaissance | date:'dd/MM/yyyy' }}</td>
-            <td>{{ patient.numeroPatient || '—' }}</td>
-            <td>
-              <div class="action-group">
-                <button class="btn-action btn-view" (click)="viewPatient(patient)" title="Voir détails">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button
-                  class="btn-action btn-view"
-                  *ngIf="auth.isSecretaire() && !patient.verifieParSecretaire"
-                  (click)="verifierPatientParSecretaire(patient)"
-                  title="Vérifier patient">
-                  <i class="fas fa-user-check"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="paginatedPatients.length === 0">
-            <td colspan="7" class="empty-state">
-              <i class="fas fa-users-slash"></i>
-              <p>Aucun patient trouvé</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="luna-list-cards" *ngIf="!isLoading; else loadingState">
+      <div class="luna-list-card" *ngFor="let patient of paginatedPatients" (click)="viewPatient(patient)">
+        <div class="luna-list-thumb"><i class="fas fa-user-injured"></i></div>
+        <div class="luna-list-body">
+          <div class="luna-list-title">{{ patient.nom }} {{ patient.prenom }}</div>
+          <div class="luna-list-sub">Age: {{ getPatientAge(patient) >= 0 ? getPatientAge(patient) : '—' }} Ans · {{ patient.telephone || 'N/A' }}</div>
+          <div class="luna-list-accent">{{ patient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}</div>
+        </div>
+        <button type="button" class="luna-list-edit" title="Voir" (click)="viewPatient(patient); $event.stopPropagation()">
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+      </div>
+      <div class="empty-state" *ngIf="paginatedPatients.length === 0">
+        <i class="fas fa-users-slash"></i><p>Aucun patient trouvé</p>
+      </div>
     </div>
 
     <!-- Pagination -->
@@ -367,6 +312,20 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div class="detail-section" *ngIf="selectedPatient.medecins?.length">
+              <h6 class="section-title">
+                <i class="fas fa-user-md"></i> Médecins suivants
+              </h6>
+              <ul class="list-unstyled d-flex flex-wrap gap-2 mb-0">
+                <li *ngFor="let m of selectedPatient.medecins">
+                  <span class="badge" [class.bg-primary]="m.principal" [class.bg-secondary]="!m.principal">
+                    Dr {{ m.prenom }} {{ m.nom }}
+                    <span *ngIf="m.principal"> (référent)</span>
+                  </span>
+                </li>
+              </ul>
             </div>
 
             <div class="detail-section">

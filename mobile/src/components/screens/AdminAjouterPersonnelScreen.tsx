@@ -123,7 +123,7 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
 
   const clearError = useCallback(() => setError(''), []);
 
-  function wizardSuivant() {
+  async function wizardSuivant() {
     clearError();
     if (step === 1) {
       if (!cin.trim()) {
@@ -159,6 +159,30 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
         setError('Clinique non identifiée. Reconnectez-vous.');
         return;
       }
+
+      try {
+        const check = await personnelService.verifierTelephone(
+          toApiTelephone(telephone),
+          medecinExistantId.trim() || undefined,
+        );
+        if (!check.disponible) {
+          const hint =
+            check.message ??
+            (check.prenom || check.nom
+              ? `Ce numéro appartient déjà à ${check.prenom ?? ''} ${check.nom ?? ''}`.trim()
+              : 'Ce numéro de téléphone est déjà enregistré.');
+          setError(
+            `${hint} Choisissez un autre numéro${
+              role === 'MEDECIN' ? ' ou rattachez un médecin existant à l\'étape précédente.' : '.'
+            }`,
+          );
+          return;
+        }
+      } catch {
+        setError('Impossible de vérifier le numéro de téléphone. Réessayez.');
+        return;
+      }
+
       setStep(3);
     }
   }
@@ -230,6 +254,17 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
 
     setSaving(true);
     try {
+      const check = await personnelService.verifierTelephone(
+        payload.telephone,
+        payload.medecinExistantId,
+      );
+      if (!check.disponible) {
+        const msg = check.message ?? 'Ce numéro de téléphone est déjà enregistré.';
+        setError(msg);
+        Alert.alert('Création impossible', msg);
+        return;
+      }
+
       const res = await personnelService.creer(payload);
       const msg = res.message ?? 'Personnel créé avec succès.';
       if (res.pdfBase64) {
@@ -432,7 +467,7 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
             {step < 3 ? (
               <Pressable
                 style={[styles.btnPrimary, step === 1 && { flex: 1 }]}
-                onPress={wizardSuivant}
+                onPress={() => void wizardSuivant()}
               >
                 <Text style={styles.btnPrimaryTxt}>Suivant</Text>
               </Pressable>

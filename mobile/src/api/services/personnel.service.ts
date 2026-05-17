@@ -35,9 +35,24 @@ function deleteUrl(role: PersonnelRole, id: string): string {
   return byId(id);
 }
 
+export interface VerifierTelephoneResult {
+  disponible: boolean;
+  message?: string;
+  telephoneNormalise?: string;
+  nom?: string;
+  prenom?: string;
+  roles?: string[];
+}
+
 export const personnelService = {
   listByRole(role: PersonnelRole, cliniqueId: string | number): Promise<PersonnelMember[]> {
     return apiGet<PersonnelMember[]>(listUrl(role, cliniqueId));
+  },
+
+  verifierTelephone(telephone: string, medecinExistantId?: string): Promise<VerifierTelephoneResult> {
+    return apiGet<VerifierTelephoneResult>(
+      PERSONNEL.VERIFIER_TELEPHONE(telephone, medecinExistantId),
+    );
   },
 
   creer(payload: CreerPersonnelPayload): Promise<CreerPersonnelResponse> {

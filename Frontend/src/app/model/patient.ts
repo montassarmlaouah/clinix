@@ -12,6 +12,10 @@ export interface Patient extends User {
     verificationSecretaireDate?: string;
     age?: number;
     dossierMedical?: DossierMedical;
+    medecinReferentId?: string;
+    medecinReferentNom?: string;
+    medecinIds?: string[];
+    medecins?: { id: string; nom: string; prenom: string; specialite?: string; principal?: boolean }[];
 }
 
 export interface PatientDTO {
@@ -25,4 +29,6 @@ export interface PatientDTO {
     adresse?: string;
     typeAdmission?: string;
     cliniqueId?: string;
+    medecinIds?: string[];
+    medecinReferentId?: string;
 }
