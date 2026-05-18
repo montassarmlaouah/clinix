@@ -434,3 +434,19 @@
 .luna-list-status.alert {
     background: #ef4444;
 }
+
+.medecins-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.medecin-check-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}

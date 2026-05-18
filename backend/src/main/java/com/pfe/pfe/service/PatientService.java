@@ -88,7 +88,7 @@ public class PatientService {
     }
     
     public List<Patient> obtenirTousLesPatients() {
-        List<Patient> patients = patientRepository.findAll();
+        List<Patient> patients = patientRepository.findAllActifs();
         patientMedecinService.enrichirMedecins(patients);
         return patients;
     }

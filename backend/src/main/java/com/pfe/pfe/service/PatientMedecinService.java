@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class PatientMedecinService {
+
+    private static final Logger log = LoggerFactory.getLogger(PatientMedecinService.class);
 
     private final PatientMedecinRepository patientMedecinRepository;
     private final MedecinRepository medecinRepository;
@@ -108,6 +112,16 @@ public class PatientMedecinService {
         if (patient == null || patient.getId() == null) {
             return;
         }
+        try {
+            enrichirMedecinsInternal(patient);
+        } catch (Exception ex) {
+            log.warn("Enrichissement médecins ignoré pour patient {}: {}", patient.getId(), ex.getMessage());
+            patient.setMedecinIds(new ArrayList<>());
+            patient.setMedecins(new ArrayList<>());
+        }
+    }
+
+    private void enrichirMedecinsInternal(Patient patient) {
         List<PatientMedecin> liens = patientMedecinRepository.findByPatientIdOrderByPrincipalDescDateAttributionAsc(patient.getId());
         List<MedecinAttributionDto> medecins = new ArrayList<>();
         List<String> ids = new ArrayList<>();
@@ -150,12 +164,28 @@ public class PatientMedecinService {
         if (patients == null || patients.isEmpty()) {
             return;
         }
+        try {
+            enrichirMedecinsBatch(patients);
+        } catch (Exception ex) {
+            log.warn("Enrichissement médecins ignoré (liste): {}", ex.getMessage());
+            for (Patient patient : patients) {
+                if (patient != null) {
+                    patient.setMedecinIds(new ArrayList<>());
+                    patient.setMedecins(new ArrayList<>());
+                }
+            }
+        }
+    }
+
+    private void enrichirMedecinsBatch(List<Patient> patients) {
         List<String> patientIds = patients.stream().map(Patient::getId).filter(id -> id != null).toList();
         if (patientIds.isEmpty()) {
             return;
         }
         List<PatientMedecin> all = patientMedecinRepository.findByPatientIdInWithMedecin(patientIds);
-        var byPatient = all.stream().collect(Collectors.groupingBy(pm -> pm.getPatient().getId()));
+        var byPatient = all.stream()
+            .filter(pm -> pm.getPatient() != null && pm.getPatient().getId() != null)
+            .collect(Collectors.groupingBy(pm -> pm.getPatient().getId()));
 
         for (Patient patient : patients) {
             List<PatientMedecin> liens = byPatient.getOrDefault(patient.getId(), List.of());

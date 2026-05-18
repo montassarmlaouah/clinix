@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PatientService } from '../service/patient-service';
 import { MedecinService } from '../service/medecin.service';
 import { AuthService } from '../service/auth-service';
-import { Patient, PatientDTO } from '../model/user.model';
+import { Medecin, Patient, PatientDTO } from '../model/user.model';
 
 @Component({
   selector: 'app-patients',
@@ -33,6 +33,10 @@ export class PatientComponent implements OnInit {
   // Filtres
   searchTerm: string = '';
   selectedTypeAdmission: string = 'all';
+
+  medecinsClinique: Medecin[] = [];
+  selectedMedecinIds: string[] = [];
+  medecinReferentId = '';
 
   newPatient: PatientDTO = {
     nom: '',
@@ -87,8 +91,12 @@ export class PatientComponent implements OnInit {
           this.filterPatients();
           this.isLoading = false;
         },
-        error: (err) => {
-          this.error = err.error?.message || 'Erreur lors du chargement des patients du service';
+        error: (err: { error?: { message?: string }; message?: string; status?: number }) => {
+          const msg =
+            err.error?.message ||
+            err.message ||
+            (err.status === 0 ? 'Serveur inaccessible — vérifiez que le backend est démarré.' : null);
+          this.error = msg || 'Erreur lors du chargement des patients du service';
           this.isLoading = false;
         }
       });
@@ -106,25 +114,16 @@ export class PatientComponent implements OnInit {
       this.isLoading = false;
     };
 
-    const handleError = (err: any) => {
-      this.error = err.error?.message || 'Erreur lors du chargement des patients';
+    const handleError = (err: { error?: { message?: string; details?: string }; message?: string; status?: number }) => {
+      const msg =
+        err.error?.message ||
+        err.error?.details ||
+        err.message ||
+        (err.status === 0 ? 'Serveur inaccessible — vérifiez que le backend est démarré.' : null);
+      this.error = msg || 'Erreur lors du chargement des patients';
       this.isLoading = false;
     };
 
-    if (cliniqueId) {
-      this.patientService.getPatientsByClinique(cliniqueId).subscribe({
-        next: handleSuccess,
-        error: () => {
-          this.patientService.obtenirTousLesPatients().subscribe({
-            next: handleSuccess,
-            error: handleError
-          });
-        }
-      });
-      return;
-    }
-
-    // Médecin cabinet (sans clinique) : patients liés à son compte
     if (this.auth.isMedecinCabinet() && this.auth.getUserId()) {
       this.medecinService.listerPatientsCabinet(this.auth.getUserId() as string).subscribe({
         next: handleSuccess,
@@ -133,14 +132,52 @@ export class PatientComponent implements OnInit {
       return;
     }
 
-    this.patientService.obtenirTousLesPatients().subscribe({
-      next: handleSuccess,
-      error: handleError
+    if (cliniqueId) {
+      this.fetchPatientsByClinique(cliniqueId, handleSuccess, handleError);
+      return;
+    }
+
+    this.auth.getProfile().subscribe({
+      next: (profile) => {
+        const cid = profile?.cliniqueId || profile?.clinique?.id;
+        if (cid && cid !== 'null') {
+          this.fetchPatientsByClinique(cid, handleSuccess, handleError);
+        } else {
+          this.patientService.obtenirTousLesPatients().subscribe({
+            next: handleSuccess,
+            error: handleError
+          });
+        }
+      },
+      error: () => {
+        this.patientService.obtenirTousLesPatients().subscribe({
+          next: handleSuccess,
+          error: handleError
+        });
+      }
+    });
+  }
+
+  private fetchPatientsByClinique(
+    cliniqueId: string,
+    onSuccess: (data: Patient[]) => void,
+    onError: (err: { error?: { message?: string; details?: string }; message?: string; status?: number }) => void
+  ): void {
+    this.patientService.getPatientsByClinique(cliniqueId).subscribe({
+      next: onSuccess,
+      error: (err) => {
+        this.patientService.obtenirTousLesPatients().subscribe({
+          next: onSuccess,
+          error: onError
+        });
+      }
     });
   }
 
   openModal(): void {
     const isCab = this.auth.isMedecinCabinet();
+    this.selectedMedecinIds = [];
+    this.medecinReferentId = '';
     this.newPatient = {
       nom: '',
       prenom: '',
@@ -151,11 +188,60 @@ export class PatientComponent implements OnInit {
       groupeSanguin: '',
       adresse: '',
       typeAdmission: isCab ? 'CABINET' : 'URGENT',
-      cliniqueId: this.auth.getCliniqueId() || ''
+      cliniqueId: this.auth.getCliniqueId() || '',
+      medecinIds: [],
+      medecinReferentId: ''
     };
     this.error = '';
     this.success = '';
     this.showModal = true;
+    this.loadMedecinsClinique();
+  }
+
+  loadMedecinsClinique(): void {
+    const load = (cid: string) => {
+      this.medecinService.getMedecinsByClinique(cid).subscribe({
+        next: (list) => (this.medecinsClinique = list || []),
+        error: () => (this.medecinsClinique = [])
+      });
+    };
+    const cid = this.auth.getCliniqueId();
+    if (cid && cid !== 'null') {
+      load(cid);
+      return;
+    }
+    this.auth.getProfile().subscribe({
+      next: (profile) => {
+        const id = profile?.cliniqueId || profile?.clinique?.id;
+        if (id) load(id);
+        else this.medecinsClinique = [];
+      },
+      error: () => (this.medecinsClinique = [])
+    });
+  }
+
+  isMedecinSelected(id: string): boolean {
+    return this.selectedMedecinIds.includes(id);
+  }
+
+  getMedecinLabel(id: string): string {
+    const m = this.medecinsClinique.find((x) => x.id === id);
+    if (!m) return id;
+    return `Dr ${m.prenom ?? ''} ${m.nom ?? ''}`.trim();
+  }
+
+  toggleMedecin(id: string): void {
+    if (this.isMedecinSelected(id)) {
+      this.selectedMedecinIds = this.selectedMedecinIds.filter((x) => x !== id);
+      if (this.medecinReferentId === id) {
+        this.medecinReferentId = this.selectedMedecinIds[0] || '';
+      }
+    } else {
+      this.selectedMedecinIds = [...this.selectedMedecinIds, id];
+      if (!this.medecinReferentId) {
+        this.medecinReferentId = id;
+      }
+    }
   }
 
   closeModal(): void {
@@ -165,8 +251,21 @@ export class PatientComponent implements OnInit {
   }
 
   viewPatient(patient: Patient): void {
-    this.selectedPatient = patient;
-    this.showDetailsModal = true;
+    if (!patient.id) {
+      this.selectedPatient = patient;
+      this.showDetailsModal = true;
+      return;
+    }
+    this.patientService.obtenirPatientParId(patient.id).subscribe({
+      next: (full) => {
+        this.selectedPatient = full;
+        this.showDetailsModal = true;
+      },
+      error: () => {
+        this.selectedPatient = patient;
+        this.showDetailsModal = true;
+      }
+    });
   }
 
   closeDetailsModal(): void {
@@ -213,6 +312,9 @@ export class PatientComponent implements OnInit {
 
     this.isLoading = true;
     this.newPatient.telephone = telephoneDigits;
+    this.newPatient.medecinIds = [...this.selectedMedecinIds];
+    this.newPatient.medecinReferentId =
+      this.medecinReferentId || this.selectedMedecinIds[0] || undefined;
 
     const userId = this.auth.getUserId();
     if (this.auth.isMedecinCabinet() && userId) {

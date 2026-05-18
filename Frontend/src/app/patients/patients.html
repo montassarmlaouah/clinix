@@ -53,7 +53,10 @@
         <div class="luna-list-body">
           <div class="luna-list-title">{{ patient.nom }} {{ patient.prenom }}</div>
           <div class="luna-list-sub">Age: {{ getPatientAge(patient) >= 0 ? getPatientAge(patient) : '—' }} Ans · {{ patient.telephone || 'N/A' }}</div>
-          <div class="luna-list-accent">{{ patient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}</div>
+          <div class="luna-list-accent">
+            {{ patient.typeAdmission === 'URGENT' ? 'Urgent' : 'Cabinet' }}
+            <span *ngIf="patient.medecinReferentNom"> · {{ patient.medecinReferentNom }}</span>
+          </div>
         </div>
         <button type="button" class="luna-list-edit" title="Voir" (click)="viewPatient(patient); $event.stopPropagation()">
           <i class="fas fa-pencil-alt"></i>
@@ -212,6 +215,30 @@
                 </div>
               </div>
 
+              <div class="detail-section" *ngIf="medecinsClinique.length && !auth.isMedecinCabinet()">
+                <h6 class="section-title">
+                  <i class="fas fa-user-md"></i> Médecins suivants (optionnel)
+                </h6>
+                <div class="medecins-select-list">
+                  <label *ngFor="let m of medecinsClinique" class="medecin-check-row">
+                    <input
+                      type="checkbox"
+                      [checked]="isMedecinSelected(m.id!)"
+                      (change)="toggleMedecin(m.id!)"
+                    />
+                    <span>Dr {{ m.prenom }} {{ m.nom }} — {{ m.specialite || 'Médecin' }}</span>
+                  </label>
+                </div>
+                <div class="detail-item mt-2" *ngIf="selectedMedecinIds.length">
+                  <label>Médecin référent</label>
+                  <select class="form-control luna-input" [(ngModel)]="medecinReferentId" name="medecinReferent">
+                    <option *ngFor="let mid of selectedMedecinIds" [value]="mid">
+                      {{ getMedecinLabel(mid) }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
             </div>
 
             <div class="modal-footer">
@@ -344,6 +371,14 @@
             </div>
           </div>
           <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-primary me-auto"
+              *ngIf="auth.isSecretaire() && selectedPatient && !selectedPatient.verifieParSecretaire"
+              (click)="verifierPatientParSecretaire(selectedPatient!)"
+            >
+              Valider le dossier
+            </button>
             <button type="button" class="btn btn-secondary" (click)="closeDetailsModal()">
               Fermer
             </button>

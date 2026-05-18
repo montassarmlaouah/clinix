@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.pfe.pfe.dto.MedecinAttributionDto;
 
 import jakarta.persistence.CascadeType;
@@ -27,6 +28,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
+@JsonIgnoreProperties({ "roles", "motDePasse", "service", "onboardingCodeHash", "onboardingCodeExpiresAt" })
 public class Patient extends User {
     
     @Column(nullable = false, unique = true)
