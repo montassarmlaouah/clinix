@@ -56,7 +56,7 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
   ROLE_CHEF_PERSONNEL: menu('ROLE_CHEF_PERSONNEL', [], '/(chef-personnel)/profil'),
   ROLE_TECHNICIEN_MAINTENANCE: menu(
     'ROLE_TECHNICIEN_MAINTENANCE',
-    [{ label: 'Abonnement', route: '/(technicien)/abonnement', icon: 'card-outline' }],
+    [],
     '/(technicien)/profil',
   ),
 };

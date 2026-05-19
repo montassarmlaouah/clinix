@@ -34,7 +34,6 @@ export const HEADER_NAV_MENUS: Record<string, RoleMenuItem[]> = {
     { label: 'Dashboard', route: '/(technicien)/index', icon: 'speedometer-outline' },
     { label: 'Équipements', route: '/(technicien)/equipements', icon: 'construct-outline' },
     { label: 'Pannes', route: '/(technicien)/pannes', icon: 'warning-outline' },
-    { label: 'Chambres', route: '/(technicien)/chambres', icon: 'bed-outline' },
   ],
   ROLE_INFIRMIER: [
     { label: 'Dashboard', route: '/(infirmier)/index', icon: 'speedometer-outline' },
