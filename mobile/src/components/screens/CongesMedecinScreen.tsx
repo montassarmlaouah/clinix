@@ -6,54 +6,46 @@ import { apiGet } from '@/src/api/client';
 import { CONGES_MEDECIN } from '@/src/api/endpoints';
 import { EmptyState, LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
-import { useAuthStore } from '@/src/store/auth.store';
+import { useAuthStore, selectCliniqueId } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-interface CongeMedecin {
+interface MedecinDisponible {
   id: string | number;
-  dateDebut?: string;
-  dateFin?: string;
-  statut?: string;
-  medecin?: { nom?: string; prenom?: string; specialite?: string };
+  nom?: string;
+  prenom?: string;
+  specialite?: string;
 }
 
 export function CongesMedecinScreen(): React.JSX.Element {
-  const medecinId = useAuthStore((s) => s.userId);
-  const [liste, setListe] = useState<CongeMedecin[]>([]);
-  const [disponibles, setDisponibles] = useState<CongeMedecin[]>([]);
+  const cliniqueId = useAuthStore(selectCliniqueId);
+  const [liste, setListe] = useState<MedecinDisponible[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async (silent = false) => {
+    if (!cliniqueId) return;
     if (!silent) setLoading(true);
     try {
-      const [disp, mine] = await Promise.all([
-        apiGet<CongeMedecin[]>(CONGES_MEDECIN.DISPONIBLES).catch(() => []),
-        medecinId
-          ? apiGet<CongeMedecin[]>(CONGES_MEDECIN.BY_MEDECIN(medecinId)).catch(() => [])
-          : Promise.resolve([]),
-      ]);
-      setDisponibles(disp ?? []);
-      setListe(mine ?? []);
+      const url = `${CONGES_MEDECIN.DISPONIBLES}?cliniqueId=${cliniqueId}`;
+      const disp = await apiGet<MedecinDisponible[]>(url).catch(() => []);
+      setListe(disp ?? []);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [medecinId]);
+  }, [cliniqueId]);
 
   useEffect(() => { load(); }, [load]);
 
   if (loading) return <LoadingOverlay />;
 
-  const data = [...disponibles, ...liste];
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScreenHeader title="Congés médecins" subtitle="Disponibilités et congés" />
       <FlatList
-        data={data}
+        data={liste}
         keyExtractor={(item, i) => `${item.id}-${i}`}
         contentContainerStyle={styles.list}
         refreshControl={
@@ -62,15 +54,12 @@ export function CongesMedecinScreen(): React.JSX.Element {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.name}>
-              Dr {item.medecin?.prenom} {item.medecin?.nom}
+              Dr {item.prenom} {item.nom}
             </Text>
-            <Text style={styles.meta}>{item.medecin?.specialite ?? ''}</Text>
+            <Text style={styles.meta}>{item.specialite ?? ''}</Text>
             <Text style={styles.meta}>
-              {item.dateDebut ? new Date(item.dateDebut).toLocaleDateString('fr-FR') : '—'}
-              {' → '}
-              {item.dateFin ? new Date(item.dateFin).toLocaleDateString('fr-FR') : '—'}
+              Disponible aujourd'hui
             </Text>
-            <Text style={styles.statut}>{item.statut ?? '—'}</Text>
           </View>
         )}
         ListEmptyComponent={
@@ -83,10 +72,12 @@ export function CongesMedecinScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.xxl, paddingBottom: 80 },
+  list: { padding: spacing.xxl, paddingBottom: 80 }, // ✨ espace tab bar
   card: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg, // ✨ coins 16px
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     marginBottom: spacing.md,
     ...(shadows.sm as object),

@@ -17,7 +17,7 @@ import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface PatientRow {
   id: string;
@@ -134,8 +134,8 @@ export function MedecinNotesHubScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg, paddingBottom: 80 },
-  label: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest, marginBottom: 8 },
+  body: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
+  label: { ...typography.sectionTitle, marginBottom: spacing.sm }, // ✨ titre section
   chips: { marginBottom: spacing.md, maxHeight: 44 },
   chip: {
     paddingHorizontal: spacing.md,
@@ -150,15 +150,15 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: LUNA_COLORS.secondary, color: LUNA_COLORS.textInverse },
   input: {
     minHeight: 160,
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     fontSize: fontSize.md,
     color: LUNA_COLORS.darkest,
     textAlignVertical: 'top',
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderInput,
   },
   err: { color: LUNA_COLORS.error, marginTop: spacing.sm },
   ok: { color: LUNA_COLORS.success, marginTop: spacing.sm },

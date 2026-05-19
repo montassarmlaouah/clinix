@@ -1,3 +1,4 @@
+// src/components/common/ProfilCommun.tsx
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -12,16 +13,15 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
 import { apiGet, apiPost } from '@/src/api/client';
 import { AUTH_ENDPOINTS } from '@/src/api/endpoints';
 import { Button } from '@/src/components/common/Button';
+import { LunaHeroHeader, LunaScreen } from '@/src/components/common';
 import { useAuth } from '@/src/hooks/useAuth';
-import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 const NOTIF_PREF_KEY = 'profil-notifications-enabled';
 
@@ -38,6 +38,12 @@ export interface UserProfileDto {
   specialite?: string | null;
   numeroPatient?: string | null;
   profilModifiable?: boolean;
+  // Informations supplémentaires possibles
+  abonnement?: {
+    offreNom?: string;
+    dateFin?: string;
+    statut?: string;
+  };
 }
 
 interface ProfilCommunProps {
@@ -51,8 +57,6 @@ function displayValue(v: string | null | undefined): string {
 }
 
 export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.JSX.Element {
-  usePageHeader({ title: 'Paramètre', showNotifications: true });
-
   const { logout } = useAuth();
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -137,38 +141,54 @@ export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.
   const fullName = [profile?.prenom, profile?.nom].filter(Boolean).join(' ') || '—';
   const initials = `${(profile?.prenom ?? '?').charAt(0)}${(profile?.nom ?? '?').charAt(0)}`.toUpperCase();
 
-  return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
-      {loading ? (
+  if (loading) {
+    return (
+      <LunaScreen edges={[]}>
+        <LunaHeroHeader title="Profil" subtitle={roleLabel} showBack={false} />
         <View style={styles.loaderWrap}>
           <ActivityIndicator size="large" color={LUNA_COLORS.secondary} />
           <Text style={styles.loaderText}>Chargement du profil…</Text>
         </View>
-      ) : loadError ? (
+      </LunaScreen>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <LunaScreen edges={[]}>
+        <LunaHeroHeader title="Profil" subtitle={roleLabel} showBack={false} />
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{loadError}</Text>
           <Button title="Réessayer" onPress={() => void loadProfile()} style={{ marginTop: spacing.md }} />
         </View>
-      ) : (
+      </LunaScreen>
+    );
+  }
+
+  return (
+    <LunaScreen edges={[]}>
+      <LunaHeroHeader title="Profil" subtitle={roleLabel} showBack={false} />
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.mainCard}>
+          {/* Avatar + identité */}
           <View style={styles.avatarSection}>
             <View style={styles.avatar}>
               <Text style={styles.avatarTxt}>{initials}</Text>
             </View>
             <Text style={styles.fullName}>{fullName}</Text>
-            <Text style={styles.roleSub}>{roleLabel}</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>{roleLabel}</Text>
+            </View>
           </View>
 
           <View style={styles.divider} />
 
+          {/* Informations personnelles */}
           <ProfileInfoRow icon="person-outline" label="Prénom" value={displayValue(profile?.prenom)} />
           <ProfileInfoRow icon="person-outline" label="Nom" value={displayValue(profile?.nom)} />
           <ProfileInfoRow icon="mail-outline" label="E-mail" value={displayValue(profile?.email)} />
           <ProfileInfoRow icon="call-outline" label="Téléphone" value={displayValue(profile?.telephone)} />
+
           {profile?.cliniqueId != null || profile?.cliniqueNom ? (
             <ProfileInfoRow
               icon="business-outline"
@@ -176,18 +196,48 @@ export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.
               value={displayValue(profile?.cliniqueNom ?? String(profile?.cliniqueId ?? ''))}
             />
           ) : null}
+
           {profile?.specialite ? (
             <ProfileInfoRow icon="medkit-outline" label="Spécialité" value={displayValue(profile.specialite)} />
           ) : null}
+
           {profile?.cin ? (
             <ProfileInfoRow icon="card-outline" label="CIN" value={displayValue(profile.cin)} />
           ) : null}
+
           {profile?.numeroPatient ? (
             <ProfileInfoRow icon="barcode-outline" label="N° patient" value={displayValue(profile.numeroPatient)} />
           ) : null}
 
+          {/* Abonnement si disponible */}
+          {profile?.abonnement && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.abonnementCard}>
+                <View style={styles.abonnementHeader}>
+                  <Ionicons name="crown-outline" size={18} color={LUNA_COLORS.warning} />
+                  <Text style={styles.abonnementTitle}>Abonnement actuel</Text>
+                </View>
+                <Text style={styles.abonnementOffre}>{profile.abonnement.offreNom ?? '—'}</Text>
+                {profile.abonnement.dateFin && (
+                  <Text style={styles.abonnementDate}>
+                    Valable jusqu’au {new Date(profile.abonnement.dateFin).toLocaleDateString()}
+                  </Text>
+                )}
+                {profile.abonnement.statut && (
+                  <View style={[styles.statutPill, { backgroundColor: LUNA_COLORS.successLight }]}>
+                    <Text style={[styles.statutPillText, { color: LUNA_COLORS.success }]}>
+                      {profile.abonnement.statut}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+
           <View style={styles.divider} />
 
+          {/* Notifications */}
           <View style={styles.toggleRow}>
             <View style={styles.toggleIcon}>
               <Ionicons name="notifications-outline" size={22} color={LUNA_COLORS.secondary} />
@@ -198,28 +248,28 @@ export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.
             </View>
             <Switch
               value={notifEnabled}
-              onValueChange={(v) => void onNotifToggle(v)}
-              trackColor={{ false: LUNA_COLORS.borderDark, true: LUNA_COLORS.secondary }}
+              onValueChange={onNotifToggle}
+              trackColor={{ false: LUNA_COLORS.border, true: LUNA_COLORS.secondary }}
               thumbColor={LUNA_COLORS.surface}
             />
           </View>
 
-          {modifiable ? (
+          {/* Changement mot de passe (si modifiable) */}
+          {modifiable && (
             <>
               <View style={styles.divider} />
-              <Pressable style={styles.accordionHeader} onPress={() => setPwdOpen((o) => !o)}>
+              <Pressable
+                style={({ pressed }) => [styles.accordionHeader, pressed && { opacity: 0.75 }]} // ✨
+                onPress={() => setPwdOpen((o) => !o)}
+              >
                 <View style={styles.toggleIcon}>
                   <Ionicons name="lock-closed-outline" size={22} color={LUNA_COLORS.secondary} />
                 </View>
                 <Text style={styles.accordionTitle}>Changer le mot de passe</Text>
-                <Ionicons
-                  name={pwdOpen ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={LUNA_COLORS.textDisabled}
-                />
+                <Ionicons name={pwdOpen ? 'chevron-up' : 'chevron-down'} size={20} color={LUNA_COLORS.textDisabled} />
               </Pressable>
 
-              {pwdOpen ? (
+              {pwdOpen && (
                 <View style={styles.pwdSection}>
                   <PasswordField
                     placeholder="Ancien mot de passe"
@@ -242,73 +292,51 @@ export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.
                     secure={!showConfirm}
                     onToggle={() => setShowConfirm((s) => !s)}
                   />
-                  <Button
-                    title="Confirmer"
-                    onPress={() => void submitPasswordChange()}
-                    loading={pwdSaving}
-                    fullWidth
-                  />
+                  <Button title="Confirmer" onPress={submitPasswordChange} loading={pwdSaving} fullWidth />
                 </View>
-              ) : null}
+              )}
             </>
-          ) : null}
+          )}
 
-          {children ? (
+          {children && (
             <>
               <View style={styles.divider} />
               {children}
             </>
-          ) : null}
+          )}
 
           <View style={styles.divider} />
 
-          <Pressable style={styles.logoutRow} onPress={() => void logout()}>
+          {/* Déconnexion */}
+          <Pressable
+            style={({ pressed }) => [styles.logoutRow, pressed && { opacity: 0.75 }]} // ✨
+            onPress={() => void logout()}
+          >
             <Ionicons name="log-out-outline" size={22} color={LUNA_COLORS.error} />
             <Text style={styles.logoutText}>Déconnexion</Text>
           </Pressable>
         </View>
-      )}
-    </ScrollView>
+      </ScrollView>
+    </LunaScreen>
   );
 }
 
-function ProfileInfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-}) {
+// Sous-composants
+function ProfileInfoRow({ icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoIcon}>
-        <Ionicons name={icon} size={20} color={LUNA_COLORS.secondary} />
+        <Ionicons name={icon} size={18} color={LUNA_COLORS.secondary} />
       </View>
       <View style={styles.infoText}>
         <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue} numberOfLines={2}>
-          {value}
-        </Text>
+        <Text style={styles.infoValue}>{value}</Text>
       </View>
     </View>
   );
 }
 
-function PasswordField({
-  placeholder,
-  value,
-  onChangeText,
-  secure,
-  onToggle,
-}: {
-  placeholder: string;
-  value: string;
-  onChangeText: (t: string) => void;
-  secure: boolean;
-  onToggle: () => void;
-}) {
+function PasswordField({ placeholder, value, onChangeText, secure, onToggle }: any) {
   return (
     <View style={styles.pwdField}>
       <TextInput
@@ -319,7 +347,6 @@ function PasswordField({
         onChangeText={onChangeText}
         secureTextEntry={secure}
         autoCapitalize="none"
-        autoCorrect={false}
       />
       <Pressable onPress={onToggle} style={styles.eyeBtn} hitSlop={8}>
         <Ionicons name={secure ? 'eye-outline' : 'eye-off-outline'} size={20} color={LUNA_COLORS.textDisabled} />
@@ -329,132 +356,93 @@ function PasswordField({
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: 120,
-  },
-  loaderWrap: {
-    alignItems: 'center',
-    paddingVertical: spacing.xxl,
-    gap: spacing.md,
-  },
+  scrollContent: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  loaderWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
   loaderText: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
-  errorBox: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    ...(shadows.sm as object),
-  },
-  errorText: { color: LUNA_COLORS.error, fontSize: fontSize.sm },
+  errorBox: { padding: spacing.lg, alignItems: 'center' },
+  errorText: { color: LUNA_COLORS.error, fontSize: fontSize.sm, textAlign: 'center' },
+
   mainCard: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg, // ✨ carte lg
     padding: spacing.lg,
-    ...(shadows.md as object),
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
-  avatarSection: {
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    gap: spacing.xs,
-  },
+  avatarSection: { alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm },
   avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: LUNA_COLORS.infoLight,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: LUNA_COLORS.secondary,
   },
-  avatarTxt: { fontSize: 28, fontWeight: fontWeight.bold, color: LUNA_COLORS.dark },
-  fullName: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
-    marginTop: spacing.sm,
+  avatarTxt: { fontSize: 32, fontWeight: fontWeight.bold, color: LUNA_COLORS.primary },
+  fullName: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
+  roleBadge: {
+    backgroundColor: LUNA_COLORS.surfaceLight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
-  roleSub: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
-  divider: {
-    height: 1,
-    backgroundColor: LUNA_COLORS.borderDark,
-    marginVertical: spacing.md,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-  },
+  roleBadgeText: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, fontWeight: fontWeight.medium },
+  divider: { height: 1, backgroundColor: 'rgba(197, 220, 234, 0.6)', marginVertical: spacing.md }, // ✨
+
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginBottom: spacing.sm },
   infoIcon: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: borderRadius.sm,
     backgroundColor: LUNA_COLORS.infoLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   infoText: { flex: 1 },
-  infoLabel: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary },
-  infoValue: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.medium,
-    color: LUNA_COLORS.darkest,
-    marginTop: 2,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  toggleIcon: {
-    width: 40,
-    alignItems: 'center',
-  },
+  infoLabel: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginBottom: 2 },
+  infoValue: { fontSize: fontSize.base, fontWeight: fontWeight.medium, color: LUNA_COLORS.textPrimary },
+
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  toggleIcon: { width: 36, alignItems: 'center' },
   toggleText: { flex: 1 },
-  toggleTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
-  toggleSub: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginTop: 2 },
-  accordionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  accordionTitle: {
-    flex: 1,
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.darkest,
-  },
-  pwdSection: { paddingTop: spacing.sm, gap: spacing.sm },
+  toggleTitle: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textPrimary },
+  toggleSub: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary },
+
+  accordionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  accordionTitle: { flex: 1, fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textPrimary },
+
+  pwdSection: { marginTop: spacing.md, gap: spacing.sm },
   pwdField: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
     borderRadius: borderRadius.md,
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     paddingHorizontal: spacing.md,
-    minHeight: 48,
   },
-  pwdInput: {
-    flex: 1,
-    fontSize: fontSize.base,
-    color: LUNA_COLORS.textPrimary,
-    paddingVertical: spacing.sm,
-  },
+  pwdInput: { flex: 1, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, paddingVertical: spacing.sm },
   eyeBtn: { padding: spacing.xs },
-  logoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
+
+  abonnementCard: {
+    backgroundColor: LUNA_COLORS.surfaceLight,
+    borderRadius: borderRadius.lg, // ✨
+    padding: spacing.md,
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
-  logoutText: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.error,
-  },
+  abonnementHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs },
+  abonnementTitle: { ...typography.sectionTitle, marginBottom: 0 }, // ✨
+  abonnementOffre: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: LUNA_COLORS.primary },
+  abonnementDate: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  statutPill: { alignSelf: 'flex-start', paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.sm },
+  statutPillText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+
+  logoutRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.xs },
+  logoutText: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.error },
 });

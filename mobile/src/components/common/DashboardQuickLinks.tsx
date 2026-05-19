@@ -7,20 +7,23 @@ import { getRoleMenu, type RoleMenuItem } from '@/src/constants/roleMenus';
 import { getRoleTabRoutes } from '@/src/constants/roleTabs';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface DashboardQuickLinksProps {
   maxItems?: number;
   excludeRoutes?: string[];
   /** Routes affichées en priorité (ex. navigation principale admin). */
   pinnedRoutes?: readonly string[];
+  /** Couleur de la bordure gauche des tuiles */
+  accentColor?: string;
 }
 
 export function DashboardQuickLinks({
   maxItems = 12,
   excludeRoutes = [],
   pinnedRoutes,
+  accentColor = LUNA_COLORS.secondary,
 }: DashboardQuickLinksProps): React.JSX.Element | null {
   const router = useRouter();
   const role = useAuthStore((s) => s.role);
@@ -57,6 +60,7 @@ export function DashboardQuickLinks({
           <QuickTile
             key={item.route}
             item={item}
+            accentColor={accentColor}
             onPress={() => router.push(item.route as never)}
           />
         ))}
@@ -65,11 +69,19 @@ export function DashboardQuickLinks({
   );
 }
 
-function QuickTile({ item, onPress }: { item: RoleMenuItem; onPress: () => void }) {
+function QuickTile({
+  item,
+  accentColor,
+  onPress,
+}: {
+  item: RoleMenuItem;
+  accentColor: string;
+  onPress: () => void;
+}) {
   return (
-    <Pressable style={styles.tile} onPress={onPress}>
+    <Pressable style={[styles.tile, { borderLeftColor: accentColor }]} onPress={onPress}>
       <View style={styles.iconWrap}>
-        <Ionicons name={item.icon} size={20} color={LUNA_COLORS.secondary} />
+        <Ionicons name={item.icon} size={24} color={LUNA_COLORS.secondary} />
       </View>
       <Text style={styles.label} numberOfLines={2}>
         {item.label}
@@ -81,41 +93,41 @@ function QuickTile({ item, onPress }: { item: RoleMenuItem; onPress: () => void 
 const styles = StyleSheet.create({
   wrap: { marginTop: spacing.lg },
   title: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    ...typography.sectionTitle,
     marginBottom: spacing.md,
     paddingHorizontal: spacing.xs,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   tile: {
     width: '30%',
-    minWidth: 96,
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
+    minWidth: 100,
+    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ fond surfaceLight
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
     alignItems: 'center',
+    borderLeftWidth: 4, // ✨ bordure colorée gauche
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
   iconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: borderRadius.sm,
-    backgroundColor: LUNA_COLORS.infoLight,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.tabActiveBg,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
   },
   label: {
-    fontSize: 10,
-    color: LUNA_COLORS.dark,
+    fontSize: fontSize.xs,
+    color: LUNA_COLORS.textPrimary,
     textAlign: 'center',
     fontWeight: fontWeight.medium,
-    lineHeight: 13,
+    lineHeight: 15,
   },
 });

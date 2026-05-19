@@ -8,7 +8,7 @@ import { LoadingOverlay } from '@/src/components/common';
 import { LunaCard } from '@/src/components/common/LunaCard';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 export default function AdminPatientDetailScreen(): React.JSX.Element {
@@ -80,15 +80,18 @@ export default function AdminPatientDetailScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
+  // ✨ ScrollView — paddingBottom tab bar
   body: { padding: spacing.lg, paddingBottom: 80 },
   label: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginTop: spacing.sm },
   value: { fontSize: fontSize.md, color: LUNA_COLORS.darkest, fontWeight: fontWeight.medium },
   btn: {
     backgroundColor: LUNA_COLORS.secondary,
     padding: spacing.lg,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     marginTop: spacing.md,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   btnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
   err: { color: LUNA_COLORS.error, textAlign: 'center' },

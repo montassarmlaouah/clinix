@@ -133,7 +133,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, backgroundColor: LUNA_COLORS.surface, ...(shadows.sm as object) },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
-  list: { padding: spacing.md, paddingBottom: 20 },
+  // ✨ Liste — paddingBottom tab bar
+  list: { padding: spacing.md, paddingBottom: 80 },
   bubbleWrap: { marginBottom: spacing.sm },
   bubbleLeft: { alignItems: 'flex-start' },
   bubbleRight: { alignItems: 'flex-end' },
@@ -145,8 +146,9 @@ const styles = StyleSheet.create({
   bubbleTextMe: { color: LUNA_COLORS.textInverse },
   bubbleTextOther: { color: LUNA_COLORS.textPrimary },
   time: { fontSize: 10, color: LUNA_COLORS.textSecondary, marginTop: 4, alignSelf: 'flex-end' },
-  inputBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: LUNA_COLORS.surface, borderTopWidth: 1, borderTopColor: LUNA_COLORS.borderDark },
-  input: { flex: 1, backgroundColor: LUNA_COLORS.background, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, maxHeight: 100 },
+  inputBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: LUNA_COLORS.surface, borderTopWidth: 1, borderTopColor: 'rgba(197, 220, 234, 0.6)' },
+  // ✨ Input HeroUI — inputBg, minHeight 52
+  input: { flex: 1, backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, maxHeight: 100, minHeight: 52, borderWidth: 1, borderColor: LUNA_COLORS.borderInput },
   sendBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: LUNA_COLORS.secondary, alignItems: 'center', justifyContent: 'center' },
   sendBtnDisabled: { backgroundColor: LUNA_COLORS.borderDark },
 });

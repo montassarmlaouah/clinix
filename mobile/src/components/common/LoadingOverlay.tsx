@@ -29,7 +29,7 @@ export function LoadingOverlay({
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: LUNA_COLORS.overlay,
+    backgroundColor: LUNA_COLORS.overlay, // ✨ overlay HeroUI
     alignItems:      'center',
     justifyContent:  'center',
     zIndex:          999,

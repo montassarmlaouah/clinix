@@ -8,9 +8,6 @@ export default function ExamenLayout(): React.JSX.Element {
         headerShown: false,
         animation: 'slide_from_right',
       }}
-    >
-      <Stack.Screen name="[id]" />
-      <Stack.Screen name="[id]/rapport" />
-    </Stack>
+    />
   );
 }

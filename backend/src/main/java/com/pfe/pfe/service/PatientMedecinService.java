@@ -188,7 +188,7 @@ public class PatientMedecinService {
             .collect(Collectors.groupingBy(pm -> pm.getPatient().getId()));
 
         for (Patient patient : patients) {
-            List<PatientMedecin> liens = byPatient.getOrDefault(patient.getId(), List.of());
+            List<PatientMedecin> liens = new ArrayList<>(byPatient.getOrDefault(patient.getId(), List.of()));
             List<MedecinAttributionDto> medecins = new ArrayList<>();
             List<String> ids = new ArrayList<>();
             String referentId = null;

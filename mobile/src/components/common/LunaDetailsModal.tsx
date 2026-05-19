@@ -34,13 +34,13 @@ export function LunaDetailsModal({
             <Text style={s.headerTitle} numberOfLines={1}>
               {title}
             </Text>
-            <Pressable onPress={onClose} hitSlop={12}>
+            <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && { opacity: 0.75 }}>
               <Ionicons name="close" size={24} color={LUNA_COLORS.tertiary} />
             </Pressable>
           </View>
           <ScrollView style={s.body}>{children}</ScrollView>
           <View style={s.footerSingle}>
-            <Pressable style={s.btnCloseOnly} onPress={onClose}>
+            <Pressable style={({ pressed }) => [s.btnCloseOnly, pressed && { opacity: 0.75 }]} onPress={onClose}>
               <Text style={s.btnCloseOnlyTxt}>{closeLabel}</Text>
             </Pressable>
           </View>

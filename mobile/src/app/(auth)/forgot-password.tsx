@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     flexGrow:          1,
     paddingHorizontal: spacing.xxl,
     paddingTop:        spacing.lg,
-    paddingBottom:     spacing.huge,
+    paddingBottom:     80,
   },
 
   // Navigation
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   stepDotInactive: {
     backgroundColor: LUNA_COLORS.surfaceLight,
     borderWidth:     1.5,
-    borderColor:     LUNA_COLORS.borderDark,
+    borderColor:     LUNA_COLORS.borderSubtle,
   },
   stepDotNum: {
     fontSize:   fontSize.xs,
@@ -458,9 +458,9 @@ const styles = StyleSheet.create({
     flex:            1,
     height:          52,
     borderWidth:     1.5,
-    borderColor:     LUNA_COLORS.borderDark,
+    borderColor:     LUNA_COLORS.borderInput,
     borderRadius:    borderRadius.md,
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     textAlign:       'center',
     fontSize:        fontSize.xl,
     fontWeight:      fontWeight.bold,

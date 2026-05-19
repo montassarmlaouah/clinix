@@ -7,7 +7,7 @@ import { Badge, EmptyState, LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 function formatTime(iso: string): string {
@@ -85,14 +85,17 @@ export function RendezVousCliniqueScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.lg, paddingBottom: 80 },
+  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   card: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: LUNA_COLORS.secondary,
+    ...(shadows.sm as object),
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest, flex: 1 },

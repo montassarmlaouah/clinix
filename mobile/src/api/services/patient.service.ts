@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPut } from '@/src/api/client';
+import { apiDelete, apiGet, apiPost, apiPut } from '@/src/api/client';
 import { PATIENTS } from '@/src/api/endpoints';
 
 // ── Types — STRICTEMENT alignés avec backend Patient / PatientDTO ─────────────
@@ -91,5 +91,5 @@ export const patientService = {
     apiPut<Patient>(PATIENTS.VERIFIER_SECRETAIRE(id), {}),
 
   deletePatient: (id: number | string) =>
-    apiGet<Patient>(PATIENTS.DELETE(id)),
+    apiDelete<void>(PATIENTS.DELETE(id)),
 };

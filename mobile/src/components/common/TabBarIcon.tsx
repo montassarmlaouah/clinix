@@ -66,7 +66,7 @@ export function TabBarIcon({
 export interface CreateTabBarIconOptions {
   filled?: TabIconName;
   badge?: number;
-  /** Même rendu que l’accès rapide : toujours l’icône outline (évite les glyphes manquants sur web). */
+  /** Même rendu que l'accès rapide : toujours l'icône outline (évite les glyphes manquants sur web). */
   outlineOnly?: boolean;
 }
 
@@ -90,29 +90,33 @@ export function createTabBarIcon(
 
 const styles = StyleSheet.create({
   wrap: {
-    width: 56,
-    height: 52,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: borderRadius.lg,
   },
   wrapFocused: {
-    transform: [{ scale: 1.08 }],
+    backgroundColor: LUNA_COLORS.tabActiveBg, // ✨ fond circulaire semi-transparent
+    borderRadius: 16,
   },
   badge: {
     position: 'absolute',
-    top: 0,
+    top: 2,
     right: 2,
-    minWidth: 14,
-    height: 14,
+    minWidth: 16,
+    height: 16,
     borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.error,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.surface,
   },
   badgeText: {
     color: LUNA_COLORS.textInverse,
-    fontSize: 8,
+    fontSize: 9,
     fontWeight: '700',
   },
 });

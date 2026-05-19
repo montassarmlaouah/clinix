@@ -21,8 +21,8 @@ import {
 } from '@/src/api/endpoints';
 import { patientService, type Patient } from '@/src/api/services/patient.service';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface DossierMedical {
@@ -219,27 +219,26 @@ export default function DossierMedicalScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safe:      { flex: 1, backgroundColor: LUNA_COLORS.background },
   scroll:    { flex: 1 },
-  content:   { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  // ✨ ScrollView — paddingBottom tab bar
+  content:   { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
   center:    { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   loadingText:{ color: LUNA_COLORS.textSecondary, fontSize: fontSize.sm },
 
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,
-    padding: spacing.md, ...({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 } as object),
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object),
   },
   headerName: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: LUNA_COLORS.dark },
   headerSub:  { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginTop: 2 },
 
   section: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,
-    padding: spacing.md, ...({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 } as object),
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object),
   },
-  sectionTitle: {
-    fontSize: fontSize.sm, fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.secondary, textTransform: 'uppercase', letterSpacing: 0.8,
-    marginBottom: spacing.sm,
-  },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.sm },
 
   paragraph: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary, lineHeight: 20 },
 

@@ -104,15 +104,17 @@ function Field({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  form: { padding: spacing.xxl, gap: spacing.md },
+  form: { padding: spacing.xxl, gap: spacing.md, paddingBottom: 80 }, // ✨ espace tab bar
   field: { gap: spacing.xs },
   label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.dark },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    padding: spacing.md,
+    borderColor: LUNA_COLORS.borderInput,
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
   },
@@ -121,8 +123,10 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     padding: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     color: LUNA_COLORS.textPrimary,
   },
   sexeActive: { backgroundColor: LUNA_COLORS.secondary, color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },

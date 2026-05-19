@@ -30,6 +30,6 @@ export default function SSPIScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg },
+  body: { padding: spacing.lg, paddingBottom: 80 }, // ✨ ScrollView tab bar
   hint: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginBottom: spacing.md },
 });

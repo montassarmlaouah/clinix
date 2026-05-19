@@ -9,7 +9,7 @@ import { LunaCard } from '@/src/components/common/LunaCard';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface Urgence {
@@ -110,7 +110,7 @@ export function MedecinUrgencesScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.lg, paddingBottom: 80 },
+  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   patient: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest, flex: 1 },
   motif: { fontSize: fontSize.sm, color: LUNA_COLORS.tertiary, marginTop: 4 },
@@ -121,8 +121,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: LUNA_COLORS.secondary,
     paddingVertical: spacing.sm,
-    borderRadius: 8,
+    borderRadius: borderRadius.lg, // ✨ coins 16px
     alignItems: 'center',
+    minHeight: 44,
   },
   btnOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: LUNA_COLORS.secondary },
   btnText: { color: LUNA_COLORS.textInverse, fontSize: fontSize.xs, fontWeight: fontWeight.semibold },

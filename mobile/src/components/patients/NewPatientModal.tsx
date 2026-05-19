@@ -7,7 +7,7 @@ import { patientService, type CreatePatientPayload } from '@/src/api/services/pa
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 const PHONE_RE = /^(\+216)?[2459]\d{7}$/;
 const DATE_RE  = /^\d{4}-\d{2}-\d{2}$/;
@@ -187,6 +187,7 @@ export function NewPatientModal({
             key={sx}
             style={[s.sexeBtn, form.sexe === sx && s.sexeBtnOn]}
             onPress={() => setField('sexe', sx)}
+            activeOpacity={0.75}
           >
             <Text style={[s.sexeTxt, form.sexe === sx && s.sexeTxtOn]}>
               {sx === 'HOMME' ? 'Homme' : 'Femme'}
@@ -226,6 +227,7 @@ export function NewPatientModal({
             key={t}
             style={[s.chip, form.typeAdmission === t && s.chipOn]}
             onPress={() => setField('typeAdmission', t)}
+            activeOpacity={0.75}
           >
             <Text style={[s.chipTxt, form.typeAdmission === t && s.chipTxtOn]}>{t}</Text>
           </TouchableOpacity>
@@ -237,11 +239,7 @@ export function NewPatientModal({
 
 const s = StyleSheet.create({
   section: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    ...typography.sectionTitle, // ✨
     marginBottom: spacing.sm,
   },
   label: {
@@ -256,9 +254,9 @@ const s = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     alignItems: 'center',
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   sexeBtnOn: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
   sexeTxt: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
@@ -270,8 +268,8 @@ const s = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
-    backgroundColor: LUNA_COLORS.surface,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   chipOn: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
   chipTxt: { fontSize: fontSize.xs, color: LUNA_COLORS.textPrimary },

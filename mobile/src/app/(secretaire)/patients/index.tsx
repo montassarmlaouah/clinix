@@ -206,15 +206,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.borderDark,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)',
   },
+  // ✨ Input HeroUI — inputBg, minHeight 52
   searchInput: {
     flex: 1,
     fontSize: 15,
     color: LUNA_COLORS.textPrimary,
+    backgroundColor: LUNA_COLORS.inputBg,
+    minHeight: 52,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
   },
-  list: { paddingBottom: 100 },
-  listEmpty: { flexGrow: 1, paddingBottom: 100 },
+  // ✨ Liste — paddingBottom tab bar
+  list: { paddingBottom: 80 },
+  listEmpty: { flexGrow: 1, paddingBottom: 80 },
   fab: {
     position: 'absolute',
     bottom: spacing.xxl,

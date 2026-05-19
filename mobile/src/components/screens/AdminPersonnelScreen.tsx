@@ -28,7 +28,7 @@ import { useAuthStore } from '@/src/store/auth.store';
 import type { PersonnelMember, PersonnelRole } from '@/src/types/personnel';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 import { normalizeTelephoneDigits } from '@/src/utils/telephone';
 
 type IonIcon = ComponentProps<typeof Ionicons>['name'];
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.surface,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨ bordure subtile
     marginRight: spacing.sm,
   },
   chipOn: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
@@ -420,16 +420,16 @@ const styles = StyleSheet.create({
   statCard: { flex: 1, minWidth: 0 },
   filters: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md, gap: spacing.sm },
   filterLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: LUNA_COLORS.dark,
+    ...typography.sectionTitle, // ✨ titre section
   },
   search: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
   },
@@ -439,8 +439,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨ coins 16px
     paddingVertical: spacing.md,
+    minHeight: 52,
     ...(shadows.button as object),
   },
   addPrimaryTxt: {
@@ -448,12 +449,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     fontSize: fontSize.base,
   },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
+  list: { paddingHorizontal: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     marginBottom: spacing.md,
     gap: spacing.md,
@@ -505,10 +508,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.xxl,
     padding: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: LUNA_COLORS.error,
-    backgroundColor: LUNA_COLORS.errorLight,
+    backgroundColor: LUNA_COLORS.errorLight, // ✨ badge errorLight
   },
   dangerTxt: { fontSize: fontSize.base, color: LUNA_COLORS.error, fontWeight: fontWeight.semibold },
   disabled: { opacity: 0.6 },

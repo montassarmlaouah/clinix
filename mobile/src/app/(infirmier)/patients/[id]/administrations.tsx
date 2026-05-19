@@ -149,20 +149,20 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
     backgroundColor: LUNA_COLORS.surface,
   },
   backBtn: { padding: spacing.xs },
   title: { flex: 1, fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
 
-  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xl },
+  list: { padding: spacing.md, gap: spacing.sm, paddingBottom: 80 },
 
   card: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,
-    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.border,
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
     borderLeftWidth: 4,
     ...shadows.sm as object,
-  },
+  }, // ✨
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: fontWeight.semibold },

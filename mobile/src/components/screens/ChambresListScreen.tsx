@@ -102,12 +102,12 @@ export function ChambresListScreen({ detailRoutePrefix }: Props): React.JSX.Elem
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { paddingBottom: 80 },
+  list: { paddingBottom: 80 }, // ✨ espace tab bar
   listEmpty: { flexGrow: 1, paddingBottom: 80 },
   thumb: {
     width: 48,
     height: 48,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨ coins 16px
     backgroundColor: LUNA_COLORS.secondaryLight,
     alignItems: 'center',
     justifyContent: 'center',

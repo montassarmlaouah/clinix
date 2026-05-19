@@ -84,7 +84,7 @@ export function PharmacienDemandesScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, paddingBottom: 80 },
+  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   cardWrap: { marginBottom: spacing.sm },
   actions: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.sm, marginTop: -spacing.sm, marginBottom: spacing.md },
 });

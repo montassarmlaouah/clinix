@@ -37,6 +37,7 @@ export default function PharmacienLayout(): React.JSX.Element {
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="pharmacie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );

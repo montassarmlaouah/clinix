@@ -56,7 +56,7 @@ public class BillingController {
     }
 
     @GetMapping("/offres/actives")
-    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','SUPER_ADMIN','MEDECIN')")
     public List<Map<String, Object>> listActives() {
         return billingManagementService.listActiveClinicOffers().stream().map(this::toOffreMap).collect(Collectors.toList());
     }
@@ -163,7 +163,7 @@ public class BillingController {
     }
 
     @GetMapping("/abonnement-courant")
-    @PreAuthorize("hasRole('ADMIN_CLINIQUE')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','MEDECIN')")
     public ResponseEntity<?> currentSubscription(@AuthenticationPrincipal CustomUserDetails user) {
         if (user == null || !StringUtils.hasText(user.getCliniqueId())) {
             return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));

@@ -6,7 +6,7 @@ import { DashboardQuickLinks, EmptyState, LoadingOverlay, LunaHeroHeader, LunaSc
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 export default function PatientDossierScreen(): React.JSX.Element {
   const patientId = useAuthStore((s) => s.userId);
@@ -99,14 +99,14 @@ const styles = StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: 80, gap: spacing.md },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   cardTitle: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    ...typography.sectionTitle,
     marginBottom: spacing.sm,
   },
   cardValue: { fontSize: fontSize.base, color: LUNA_COLORS.textPrimary },

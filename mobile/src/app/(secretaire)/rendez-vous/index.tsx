@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -28,7 +28,7 @@ import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function todayLabel(): string {
@@ -180,6 +180,7 @@ function UrgentModal({ visible, cliniqueId, onClose, onCreated }: UrgentModalPro
         medecinId: selMedecin.id,
         patientId: selPatient.id,
         motif:     motif.trim(),
+        dateHeure: new Date().toISOString(),
       });
       handleClose();
       onCreated();
@@ -332,7 +333,7 @@ export default function AgendaScreen(): React.JSX.Element {
     }
   }, [cliniqueId]);
 
-  useEffect(() => { loadRdv(); }, [loadRdv]);
+  useFocusEffect(useCallback(() => { loadRdv(); }, [loadRdv]));
 
   const handleRefresh = () => { setRefreshing(true); loadRdv(); };
 
@@ -563,7 +564,8 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: spacing.xxl,
     paddingTop:        spacing.md,
-    paddingBottom:     100,
+    // ✨ Liste — paddingBottom tab bar
+    paddingBottom:     80,
   },
   sectionHeader: {
     flexDirection:  'row',
@@ -572,15 +574,12 @@ const styles = StyleSheet.create({
     marginBottom:   spacing.sm,
     gap:            spacing.sm,
   },
-  sectionTitle: {
-    fontSize:   fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color:      LUNA_COLORS.secondary,
-  },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle },
   sectionLine: {
     flex:            1,
     height:          1,
-    backgroundColor: LUNA_COLORS.borderDark,
+    backgroundColor: 'rgba(197, 220, 234, 0.6)',
   },
   rdvCard: {
     marginBottom: spacing.md,
@@ -661,11 +660,15 @@ const modalStyles = StyleSheet.create({
     alignItems:        'center',
     paddingHorizontal: spacing.xxl,
   },
+  // ✨ Carte modale — borderSubtle + shadow sm
   card: {
     width:           '100%',
     backgroundColor: LUNA_COLORS.surface,
     borderRadius:    borderRadius.lg,
     padding:         spacing.xxl,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
   urgentCard: {
     maxHeight: '85%',
@@ -681,7 +684,7 @@ const modalStyles = StyleSheet.create({
     alignItems:      'center',
     borderRadius:    borderRadius.md,
     borderWidth:     1.5,
-    borderColor:     LUNA_COLORS.borderDark,
+    borderColor:     LUNA_COLORS.borderSubtle,
   },
   cancelTxt: {
     color:      LUNA_COLORS.textSecondary,
@@ -712,15 +715,17 @@ const modalStyles = StyleSheet.create({
     color:        LUNA_COLORS.textSecondary,
     marginBottom: spacing.lg,
   },
+  // ✨ Input HeroUI — inputBg, minHeight 52
   input: {
-    borderWidth:       1.5,
-    borderColor:       LUNA_COLORS.borderDark,
+    borderWidth:       1,
+    borderColor:       LUNA_COLORS.borderInput,
     borderRadius:      borderRadius.md,
     padding:           spacing.md,
     fontSize:          fontSize.base,
     color:             LUNA_COLORS.textPrimary,
-    backgroundColor:   LUNA_COLORS.surface,
+    backgroundColor:   LUNA_COLORS.inputBg,
     marginBottom:      spacing.lg,
+    minHeight:         52,
     includeFontPadding: false,
   },
 });
@@ -745,15 +750,17 @@ const urgentStyles = StyleSheet.create({
     color:        LUNA_COLORS.textPrimary,
     marginBottom: spacing.xs,
   },
+  // ✨ Input HeroUI — inputBg, minHeight 52
   input: {
-    borderWidth:       1.5,
-    borderColor:       LUNA_COLORS.borderDark,
+    borderWidth:       1,
+    borderColor:       LUNA_COLORS.borderInput,
     borderRadius:      borderRadius.md,
     padding:           spacing.md,
     fontSize:          fontSize.base,
     color:             LUNA_COLORS.textPrimary,
-    backgroundColor:   LUNA_COLORS.surface,
+    backgroundColor:   LUNA_COLORS.inputBg,
     marginBottom:      spacing.sm,
+    minHeight:         52,
     includeFontPadding: false,
   },
   dropDown: {

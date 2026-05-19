@@ -27,7 +27,6 @@ export function DemandesOperationListScreen({
 }: Props): React.JSX.Element {
   const router = useRouter();
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
-  const userId = useAuthStore((s) => s.userId);
   const [liste, setListe] = useState<DemandeOperation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +35,6 @@ export function DemandesOperationListScreen({
     if (!silent) setLoading(true);
     const q = new URLSearchParams();
     if (cliniqueId) q.set('cliniqueId', String(cliniqueId));
-    if (userId) q.set('demandeurId', String(userId));
     try {
       const data = await demandesOperationService.list(q.toString());
       setListe(data ?? []);
@@ -44,7 +42,7 @@ export function DemandesOperationListScreen({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cliniqueId, userId]);
+  }, [cliniqueId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -90,15 +88,18 @@ const styles = StyleSheet.create({
   createBtn: {
     margin: spacing.lg,
     backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨ coins 16px
     padding: spacing.md,
     alignItems: 'center',
+    ...(shadows.sm as object),
   },
   createBtnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
-  list: { padding: spacing.xxl, paddingBottom: 80 },
+  list: { padding: spacing.xxl, paddingBottom: 80 }, // ✨ espace tab bar
   card: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     marginBottom: spacing.md,
     ...(shadows.sm as object),

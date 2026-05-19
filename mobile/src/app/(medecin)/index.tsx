@@ -1,15 +1,42 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { BarChart, LineChart, PieChart } from 'react-native-gifted-charts';
 import { apiGet } from '@/src/api/client';
 import { CONSTANTES, MEDECINS } from '@/src/api/endpoints';
-import { DashboardQuickLinks, EmptyState, LoadingOverlay, LunaHeroHeader, LunaScreen } from '@/src/components/common';
+import { patientService } from '@/src/api/services/patient.service';
+import { hasMedecinClinique } from '@/src/utils/medecinContext';
+import {
+  ChartCard,
+  DashboardQuickLinks,
+  EmptyState,
+  LegendItem,
+  LunaHeroHeader,
+  LunaScreen,
+  StatRow,
+} from '@/src/components/common';
+import { CHART_COLORS, CHART_PALETTE } from '@/src/constants/chartColors';
+import { useDashboardStats } from '@/src/hooks/useDashboardStats';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
+const { width: W } = Dimensions.get('window');
+const CHART_W = W - 80;
+
+// ── Types locaux ──────────────────────────────────────────────────────────────
 type FilterKey = 'HOSPITALISE' | 'CONSULTATION' | 'URGENCE';
 
 interface Patient {
@@ -26,16 +53,10 @@ interface Constante {
   taSystolique?: number;
   taDiastolique?: number;
   spo2?: number;
-  dateHeure?: string;
-}
-
-interface Alerte {
-  patientId?: string;
-  lue?: boolean;
 }
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'HOSPITALISE', label: 'Hospitalises' },
+  { key: 'HOSPITALISE', label: 'Hospitalisés' },
   { key: 'CONSULTATION', label: 'Consultations' },
   { key: 'URGENCE', label: 'Urgences' },
 ];
@@ -53,217 +74,350 @@ function statusStyle(statut: FilterKey) {
   return { bg: LUNA_COLORS.infoLight, fg: LUNA_COLORS.tertiary };
 }
 
-export default function MedecinDashboard(): React.JSX.Element {
-  const router = useRouter();
-  const medecinId = useAuthStore((s) => s.userId);
-  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+// ── Composant patient card ────────────────────────────────────────────────────
+function PatientCard({
+  item,
+  latest,
+  onPress,
+}: {
+  item: Patient;
+  latest: Constante | null | undefined;
+  onPress: () => void;
+}): React.JSX.Element {
+  const statut = normalizeStatut(item.statut);
+  const colors = statusStyle(statut);
+  const chambre = item.chambreNumero ?? item.chambre?.numero;
+  return (
+    <Pressable style={styles.card} onPress={onPress}>
+      <View style={styles.cardTop}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>{item.prenom?.[0]}{item.nom?.[0]}</Text>
+        </View>
+        <View style={styles.info}>
+          <Text style={styles.patientName}>{item.prenom} {item.nom}</Text>
+          <Text style={styles.meta}>
+            {item.age ? `${item.age} ans` : 'Âge non renseigné'}
+            {chambre ? ` · Chambre ${chambre}` : ''}
+          </Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
+          <Text style={[styles.statusText, { color: colors.fg }]}>{statut.toLowerCase()}</Text>
+        </View>
+      </View>
+      <View style={styles.vitals}>
+        <Text style={styles.vitalText}>
+          TA {latest?.taSystolique && latest?.taDiastolique
+            ? `${latest.taSystolique}/${latest.taDiastolique}`
+            : '--'}
+        </Text>
+        <Text style={styles.vitalDivider}>·</Text>
+        <Text style={styles.vitalText}>SpO2 {latest?.spo2 ?? '--'}%</Text>
+      </View>
+    </Pressable>
+  );
+}
 
-  const [patients, setPatients] = useState<Patient[]>([]);
+// ── Dashboard principal ───────────────────────────────────────────────────────
+export default function MedecinDashboard(): React.JSX.Element {
+  const router    = useRouter();
+  const { userId: medecinId, cliniqueId, nom } = useAuthStore();
+
+  // Stats KPI + graphiques
+  const { data: stats, loading: statsLoading, refetch } = useDashboardStats('medecin', cliniqueId, medecinId);
+
+  // Liste des patients pour le mini-tableau
+  const [patients,   setPatients]   = useState<Patient[]>([]);
   const [constantes, setConstantes] = useState<Record<string, Constante | null>>({});
-  const [alertes, setAlertes] = useState<Alerte[]>([]);
-  const [filter, setFilter] = useState<FilterKey>('HOSPITALISE');
-  const [loading, setLoading] = useState(true);
+  const [filter,     setFilter]     = useState<FilterKey>('HOSPITALISE');
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async (silent = false) => {
-    if (!medecinId) {
-      setLoading(false);
-      return;
-    }
-    if (!silent) setLoading(true);
+  const loadPatients = useCallback(async (silent = false) => {
+    if (!medecinId) return;
     try {
-      let patientData: Patient[] = [];
+      let data: Patient[] = [];
       if (hasMedecinClinique(cliniqueId)) {
-        patientData = await patientService.getByClinique(String(cliniqueId));
+        data = await patientService.getByClinique(String(cliniqueId));
       } else {
-        patientData = await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(medecinId));
+        data = await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(medecinId));
       }
-      setPatients(patientData ?? []);
-
-      const latestEntries = await Promise.all(
-        (patientData ?? []).map(async (patient) => {
-          const history = await apiGet<Constante[]>(CONSTANTES.HISTORIQUE(patient.id)).catch(() => []);
-          return [patient.id, history[0] ?? null] as const;
+      setPatients(data ?? []);
+      const entries = await Promise.all(
+        (data ?? []).map(async (p) => {
+          const history = await apiGet<Constante[]>(CONSTANTES.HISTORIQUE(p.id)).catch(() => []);
+          return [p.id, history[0] ?? null] as const;
         }),
       );
-      setConstantes(Object.fromEntries(latestEntries));
+      setConstantes(Object.fromEntries(entries));
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!silent) setRefreshing(false);
     }
   }, [medecinId, cliniqueId]);
 
-  useEffect(() => { load(); }, [load]);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    refetch();
+    loadPatients(true).finally(() => setRefreshing(false));
+  }, [refetch, loadPatients]);
+
+  useEffect(() => { loadPatients(); }, [loadPatients]);
 
   const filteredPatients = useMemo(
-    () => patients.filter((patient) => normalizeStatut(patient.statut) === filter),
+    () => patients.filter((p) => normalizeStatut(p.statut) === filter),
     [patients, filter],
   );
 
-  if (loading) return <LoadingOverlay />;
+  const consultEvol  = stats?.consultationsEvolution ?? [];
+  const patStatus    = stats?.patientsByStatus       ?? [];
+  const apptByHour   = stats?.appointmentsByHour     ?? [];
 
   return (
     <LunaScreen edges={[]}>
-      <LunaHeroHeader
-        title="Tableau de bord"
-        subtitle={`${patients.length} patient(s) suivi(s)`}
-        showBack={false}
-        right={
-          <View style={styles.headerActions}>
-            <Pressable onPress={() => router.push('/(medecin)/examens' as never)} style={styles.headerIcon}>
-              <Ionicons name="flask-outline" size={22} color={LUNA_COLORS.textInverse} />
-            </Pressable>
-            <Pressable onPress={() => router.push('/(medecin)/alertes' as never)} style={styles.headerIcon}>
-              <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.warning} />
-            </Pressable>
-          </View>
-        }
-      />
-
-      <View style={{ paddingHorizontal: spacing.lg }}>
-        <DashboardQuickLinks
-          maxItems={9}
-          excludeRoutes={['/(medecin)/index', '/(medecin)/patients', '/(medecin)/messagerie']}
-        />
-      </View>
-
-      <View style={styles.filters}>
-        {FILTERS.map((item) => (
-          <Pressable
-            key={item.key}
-            onPress={() => setFilter(item.key)}
-            style={[styles.filter, filter === item.key && styles.filterActive]}
-          >
-            <Text style={[styles.filterText, filter === item.key && styles.filterTextActive]}>
-              {item.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-
-      <FlatList
-        data={filteredPatients}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => { setRefreshing(true); load(true); }}
+            onRefresh={onRefresh}
             tintColor={LUNA_COLORS.secondary}
             colors={[LUNA_COLORS.secondary]}
           />
         }
-        renderItem={({ item }) => {
-          const statut = normalizeStatut(item.statut);
-          const colors = statusStyle(statut);
-          const latest = constantes[item.id];
-          const hasAlert = alertes.some((alerte) => alerte.patientId === item.id && !alerte.lue);
-          const chambre = item.chambreNumero ?? item.chambre?.numero;
+      >
+        {/* ── En-tête ── */}
+        <LunaHeroHeader
+          title={`Dr ${nom ?? 'Médecin'}`}
+          subtitle={`${patients.length} patient(s) suivi(s) · Tableau de bord`}
+          showBack={false}
+          right={
+            <View style={styles.headerActions}>
+              <Pressable onPress={() => router.push('/(medecin)/examens' as never)} style={styles.headerIcon}>
+                <Ionicons name="flask-outline" size={22} color={LUNA_COLORS.textInverse} />
+              </Pressable>
+              <Pressable onPress={() => router.push('/(medecin)/alertes' as never)} style={styles.headerIcon}>
+                <Ionicons name="warning-outline" size={22} color={LUNA_COLORS.warning} />
+              </Pressable>
+            </View>
+          }
+        />
 
-          return (
+        {/* ── KPIs ── */}
+        {statsLoading ? (
+          <ActivityIndicator
+            color={LUNA_COLORS.secondary}
+            style={{ marginVertical: spacing.xl }}
+          />
+        ) : stats?.kpis && stats.kpis.length > 0 ? (
+          <StatRow stats={stats.kpis} />
+        ) : null}
+
+        {/* ── Raccourcis ── */}
+        <View style={styles.quickLinksWrapper}>
+          <DashboardQuickLinks
+            maxItems={9}
+            excludeRoutes={['/(medecin)/index', '/(medecin)/patients', '/(medecin)/messagerie']}
+          />
+        </View>
+
+        {/* ── Évolution des consultations ── */}
+        {consultEvol.length > 0 && (
+          <ChartCard
+            title="Évolution des consultations"
+            subtitle="8 dernières semaines"
+            badge="Live"
+          >
+            <LineChart
+              areaChart
+              data={consultEvol}
+              width={CHART_W}
+              height={160}
+              color1={CHART_COLORS.primary}
+              startFillColor1={CHART_COLORS.primary}
+              endFillColor1="transparent"
+              startOpacity1={0.25}
+              curved
+              thickness={2.5}
+              rulesColor={CHART_COLORS.gridLines}
+              yAxisColor="transparent"
+              xAxisColor="rgba(38,101,140,0.15)"
+              xAxisLabelTextStyle={{ color: CHART_COLORS.axisText, fontSize: 11 }}
+              yAxisTextStyle={{ color: CHART_COLORS.axisText, fontSize: 11 }}
+              noOfSections={4}
+              dataPointsColor1={CHART_COLORS.primary}
+            />
+          </ChartCard>
+        )}
+
+        {/* ── Répartition patients par statut ── */}
+        {patStatus.length > 0 && (
+          <ChartCard title="Répartition des patients" subtitle="Par statut actuel">
+            <View style={styles.pieRow}>
+              <PieChart
+                data={patStatus}
+                radius={70}
+                innerRadius={42}
+                centerLabelComponent={() => (
+                  <View style={styles.pieCenter}>
+                    <Text style={styles.pieCenterNum}>{patients.length}</Text>
+                    <Text style={styles.pieCenterLabel}>patients</Text>
+                  </View>
+                )}
+              />
+              <View style={styles.legend}>
+                {patStatus.map((p, i) => (
+                  <LegendItem key={i} color={p.color} label={`${p.label ?? ''} (${p.text ?? p.value})`} />
+                ))}
+              </View>
+            </View>
+          </ChartCard>
+        )}
+
+        {/* ── RDV par heure ── */}
+        {apptByHour.length > 0 && (
+          <ChartCard title="RDV par heure" subtitle="Répartition journalière">
+            <BarChart
+              data={apptByHour}
+              width={CHART_W}
+              height={140}
+              barWidth={22}
+              barBorderRadius={4}
+              frontColor={CHART_COLORS.secondary}
+              rulesColor={CHART_COLORS.gridLines}
+              yAxisColor="transparent"
+              xAxisColor="rgba(38,101,140,0.15)"
+              xAxisLabelTextStyle={{ color: CHART_COLORS.axisText, fontSize: 10 }}
+              yAxisTextStyle={{ color: CHART_COLORS.axisText, fontSize: 11 }}
+              noOfSections={3}
+            />
+          </ChartCard>
+        )}
+
+        {/* ── Mini-liste patients ── */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Mes patients</Text>
+          <Pressable onPress={() => router.push('/(medecin)/patients' as never)}>
+            <Text style={styles.sectionLink}>Voir tout</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.filters}>
+          {FILTERS.map((item) => (
             <Pressable
-              style={styles.card}
-              onPress={() => router.push(`/(medecin)/patients/${item.id}` as never)}
+              key={item.key}
+              onPress={() => setFilter(item.key)}
+              style={[styles.filter, filter === item.key && styles.filterActive]}
             >
-              <View style={styles.cardTop}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{item.prenom?.[0]}{item.nom?.[0]}</Text>
-                </View>
-                <View style={styles.info}>
-                  <Text style={styles.patientName}>{item.prenom} {item.nom}</Text>
-                  <Text style={styles.meta}>
-                    {item.age ? `${item.age} ans` : 'Age non renseigne'}
-                    {chambre ? ` - Chambre ${chambre}` : ''}
-                  </Text>
-                </View>
-                {hasAlert ? <View style={styles.alertDot} /> : null}
-              </View>
-
-              <View style={styles.cardBottom}>
-                <View style={styles.vitals}>
-                  <Text style={styles.vitalText}>
-                    TA {latest?.taSystolique && latest?.taDiastolique ? `${latest.taSystolique}/${latest.taDiastolique}` : '--'}
-                  </Text>
-                  <Text style={styles.vitalText}>SpO2 {latest?.spo2 ?? '--'}%</Text>
-                </View>
-                <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
-                  <Text style={[styles.statusText, { color: colors.fg }]}>{statut.toLowerCase()}</Text>
-                </View>
-              </View>
+              <Text style={[styles.filterText, filter === item.key && styles.filterTextActive]}>
+                {item.label}
+              </Text>
             </Pressable>
-          );
-        }}
-        ListEmptyComponent={
+          ))}
+        </View>
+
+        {filteredPatients.length === 0 ? (
           <EmptyState
             icon="people-outline"
             title="Aucun patient"
-            subtitle="Aucun patient ne correspond au filtre selectionne."
+            subtitle="Aucun patient dans cette catégorie."
           />
-        }
-      />
+        ) : (
+          <View style={styles.patientList}>
+            {filteredPatients.slice(0, 5).map((item) => (
+              <PatientCard
+                key={item.id}
+                item={item}
+                latest={constantes[item.id]}
+                onPress={() => router.push(`/(medecin)/patients/${item.id}` as never)}
+              />
+            ))}
+            {filteredPatients.length > 5 && (
+              <Pressable
+                style={styles.moreBtn}
+                onPress={() => router.push('/(medecin)/patients' as never)}
+              >
+                <Text style={styles.moreBtnText}>
+                  +{filteredPatients.length - 5} autres patients
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </ScrollView>
     </LunaScreen>
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  scroll:          { paddingBottom: 100 },
+  headerActions:   { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   headerIcon: {
-    width: 40,
-    height: 40,
+    width: 40, height: 40,
     borderRadius: borderRadius.full,
     backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
+  quickLinksWrapper: { paddingHorizontal: spacing.lg },
+
+  // ── Section header ──
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: spacing.xxl, paddingTop: spacing.xl, paddingBottom: spacing.sm,
+  },
+  sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
+  sectionLink:  { fontSize: fontSize.sm, color: LUNA_COLORS.secondary, fontWeight: fontWeight.medium },
+
+  // ── Filtres ──
   filters: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.md,
-    backgroundColor: LUNA_COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.borderDark,
+    flexDirection: 'row', gap: spacing.sm,
+    paddingHorizontal: spacing.xxl, paddingBottom: spacing.md,
   },
   filter: {
-    flex: 1,
-    alignItems: 'center',
-    borderRadius: borderRadius.sm,
+    flex: 1, alignItems: 'center',
+    borderRadius: borderRadius.full,
     paddingVertical: spacing.sm,
     backgroundColor: LUNA_COLORS.background,
+    borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
   },
-  filterActive: { backgroundColor: LUNA_COLORS.secondary },
-  filterText: { fontSize: fontSize.xs, color: LUNA_COLORS.dark, fontWeight: fontWeight.medium },
-  filterTextActive: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
-  list: { padding: spacing.xxl, paddingBottom: 80 },
+  filterActive:       { backgroundColor: LUNA_COLORS.secondary },
+  filterText:         { fontSize: fontSize.xs, color: LUNA_COLORS.dark, fontWeight: fontWeight.medium },
+  filterTextActive:   { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
+
+  // ── Patient list ──
+  patientList:  { paddingHorizontal: spacing.xxl },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md, marginBottom: spacing.md,
     ...(shadows.sm as object),
   },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  cardTop:       { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: LUNA_COLORS.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: { color: LUNA_COLORS.textInverse, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
-  info: { flex: 1 },
-  patientName: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
-  meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
-  alertDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: LUNA_COLORS.error },
-  cardBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
+  avatarText:    { color: LUNA_COLORS.textInverse, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
+  info:          { flex: 1 },
+  patientName:   { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
+  meta:          { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
+  statusBadge:   { borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  statusText:    { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+  vitals:        { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, gap: spacing.xs },
+  vitalText:     { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
+  vitalDivider:  { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  moreBtn: {
+    alignItems: 'center', paddingVertical: spacing.md,
+    borderRadius: borderRadius.md, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
+    marginBottom: spacing.md,
   },
-  vitals: { flexDirection: 'row', gap: spacing.sm },
-  vitalText: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
-  statusBadge: { borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  statusText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+  moreBtnText: { fontSize: fontSize.sm, color: LUNA_COLORS.secondary, fontWeight: fontWeight.medium },
+
+  // ── Pie chart ──
+  pieRow:        { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  pieCenter:     { alignItems: 'center' },
+  pieCenterNum:  { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
+  pieCenterLabel:{ fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary },
+  legend:        { flex: 1, gap: spacing.xs },
 });

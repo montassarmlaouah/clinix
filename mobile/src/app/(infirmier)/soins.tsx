@@ -19,7 +19,7 @@ import { EmptyState, LoadingOverlay } from '@/src/components/common';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface PatientInfo {
   id: string | number;
@@ -263,6 +263,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
   scanButton: {
     flexDirection: 'row',
+    minHeight: 48,
     alignItems: 'center',
     gap: spacing.xs,
     backgroundColor: LUNA_COLORS.secondary,
@@ -286,7 +287,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: LUNA_COLORS.background,
   },
-  sectionTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: LUNA_COLORS.tertiary },
+  sectionTitle: {
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
+  }, // ✨
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -336,12 +342,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
     marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     color: LUNA_COLORS.textPrimary,
     textAlignVertical: 'top',
-  },
+  }, // ✨
   actions: { flexDirection: 'row', gap: spacing.md },
   actionButton: {
     flex: 1,

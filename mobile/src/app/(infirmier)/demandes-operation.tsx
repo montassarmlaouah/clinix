@@ -5,8 +5,8 @@ import { DemandesOperationListScreen } from '@/src/components/screens/DemandesOp
 export default function InfirmierDemandesOperation(): React.JSX.Element {
   return (
     <DemandesOperationListScreen
-      title="Demandes d'opération"
-      detailRoutePrefix="/(secretaire)/transferts"
-    />
+  title="Demandes d'opération"
+  detailRoutePrefix="/(infirmier)/demandes-operation"
+/>
   );
 }

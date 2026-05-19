@@ -96,7 +96,7 @@ export function AbonnementPaiementScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg, paddingBottom: 80 },
+  body: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   intro: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginBottom: spacing.lg },
   nom: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   prix: { fontSize: fontSize.base, color: LUNA_COLORS.secondary, marginVertical: spacing.sm },

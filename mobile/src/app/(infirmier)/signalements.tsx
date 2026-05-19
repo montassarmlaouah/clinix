@@ -15,7 +15,7 @@ import { apiGet } from '@/src/api/client';
 import { SURVEILLANCES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -161,9 +161,11 @@ const styles = StyleSheet.create({
   errorText:  { color: '#fff', fontSize: fontSize.sm, flex: 1 },
   retryText:  { color: '#fff', fontSize: fontSize.sm, fontWeight: fontWeight.bold, marginLeft: spacing.sm },
   card: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, borderRadius: borderRadius.lg,
     padding: spacing.md, gap: spacing.xs,
-  },
+  }, // ✨
   cardHeader:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   badge:       { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.full },
   badgeText:   { fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: '#fff' },

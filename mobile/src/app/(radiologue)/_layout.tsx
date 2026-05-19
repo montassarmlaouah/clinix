@@ -63,6 +63,7 @@ export default function RadiologueLayout(): React.JSX.Element {
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );

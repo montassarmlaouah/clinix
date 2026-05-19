@@ -26,6 +26,7 @@ export function TTLSelector({ value, onChange }: TTLSelectorProps): React.JSX.El
             key={opt.value}
             style={[styles.btn, value === opt.value && styles.btnActive]}
             onPress={() => onChange(opt.value)}
+            activeOpacity={0.75}
             accessibilityRole="radio"
             accessibilityState={{ checked: value === opt.value }}
           >
@@ -54,10 +55,10 @@ const styles = StyleSheet.create({
     flex:            1,
     paddingVertical: spacing.sm,
     alignItems:      'center',
-    borderRadius:    borderRadius.sm,
+    borderRadius:    borderRadius.md, // ✨
     borderWidth:     1,
-    borderColor:     LUNA_COLORS.tertiary,
-    backgroundColor: LUNA_COLORS.surface,
+    borderColor:     LUNA_COLORS.borderSubtle, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   btnActive: {
     backgroundColor: LUNA_COLORS.secondary,

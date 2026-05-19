@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     gap:               spacing.sm,
     backgroundColor:   LUNA_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.border,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
     paddingHorizontal: spacing.xxl,
     paddingVertical:   spacing.md,
   },
@@ -182,15 +182,17 @@ const styles = StyleSheet.create({
     color:              LUNA_COLORS.textPrimary,
     paddingVertical:    spacing.xs,
     includeFontPadding: false,
-  },
+  }, // ✨
   listContent: { paddingHorizontal: spacing.xxl, paddingTop: spacing.md, paddingBottom: 80 },
   card: {
     backgroundColor:   LUNA_COLORS.surface,
-    borderRadius:      borderRadius.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     marginBottom:      spacing.md,
     padding:           spacing.lg,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   cardRow:     { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: {
     width: 44, height: 44, borderRadius: 22,

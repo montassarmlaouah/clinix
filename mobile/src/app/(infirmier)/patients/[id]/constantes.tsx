@@ -18,7 +18,7 @@ import { apiPost } from '@/src/api/client';
 import { CONSTANTES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface FieldConfig {
@@ -155,13 +155,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
     backgroundColor: LUNA_COLORS.surface,
   },
   backBtn: { padding: spacing.xs },
   title: { flex: 1, fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
 
-  scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
 
   formCard: {
     backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,
@@ -175,24 +175,25 @@ const styles = StyleSheet.create({
   fieldGroup: { gap: 4 },
   label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.textSecondary, marginBottom: 4 },
 
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, // ✨
   inputWrap: {
     flex: 1, flexDirection: 'row', alignItems: 'center',
-    backgroundColor: LUNA_COLORS.background, borderRadius: borderRadius.sm,
-    borderWidth: 1, borderColor: LUNA_COLORS.border, paddingHorizontal: spacing.sm,
-  },
-  inputIcon: { marginRight: spacing.xs },
+    backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.sm,
+    borderWidth: 1, borderColor: LUNA_COLORS.borderInput, paddingHorizontal: spacing.sm,
+  }, // ✨
+  inputIcon: { marginRight: spacing.xs }, // ✨
   input: {
     flex: 1, paddingVertical: spacing.sm, fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
-  },
+  }, // ✨
   unit: { fontSize: fontSize.sm, color: LUNA_COLORS.textDisabled, width: 40, textAlign: 'right' },
 
   btnSubmit: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.md,
+    flexDirection: 'row', minHeight: 48,
+    alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.full,
     paddingVertical: spacing.md,
-  },
+  }, // ✨
   btnDisabled: { opacity: 0.6 },
   btnSubmitText: { color: '#fff', fontSize: fontSize.base, fontWeight: fontWeight.bold },
 });

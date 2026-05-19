@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { typography } from '@/src/theme/typography';
 
 interface StatCardProps {
   value: string | number;
@@ -53,42 +55,34 @@ export const StatCard: React.FC<StatCardProps> = ({
 };
 
 const styles = StyleSheet.create({
+  // ✨ Carte KPI HeroUI — borderSubtle + shadow sm
   container: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: 16,
-    padding: 16,
-    ...Platform.select({
-      ios: {
-        shadowColor: LUNA_COLORS.darkest,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   circle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
-    gap: 4,
+    gap: spacing.xs,
   },
   value: {
+    ...typography.statValue,
     fontSize: 24,
-    fontWeight: '800',
-    color: LUNA_COLORS.darkest,
   },
   label: {
     fontSize: 12,

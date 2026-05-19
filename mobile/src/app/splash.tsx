@@ -32,6 +32,12 @@ export default function SplashScreen() {
   // Lire l'état auth en UNE FOIS pour éviter les re-renders partiels
   const { token, role, estCabinet, isRehydrated } = useAuthStore();
 
+  // Refs pour toujours lire les valeurs les plus récentes dans le timer
+  const tokenRef = useRef(token);
+  const roleRef  = useRef(role);
+  tokenRef.current = token;
+  roleRef.current  = role;
+
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
@@ -61,9 +67,11 @@ export default function SplashScreen() {
         return;
       }
 
-      if (token && role) {
+      const currentToken = tokenRef.current;
+      const currentRole  = roleRef.current;
+      if (currentToken && currentRole) {
         // Déjà connecté → rediriger directement vers le dashboard
-        const dest = ROLE_ROUTES[role] || ROLE_ROUTES[role.replace('ROLE_', '')];
+        const dest = ROLE_ROUTES[currentRole] || ROLE_ROUTES[currentRole.replace('ROLE_', '')];
         router.replace(dest as any);
       } else {
         // Non connecté → welcome
@@ -72,7 +80,6 @@ export default function SplashScreen() {
     }, 2500);
 
     return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRehydrated]);
 
   return (
@@ -147,6 +154,8 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     ...Platform.select({

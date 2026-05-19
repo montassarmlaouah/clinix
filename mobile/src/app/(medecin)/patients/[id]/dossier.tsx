@@ -21,8 +21,8 @@ import {
 } from '@/src/api/endpoints';
 import { patientService, type Patient } from '@/src/api/services/patient.service';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface DossierMedical {
@@ -222,7 +222,7 @@ export default function DossierMedicalScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safe:      { flex: 1, backgroundColor: LUNA_COLORS.background },
   scroll:    { flex: 1 },
-  content:   { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  content:   { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
   center:    { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   loadingText:{ color: LUNA_COLORS.textSecondary, fontSize: fontSize.sm },
 
@@ -239,10 +239,11 @@ const styles = StyleSheet.create({
     padding: spacing.md, ...({ shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 } as object),
   },
   sectionTitle: {
-    fontSize: fontSize.sm, fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.secondary, textTransform: 'uppercase', letterSpacing: 0.8,
-    marginBottom: spacing.sm,
-  },
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
+  }, // ✨
 
   paragraph: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary, lineHeight: 20 },
 

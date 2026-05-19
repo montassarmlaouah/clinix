@@ -81,10 +81,13 @@ export const HEADER_NAV_MENUS: Record<string, RoleMenuItem[]> = {
 /** Onglets barre du bas (sous-ensemble header — reste dans le drawer). */
 export const HEADER_BOTTOM_TABS: Record<string, readonly { route: string; title: string; icon: RoleMenuItem['icon'] }[]> = {
   ROLE_SECRETAIRE: [
-    { route: '/(secretaire)/index', title: 'Dashboard', icon: 'speedometer-outline' },
-    { route: '/(secretaire)/rendez-vous', title: 'Agenda', icon: 'calendar-outline' },
-    { route: '/(secretaire)/abonnement', title: 'Facturation', icon: 'receipt-outline' },
-    { route: '/(secretaire)/profil', title: 'Profil', icon: 'person-circle-outline' },
+    { route: '/(secretaire)/index',             title: 'Dashboard',             icon: 'speedometer-outline' },
+    { route: '/(secretaire)/patients',           title: 'Patients',              icon: 'people-outline' },
+    { route: '/(secretaire)/rendez-vous',        title: 'Rendez-vous',           icon: 'calendar-outline' },
+    { route: '/(secretaire)/demandes-operation', title: "Demandes d'opération",  icon: 'heart-outline' },
+    { route: '/(secretaire)/conges-medecin',     title: 'Médecins disponibles',  icon: 'person-outline' },
+    { route: '/(secretaire)/chambres',           title: 'Chambres',              icon: 'bed-outline' },
+    { route: '/(secretaire)/abonnement',         title: 'Facturation patient',   icon: 'receipt-outline' },
   ],
   ROLE_TECHNICIEN_MAINTENANCE: [
     { route: '/(technicien)/index', title: 'Dashboard', icon: 'speedometer-outline' },

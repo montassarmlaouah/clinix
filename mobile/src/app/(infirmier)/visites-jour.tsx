@@ -74,7 +74,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
   dateInput: { margin: spacing.lg, backgroundColor: LUNA_COLORS.surface, padding: spacing.md, borderRadius: borderRadius.md },
   list: { padding: spacing.lg, paddingBottom: 80 },
-  card: { backgroundColor: LUNA_COLORS.surface, padding: spacing.lg, borderRadius: borderRadius.md, marginBottom: spacing.md, ...(shadows.sm as object) },
+  card: { backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.md, ...(shadows.sm as object) }, // ✨
   name: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
   btn: { marginTop: spacing.md, backgroundColor: LUNA_COLORS.success, padding: spacing.sm, borderRadius: borderRadius.sm, alignItems: 'center' },

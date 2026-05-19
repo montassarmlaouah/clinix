@@ -115,13 +115,16 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs },
   content: { padding: spacing.xl },
   actions: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
-  actionBtn: { flex: 1, backgroundColor: LUNA_COLORS.secondary, padding: spacing.sm, borderRadius: borderRadius.md, alignItems: 'center' },
+  actionBtn: { flex: 1, backgroundColor: LUNA_COLORS.secondary, padding: spacing.sm, borderRadius: borderRadius.full, minHeight: 48,
+    alignItems: 'center' }, // ✨
   actionBtnText: { color: LUNA_COLORS.textInverse, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   card: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, borderRadius: borderRadius.lg,
     padding: spacing.xl, marginBottom: spacing.lg,
     ...shadows.sm,
-  },
+  }, // ✨
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
   infoLabel: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   infoValue: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.darkest, flex: 1, textAlign: 'right' },

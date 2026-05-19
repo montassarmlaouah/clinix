@@ -31,7 +31,7 @@ public class CongesMedecin {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "medecin_id", nullable = false)
     private Medecin medecin;
 

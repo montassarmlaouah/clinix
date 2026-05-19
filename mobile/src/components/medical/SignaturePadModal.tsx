@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface SignaturePadModalProps {
@@ -72,7 +72,7 @@ export function SignaturePadModal({
           <TouchableOpacity
             style={styles.checkRow}
             onPress={() => setConfirmed(c => !c)}
-            activeOpacity={0.7}
+            activeOpacity={0.75} // ✨
           >
             <View style={[styles.checkbox, confirmed && styles.checkboxChecked]}>
               {confirmed && <Text style={styles.checkmark}>✓</Text>}
@@ -84,13 +84,19 @@ export function SignaturePadModal({
 
           {/* Boutons */}
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleClose} disabled={loading}>
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleClose}
+              disabled={loading}
+              activeOpacity={0.75}
+            >
               <Text style={styles.cancelText}>Annuler</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.confirmBtn, (!confirmed || loading) && styles.btnDisabled]}
               onPress={handleConfirm}
               disabled={!confirmed || loading}
+              activeOpacity={0.75}
             >
               <Text style={styles.confirmText}>
                 {loading ? 'Signature...' : 'Signer'}
@@ -111,8 +117,11 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: LUNA_COLORS.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: borderRadius.xl, // ✨
+    borderTopRightRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderBottomWidth: 0,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.xl,
     paddingBottom: spacing.xxxl,
   },
@@ -124,10 +133,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   padArea: {
-    backgroundColor: LUNA_COLORS.background,
-    borderRadius: 16,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
+    borderRadius: borderRadius.lg, // ✨
     borderWidth: 2,
-    borderColor: LUNA_COLORS.secondary,
+    borderColor: LUNA_COLORS.borderInput, // ✨
     borderStyle: 'dashed',
     padding: spacing.xl,
     alignItems: 'center',
@@ -170,17 +179,17 @@ const styles = StyleSheet.create({
   cancelBtn: {
     flex: 1,
     padding: spacing.lg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderRadius: borderRadius.full, // ✨
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     alignItems: 'center',
   },
   cancelText: { color: LUNA_COLORS.textSecondary, fontWeight: fontWeight.medium as any },
   confirmBtn: {
     flex: 1,
     padding: spacing.lg,
-    borderRadius: 12,
-    backgroundColor: LUNA_COLORS.tertiary,
+    borderRadius: borderRadius.full, // ✨
+    backgroundColor: LUNA_COLORS.secondary, // ✨
     alignItems: 'center',
   },
   confirmText: { color: LUNA_COLORS.surface, fontWeight: fontWeight.bold as any, fontSize: fontSize.md },

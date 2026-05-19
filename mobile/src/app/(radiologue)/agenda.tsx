@@ -168,6 +168,7 @@ export default function RadiologueAgendaScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  // ✨ Liste — paddingBottom tab bar
   list: { padding: spacing.lg, paddingBottom: 80 },
   urg: { fontSize: fontSize.xs, color: LUNA_COLORS.error, fontWeight: fontWeight.semibold },
 });

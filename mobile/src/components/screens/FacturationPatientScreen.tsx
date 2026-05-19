@@ -20,8 +20,8 @@ import { FACTURATION_PATIENT, HOSPITALISATIONS } from '@/src/api/endpoints';
 import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 type TypePrestation =
   | 'HOSPITALISATION'
@@ -287,7 +287,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
       contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} />}
     >
-      <TouchableOpacity
+      <TouchableOpacity activeOpacity={0.75}
         style={styles.primaryBtn}
         onPress={() => {
           if (!hospitalisations.length) {
@@ -297,7 +297,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
           setModalGen(true);
         }}
       >
-        <Ionicons name="add-circle-outline" size={22} color="#fff" />
+        <Ionicons name="add-circle-outline" size={22} color={LUNA_COLORS.textInverse} />
         <Text style={styles.primaryBtnText}>Facturer une sortie</Text>
       </TouchableOpacity>
 
@@ -305,7 +305,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
         <ActivityIndicator color={LUNA_COLORS.secondary} style={{ marginTop: spacing.lg }} />
       ) : (
         factures.map((f) => (
-          <TouchableOpacity key={f.id} style={styles.card} onPress={() => void ouvrirDetail(f)}>
+          <TouchableOpacity activeOpacity={0.75} key={f.id} style={styles.card} onPress={() => void ouvrirDetail(f)}>
             <View style={styles.cardRow}>
               <Text style={styles.cardTitle}>{f.numeroFacture}</Text>
               <Text style={[styles.badge, badgeStyle(f.statut)]}>
@@ -334,7 +334,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
             <Text style={styles.modalHint}>Tarif hospitalisation × nombre de jours + prestations</Text>
             <ScrollView style={{ maxHeight: 280 }}>
               {hospitalisations.map((h) => (
-                <TouchableOpacity
+                <TouchableOpacity activeOpacity={0.75}
                   key={h.id}
                   style={[styles.hospRow, selectedHosp === h.id && styles.hospRowActive]}
                   onPress={() => setSelectedHosp(h.id)}
@@ -348,7 +348,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
             {prestations
               .filter((p) => p.type !== 'HOSPITALISATION')
               .map((p) => (
-                <TouchableOpacity
+                <TouchableOpacity activeOpacity={0.75}
                   key={p.id}
                   style={styles.checkRow}
                   onPress={() =>
@@ -366,10 +366,10 @@ export default function FacturationPatientScreen(): React.JSX.Element {
                 </TouchableOpacity>
               ))}
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.secondaryBtn} onPress={() => setModalGen(false)}>
+              <TouchableOpacity activeOpacity={0.75} style={styles.secondaryBtn} onPress={() => setModalGen(false)}>
                 <Text>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.primaryBtn} onPress={() => void generer()}>
+              <TouchableOpacity activeOpacity={0.75} style={styles.primaryBtn} onPress={() => void generer()}>
                 <Text style={styles.primaryBtnText}>Générer</Text>
               </TouchableOpacity>
             </View>
@@ -414,7 +414,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
                     <Text style={styles.sectionLabel}>Mode de paiement</Text>
                     <View style={styles.modeRow}>
                       {MODES_PAIEMENT.map((m) => (
-                        <TouchableOpacity
+                        <TouchableOpacity activeOpacity={0.75}
                           key={m.value}
                           style={[styles.modeChip, modePaiement === m.value && styles.modeChipActive]}
                           onPress={() => setModePaiement(m.value)}
@@ -434,11 +434,11 @@ export default function FacturationPatientScreen(): React.JSX.Element {
                 )}
 
                 <View style={styles.modalActions}>
-                  <TouchableOpacity style={styles.secondaryBtn} onPress={() => void ouvrirPdf(detail)}>
+                  <TouchableOpacity activeOpacity={0.75} style={styles.secondaryBtn} onPress={() => void ouvrirPdf(detail)}>
                     <Text>PDF</Text>
                   </TouchableOpacity>
                   {canEmettre(detail.statut) && (
-                    <TouchableOpacity
+                    <TouchableOpacity activeOpacity={0.75}
                       style={styles.secondaryBtn}
                       onPress={() => void emettre(detail)}
                     >
@@ -446,7 +446,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
                     </TouchableOpacity>
                   )}
                   {canPayer(detail.statut) && (
-                    <TouchableOpacity
+                    <TouchableOpacity activeOpacity={0.75}
                       style={styles.primaryBtn}
                       onPress={() => void validerPaiement(detail)}
                     >
@@ -454,14 +454,14 @@ export default function FacturationPatientScreen(): React.JSX.Element {
                     </TouchableOpacity>
                   )}
                   {canTeletransmettre(detail.statut) && (
-                    <TouchableOpacity
+                    <TouchableOpacity activeOpacity={0.75}
                       style={styles.secondaryBtn}
                       onPress={() => void teletransmettre(detail)}
                     >
                       <Text>CNAM</Text>
                     </TouchableOpacity>
                   )}
-                  <TouchableOpacity style={styles.secondaryBtn} onPress={() => setDetail(null)}>
+                  <TouchableOpacity activeOpacity={0.75} style={styles.secondaryBtn} onPress={() => setDetail(null)}>
                     <Text>Fermer</Text>
                   </TouchableOpacity>
                 </View>
@@ -476,7 +476,7 @@ export default function FacturationPatientScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  content: { padding: spacing.md, paddingBottom: spacing.xl },
+  content: { padding: spacing.md, paddingBottom: 80 }, // ✨ espace tab bar
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -484,94 +484,107 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: LUNA_COLORS.secondary,
     padding: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
+    minHeight: 52,
   },
-  primaryBtnText: { color: '#fff', fontWeight: fontWeight.semibold, fontSize: fontSize.md },
+  primaryBtnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.semibold, fontSize: fontSize.md },
   secondaryBtn: {
     padding: spacing.sm,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle,
+    backgroundColor: LUNA_COLORS.surface,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
   cardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontWeight: fontWeight.bold, fontSize: fontSize.md, flex: 1 },
+  cardTitle: { fontWeight: fontWeight.bold, fontSize: fontSize.md, flex: 1, color: LUNA_COLORS.darkest },
   badge: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full, // ✨ badge pill
     overflow: 'hidden',
   },
-  badgeBrouillon: { backgroundColor: '#f1f5f9', color: '#475569' },
-  badgeEmise: { backgroundColor: '#fef3c7', color: '#92400e' },
-  badgePayee: { backgroundColor: '#d1fae5', color: '#065f46' },
-  badgeTele: { backgroundColor: '#e0f2fe', color: '#0369a1' },
+  badgeBrouillon: { backgroundColor: LUNA_COLORS.surfaceLight, color: LUNA_COLORS.textSecondary },
+  badgeEmise: { backgroundColor: LUNA_COLORS.warningLight, color: LUNA_COLORS.warning },
+  badgePayee: { backgroundColor: LUNA_COLORS.successLight, color: LUNA_COLORS.success }, // ✨ successLight
+  badgeTele: { backgroundColor: LUNA_COLORS.infoLight, color: LUNA_COLORS.info },
   cardSub: { color: LUNA_COLORS.textDisabled, marginTop: 4 },
-  cardAmount: { marginTop: 6, fontSize: fontSize.sm },
+  cardAmount: { marginTop: 6, fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
   empty: { textAlign: 'center', color: LUNA_COLORS.textDisabled, marginTop: spacing.lg },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: LUNA_COLORS.overlay,
     justifyContent: 'center',
     padding: spacing.md,
   },
   modalBox: {
-    backgroundColor: '#fff',
+    backgroundColor: LUNA_COLORS.surface, // ✨ modal surface
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    padding: spacing.lg,
     maxHeight: '90%',
+    ...(shadows.md as object),
   },
-  modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, marginBottom: spacing.xs },
+  modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, marginBottom: spacing.xs, color: LUNA_COLORS.darkest },
   statutBadge: {
     fontSize: fontSize.sm,
     color: LUNA_COLORS.secondary,
     fontWeight: fontWeight.semibold,
     marginBottom: spacing.sm,
   },
-  patientName: { fontSize: fontSize.md, marginBottom: spacing.sm },
+  patientName: { fontSize: fontSize.md, marginBottom: spacing.sm, color: LUNA_COLORS.textPrimary },
   refCnam: { fontSize: fontSize.sm, color: LUNA_COLORS.textDisabled, marginBottom: spacing.sm },
   modalHint: { color: LUNA_COLORS.textDisabled, marginBottom: spacing.md, fontSize: fontSize.sm },
   hospRow: {
-    padding: spacing.sm,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
-    borderRadius: borderRadius.sm,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.xs,
+    backgroundColor: LUNA_COLORS.surface,
   },
-  hospRowActive: { borderColor: LUNA_COLORS.secondary, backgroundColor: '#f0fdfa' },
+  hospRowActive: { borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.secondaryLight },
   hospDate: { fontSize: fontSize.xs, color: LUNA_COLORS.textDisabled },
-  sectionLabel: { fontWeight: fontWeight.semibold, marginTop: spacing.md, marginBottom: spacing.xs },
+  sectionLabel: { ...typography.sectionTitle, marginTop: spacing.md, marginBottom: spacing.xs }, // ✨ titre section
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  checkLabel: { flex: 1, fontSize: fontSize.sm },
+  checkLabel: { flex: 1, fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
   input: {
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
+    borderColor: LUNA_COLORS.borderInput,
+    borderRadius: borderRadius.lg,
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     marginBottom: spacing.sm,
+    fontSize: fontSize.base,
+    color: LUNA_COLORS.textPrimary,
   },
   modeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.md },
   modeChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle,
+    backgroundColor: LUNA_COLORS.surface,
   },
   modeChipActive: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
-  modeChipText: { fontSize: fontSize.xs },
-  modeChipTextActive: { color: '#fff' },
+  modeChipText: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary },
+  modeChipTextActive: { color: LUNA_COLORS.textInverse },
   modalActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.md },
-  ligne: { fontSize: fontSize.sm, marginBottom: 4 },
-  total: { fontWeight: fontWeight.semibold, marginTop: 4 },
+  ligne: { fontSize: fontSize.sm, marginBottom: 4, color: LUNA_COLORS.textPrimary },
+  total: { fontWeight: fontWeight.semibold, marginTop: 4, color: LUNA_COLORS.darkest },
 });

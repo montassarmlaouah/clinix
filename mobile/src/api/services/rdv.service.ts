@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from '@/src/api/client';
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from '@/src/api/client';
 import { MEDECINS, RDV } from '@/src/api/endpoints';
 
 // ── Types — STRICTEMENT alignés avec backend StatutRendezVous enum ────────────
@@ -38,6 +38,7 @@ export interface RdvUrgentPayload {
   patientId:    string | number;
   signaleParId?: string | number;
   motif:        string;
+  dateHeure?:   string;   // ISO 8601 — requis par le backend
   description?: string;
   niveau?:      'FAIBLE' | 'MODEREE' | 'ELEVEE' | 'CRITIQUE';
   // Alias UI historique — le backend utilise signaleParId
@@ -85,10 +86,10 @@ export const rdvService = {
   ) => apiPatch<RendezVous>(RDV.VALIDATION_VISITE_INF(id), body),
 
   updateRdv: (id: number | string, data: CreateRdvPayload) =>
-    apiPost<RendezVous>(RDV.UPDATE(id), data),
+    apiPut<RendezVous>(RDV.UPDATE(id), data),
 
   deleteRdv: (id: number | string) =>
-    apiGet<void>(RDV.DELETE(id)),
+    apiDelete<void>(RDV.DELETE(id)),
 
   createRdvUrgent: (data: RdvUrgentPayload) =>
     apiPost<RendezVous>(RDV.CREATE, data),

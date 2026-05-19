@@ -36,6 +36,7 @@ export default function ChefPersonnelLayout(): React.JSX.Element {
       <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );

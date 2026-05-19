@@ -211,8 +211,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxl,
     paddingVertical:   spacing.lg,
     backgroundColor:   LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     gap:               spacing.md,
-  },
+  }, // ✨
   avatarWrap: { position: 'relative' },
   avatar: {
     width:           48,

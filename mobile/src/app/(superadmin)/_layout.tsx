@@ -1,42 +1,65 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
+import { LUNA_COLORS } from '@/src/theme/colors';
 
-/** Barre du bas : 3 icônes — Dashboard · Cliniques · Abonnements */
 export default function SuperAdminLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
   return (
     <RoleTabsShell>
-    <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Accueil',
-          tabBarIcon: createTabBarIcon('grid-outline'),
+      <Tabs
+        screenOptions={{
+          ...screenOptions,
+          tabBarActiveTintColor: LUNA_COLORS.primary,
+          headerShown: false,
         }}
-      />
-      <Tabs.Screen
-        name="organisations"
-        options={{
-          title: 'Cliniques',
-          tabBarIcon: createTabBarIcon('business-outline'),
-        }}
-      />
-      <Tabs.Screen
-        name="abonnements"
-        options={{
-          title: 'Abonnements',
-          tabBarIcon: createTabBarIcon('card-outline'),
-        }}
-      />
-      <Tabs.Screen name="medecins-admin" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="stripe-config" options={hiddenTabScreenOptions} />
-    </Tabs>
+      >
+        {/* 1. Dashboard */}
+        <Tabs.Screen
+          name="dashboard"
+          options={{
+            title: 'Accueil',
+            tabBarIcon: createTabBarIcon('grid-outline'),
+          }}
+        />
+        {/* 2. Cliniques */}
+        <Tabs.Screen
+          name="organisations"
+          options={{
+            title: 'Cliniques',
+            tabBarIcon: createTabBarIcon('business-outline'),
+          }}
+        />
+        {/* 3. Médecins (nouvel onglet) */}
+        <Tabs.Screen
+          name="medecins-admin"
+          options={{
+            title: 'Médecins',
+            tabBarIcon: createTabBarIcon('people-outline'),
+          }}
+        />
+        {/* 4. Abonnements */}
+        <Tabs.Screen
+          name="abonnements"
+          options={{
+            title: 'Abonnements',
+            tabBarIcon: createTabBarIcon('card-outline'),
+          }}
+        />
+        {/* 5. Stripe Config (nouvel onglet) */}
+        <Tabs.Screen
+          name="stripe-config"
+          options={{
+            title: 'Stripe',
+            tabBarIcon: createTabBarIcon('logo-stripe'),
+          }}
+        />
+        {/* Écrans cachés (menu, profil) */}
+        <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      </Tabs>
     </RoleTabsShell>
   );
 }

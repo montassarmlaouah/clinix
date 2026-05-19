@@ -16,7 +16,7 @@ import { LunaCard } from '@/src/components/common/LunaCard';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface Offre {
@@ -119,13 +119,16 @@ export function AbonnementTarifsScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg, paddingBottom: 80 },
+  body: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   toggle: {
     flexDirection: 'row',
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
     borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: 4,
     marginBottom: spacing.lg,
+    ...(shadows.sm as object),
   },
   toggleBtn: { flex: 1, paddingVertical: spacing.sm, alignItems: 'center', borderRadius: borderRadius.full },
   toggleActive: { backgroundColor: LUNA_COLORS.secondary },

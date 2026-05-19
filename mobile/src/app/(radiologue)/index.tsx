@@ -15,7 +15,7 @@ import {
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface RadiologueStats {
   totalImageriesJour: number;
@@ -163,16 +163,12 @@ export default function RadiologueDashboard(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, paddingBottom: 100 },
+  // ✨ Liste — paddingBottom tab bar
+  list: { padding: spacing.lg, paddingBottom: 80 },
   statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   kpi: { flex: 1 },
-  section: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
+  // ✨ Titre de section — typography.sectionTitle
+  section: { ...typography.sectionTitle, marginBottom: spacing.sm, marginTop: spacing.sm },
   errorBanner: {
     backgroundColor: LUNA_COLORS.errorLight,
     padding: spacing.sm,

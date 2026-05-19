@@ -14,7 +14,7 @@ import {
 import { apiGet } from '@/src/api/client';
 import { HOSPITALISATIONS } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -189,10 +189,12 @@ const styles = StyleSheet.create({
   retryText:  { color: '#fff', fontSize: fontSize.sm, fontWeight: fontWeight.bold, marginLeft: spacing.sm },
   card: {
     backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     borderRadius:    borderRadius.lg,
     padding:         spacing.md,
     gap:             spacing.xs,
-  },
+  }, // ✨
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
   badge: {
     paddingHorizontal: spacing.sm, paddingVertical: 3,

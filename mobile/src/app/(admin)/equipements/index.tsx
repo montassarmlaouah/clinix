@@ -19,6 +19,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { useAuthStore } from '@/src/store/auth.store';
 import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from '@/src/api/client';
 
@@ -302,11 +303,11 @@ await apiPost(`/api/equipements/${selected.id}/traiter-panne`, {
                   ))}
                 </View>
                 {equipements.length === 0 ? (
-                  <View style={styles.emptyRow}><Text style={styles.emptyText}>Aucun équipement</Text></View>
+                  <View style={tbl.emptyRow}><Text style={tbl.emptyText}>Aucun équipement</Text></View>
                 ) : equipements.map((item, idx) => {
                   const sc = statutCfg(item.statut);
                   return (
-                    <View key={item.id} style={[styles.tableRow, idx % 2 === 1 && styles.tableRowAlt]}>
+                    <View key={item.id} style={[tbl.tableRow, idx % 2 === 1 && tbl.tableRowAlt]}>
                       {/* EQ */}
                       <View style={{ width: COL_EQ.EQ, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <View style={styles.eqIconBox}>
@@ -544,22 +545,17 @@ const styles = StyleSheet.create({
   headerTitle: { color: LUNA_COLORS.textInverse, fontSize: 16, fontWeight: '700', flex: 1 },
   kpiScroll: { backgroundColor: LUNA_COLORS.surface, maxHeight: 110 },
   kpiContent: { padding: 12, gap: 10, flexDirection: 'row' },
-  kpiCard: { width: 130, borderLeftWidth: 4, borderRadius: 10, backgroundColor: LUNA_COLORS.surface, padding: 12, gap: 4, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4 },
+  kpiCard: { width: 130, borderLeftWidth: 4, borderRadius: borderRadius.lg, backgroundColor: LUNA_COLORS.surface, padding: 12, gap: 4, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object) },
   kpiIconBox: { width: 32, height: 32, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
   kpiValue: { fontSize: 22, fontWeight: '800' },
   kpiLabel: { fontSize: 10, color: LUNA_COLORS.textSecondary, lineHeight: 13 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
-  section: { margin: 12, marginBottom: 0, borderRadius: 12, overflow: 'hidden', backgroundColor: LUNA_COLORS.surface, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 },
+  // ✨ Carte tableau — borderSubtle + shadow sm
+  section: { margin: 12, marginBottom: 0, borderRadius: borderRadius.lg, overflow: 'hidden', backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object) },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: LUNA_COLORS.secondary },
   sectionTitle: { color: LUNA_COLORS.textInverse, fontWeight: '700', fontSize: 14 },
   addBtnFloat: { backgroundColor: LUNA_COLORS.secondary, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-end', margin: 12 },
   addBtnText: { color: LUNA_COLORS.textInverse, fontWeight: '700', fontSize: 13 },
-  tableHeader: { flexDirection: 'row', backgroundColor: LUNA_COLORS.secondary, paddingHorizontal: 12, paddingVertical: 10 },
-  thText: { fontSize: 10, fontWeight: '600', color: LUNA_COLORS.textInverse },
-  tableRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: LUNA_COLORS.surface, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark ?? '#E0E0E0', alignItems: 'center' },
-  tableRowAlt: { backgroundColor: LUNA_COLORS.surfaceLight },
-  emptyRow: { padding: 32, alignItems: 'center' },
-  emptyText: { color: LUNA_COLORS.textSecondary },
   eqIconBox: { width: 32, height: 32, borderRadius: 6, backgroundColor: LUNA_COLORS.surfaceLight, justifyContent: 'center', alignItems: 'center' },
   eqName: { fontSize: 13, fontWeight: '600', color: LUNA_COLORS.darkest },
   eqCode: { fontSize: 10, color: LUNA_COLORS.textSecondary, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
@@ -597,24 +593,25 @@ const styles = StyleSheet.create({
     borderTopColor: LUNA_COLORS.primary,
     backgroundColor: LUNA_COLORS.surfaceLight,
   },
-  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
+  detailRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)' },
   detailLabel: { fontSize: 12, color: LUNA_COLORS.textSecondary },
   detailValue: { fontSize: 13, fontWeight: '600', color: LUNA_COLORS.textPrimary, flex: 1, textAlign: 'right' },
   deleteDesc: { fontSize: 14, color: LUNA_COLORS.textPrimary, textAlign: 'center' },
   readonlyField: { fontSize: 14, fontWeight: '600', color: LUNA_COLORS.darkest, padding: 10, backgroundColor: LUNA_COLORS.background, borderRadius: 8, marginBottom: 8 },
   fLabel: { fontSize: 12, fontWeight: '600', color: LUNA_COLORS.textPrimary, marginBottom: 4, marginTop: 8 },
-  inp: { backgroundColor: LUNA_COLORS.background, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: LUNA_COLORS.textPrimary, borderWidth: 1, borderColor: LUNA_COLORS.borderDark ?? '#E0E0E0', marginBottom: 4 },
+  // ✨ Input HeroUI — inputBg, minHeight 52
+  inp: { backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 14, color: LUNA_COLORS.textPrimary, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, marginBottom: 4, minHeight: 52 },
   inpErr: { borderColor: LUNA_COLORS.error },
   errTxt: { fontSize: 11, color: LUNA_COLORS.error, marginBottom: 6 },
   row2: { flexDirection: 'row', gap: 12 },
   half: { flex: 1 },
-  typeChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderDark ?? '#E0E0E0', marginRight: 6 },
+  typeChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, marginRight: 6 },
   typeChipActive: { backgroundColor: LUNA_COLORS.secondary },
   typeChipText: { fontSize: 12, color: LUNA_COLORS.textPrimary },
   typeChipTextActive: { color: LUNA_COLORS.textInverse },
   errBox: { backgroundColor: LUNA_COLORS.errorLight, borderRadius: 8, padding: 10, marginTop: 8 },
   errBoxText: { fontSize: 12, color: LUNA_COLORS.error },
-  cancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center', backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
+  cancelBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center', backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
   cancelBtnText: { fontSize: 14, color: LUNA_COLORS.darkest, fontWeight: '600' },
   submitBtn: { flex: 1, paddingVertical: 12, borderRadius: 8, alignItems: 'center', backgroundColor: LUNA_COLORS.secondary },
   submitBtnText: { fontSize: 14, color: LUNA_COLORS.textInverse, fontWeight: '700' },

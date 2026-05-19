@@ -14,7 +14,7 @@ import {
 } from '@/src/components/common';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface Imagerie {
@@ -184,8 +184,10 @@ export default function DemandesScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  // ✨ Liste — paddingBottom tab bar
   list: { padding: spacing.lg, paddingBottom: 80 },
   cardWrap: { marginBottom: spacing.sm },
+  // ✨ Bouton action — minHeight 52
   chargeBtn: {
     marginTop: spacing.xs,
     marginLeft: spacing.sm,
@@ -193,7 +195,9 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.secondary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: 8,
+    borderRadius: borderRadius.md,
+    minHeight: 52,
+    justifyContent: 'center',
   },
   chargeTxt: { color: LUNA_COLORS.textInverse, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   disabled: { opacity: 0.6 },

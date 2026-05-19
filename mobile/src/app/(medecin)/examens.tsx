@@ -118,27 +118,30 @@ const styles = StyleSheet.create({
   form: { padding: spacing.lg, gap: spacing.sm, backgroundColor: LUNA_COLORS.surface },
   label: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   input: {
-    backgroundColor: LUNA_COLORS.background,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-  },
+    borderColor: LUNA_COLORS.borderInput,
+  }, // ✨
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: { backgroundColor: LUNA_COLORS.infoLight, paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full },
   chipActive: { backgroundColor: LUNA_COLORS.secondary },
   chipText: { fontSize: fontSize.xs, color: LUNA_COLORS.dark },
   chipTextActive: { color: LUNA_COLORS.textInverse },
-  btn: { backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.md, padding: spacing.md, alignItems: 'center' },
+  btn: { backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.full, padding: spacing.md, minHeight: 48,
+    alignItems: 'center' }, // ✨
   btnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
   list: { padding: spacing.lg, paddingBottom: 80 },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   title: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
 });

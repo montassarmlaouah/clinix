@@ -1,3 +1,4 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -5,6 +6,7 @@ import {
   ActivityIndicator,
   FlatList,
   Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -18,7 +20,7 @@ import { apiGet, apiPost } from '@/src/api/client';
 import { CONGES_MEDECIN } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -52,7 +54,12 @@ export default function CongesMedecinScreen(): React.JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ dateDebut: '', dateFin: '', motif: '' });
+  const [form, setForm] = useState<{ dateDebut: Date | null; dateFin: Date | null; motif: string }>({
+    dateDebut: null,
+    dateFin:   null,
+    motif:     '',
+  });
+  const [activePicker, setActivePicker] = useState<'debut' | 'fin' | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async (silent = false) => {
@@ -72,17 +79,36 @@ export default function CongesMedecinScreen(): React.JSX.Element {
 
   useEffect(() => { load(); }, [load]);
 
+  function toIsoDate(d: Date): string {
+    return d.toISOString().split('T')[0];
+  }
+
+  function displayDate(d: Date | null): string {
+    if (!d) return 'Sélectionner une date';
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  function onDateChange(event: { type: string }, date?: Date) {
+    if (event.type === 'dismissed') { setActivePicker(null); return; }
+    if (!date) return;
+    if (activePicker === 'debut') setForm(f => ({ ...f, dateDebut: date }));
+    else if (activePicker === 'fin') setForm(f => ({ ...f, dateFin: date }));
+    if (Platform.OS === 'android') setActivePicker(null);
+  }
+
   async function handleSubmit() {
     if (!form.dateDebut || !form.dateFin) return;
     setSubmitting(true);
     try {
       await apiPost(CONGES_MEDECIN.CREATE, {
-        dateDebut: form.dateDebut,
-        dateFin:   form.dateFin,
+        medecinId: userId,
+        dateDebut: toIsoDate(form.dateDebut),
+        dateFin:   toIsoDate(form.dateFin),
         motif:     form.motif,
       });
       setShowModal(false);
-      setForm({ dateDebut: '', dateFin: '', motif: '' });
+      setForm({ dateDebut: null, dateFin: null, motif: '' });
+      setActivePicker(null);
       load(true);
     } catch (e: any) {
       setError(e?.message ?? 'Erreur lors de la demande');
@@ -179,22 +205,84 @@ export default function CongesMedecinScreen(): React.JSX.Element {
             </View>
             <ScrollView style={styles.modalBody}>
               <Text style={styles.fieldLabel}>Date de début *</Text>
-              <TextInput
-                style={styles.input}
-                value={form.dateDebut}
-                onChangeText={(v) => setForm((f) => ({ ...f, dateDebut: v }))}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={LUNA_COLORS.tertiary}
-                keyboardType="default"
-              />
+              {Platform.OS === 'web' ? (
+                <View style={[styles.dateButton, !form.dateDebut && styles.dateButtonEmpty]}>
+                  <Ionicons name="calendar-outline" size={18} color={form.dateDebut ? LUNA_COLORS.secondary : LUNA_COLORS.tertiary} />
+                  {React.createElement('input', {
+                    type: 'date',
+                    value: form.dateDebut ? toIsoDate(form.dateDebut) : '',
+                    min: toIsoDate(new Date()),
+                    onChange: (e: any) => {
+                      const v = e.target.value;
+                      setForm(f => ({ ...f, dateDebut: v ? new Date(v + 'T12:00:00') : null }));
+                    },
+                    style: { flex: 1, background: 'transparent', border: 'none', color: LUNA_COLORS.textInverse, fontSize: 16, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' },
+                  })}
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.dateButton, !form.dateDebut && styles.dateButtonEmpty]}
+                    onPress={() => setActivePicker(activePicker === 'debut' ? null : 'debut')}
+                  >
+                    <Ionicons name="calendar-outline" size={18} color={form.dateDebut ? LUNA_COLORS.secondary : LUNA_COLORS.tertiary} />
+                    <Text style={[styles.dateButtonText, !form.dateDebut && styles.dateButtonPlaceholder]}>
+                      {displayDate(form.dateDebut)}
+                    </Text>
+                  </TouchableOpacity>
+                  {activePicker === 'debut' && (
+                    <DateTimePicker
+                      value={form.dateDebut ?? new Date()}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+                      onChange={onDateChange}
+                      minimumDate={new Date()}
+                      themeVariant="dark"
+                      style={styles.datePicker}
+                    />
+                  )}
+                </>
+              )}
+
               <Text style={styles.fieldLabel}>Date de fin *</Text>
-              <TextInput
-                style={styles.input}
-                value={form.dateFin}
-                onChangeText={(v) => setForm((f) => ({ ...f, dateFin: v }))}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={LUNA_COLORS.tertiary}
-              />
+              {Platform.OS === 'web' ? (
+                <View style={[styles.dateButton, !form.dateFin && styles.dateButtonEmpty]}>
+                  <Ionicons name="calendar-outline" size={18} color={form.dateFin ? LUNA_COLORS.secondary : LUNA_COLORS.tertiary} />
+                  {React.createElement('input', {
+                    type: 'date',
+                    value: form.dateFin ? toIsoDate(form.dateFin) : '',
+                    min: form.dateDebut ? toIsoDate(form.dateDebut) : toIsoDate(new Date()),
+                    onChange: (e: any) => {
+                      const v = e.target.value;
+                      setForm(f => ({ ...f, dateFin: v ? new Date(v + 'T12:00:00') : null }));
+                    },
+                    style: { flex: 1, background: 'transparent', border: 'none', color: LUNA_COLORS.textInverse, fontSize: 16, outline: 'none', cursor: 'pointer', fontFamily: 'inherit' },
+                  })}
+                </View>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    style={[styles.dateButton, !form.dateFin && styles.dateButtonEmpty]}
+                    onPress={() => setActivePicker(activePicker === 'fin' ? null : 'fin')}
+                  >
+                    <Ionicons name="calendar-outline" size={18} color={form.dateFin ? LUNA_COLORS.secondary : LUNA_COLORS.tertiary} />
+                    <Text style={[styles.dateButtonText, !form.dateFin && styles.dateButtonPlaceholder]}>
+                      {displayDate(form.dateFin)}
+                    </Text>
+                  </TouchableOpacity>
+                  {activePicker === 'fin' && (
+                    <DateTimePicker
+                      value={form.dateFin ?? form.dateDebut ?? new Date()}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+                      onChange={onDateChange}
+                      minimumDate={form.dateDebut ?? new Date()}
+                      themeVariant="dark"
+                      style={styles.datePicker}
+                    />
+                  )}
+                </>
+              )}
               <Text style={styles.fieldLabel}>Motif (facultatif)</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
@@ -247,10 +335,12 @@ const styles = StyleSheet.create({
   errorText: { color: '#fff', fontSize: fontSize.sm },
   card: {
     backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     borderRadius:    borderRadius.lg,
     padding:         spacing.md,
     gap:             spacing.sm,
-  },
+  }, // ✨
   cardHeader: { flexDirection: 'row' },
   badge: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.full },
   badgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: '#fff' },
@@ -276,8 +366,21 @@ const styles = StyleSheet.create({
     color: LUNA_COLORS.textInverse,
     fontSize: fontSize.md,
   },
-  textArea:          { minHeight: 80, textAlignVertical: 'top' },
-  submitBtn:         { backgroundColor: LUNA_COLORS.secondary, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.xl },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  dateButton: {
+    backgroundColor:  LUNA_COLORS.dark,
+    borderRadius:     borderRadius.md,
+    padding:          spacing.sm,
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:              spacing.sm,
+  },
+  dateButtonEmpty:       { borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
+  dateButtonText:        { color: LUNA_COLORS.textInverse, fontSize: fontSize.md, flex: 1 },
+  dateButtonPlaceholder: { color: LUNA_COLORS.tertiary },
+  datePicker:            { backgroundColor: LUNA_COLORS.dark, borderRadius: borderRadius.md, marginTop: spacing.xs },
+  submitBtn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.md, borderRadius: borderRadius.full, minHeight: 48,
+    alignItems: 'center', marginTop: spacing.lg, marginBottom: spacing.xl }, // ✨
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText:     { color: '#fff', fontWeight: fontWeight.bold, fontSize: fontSize.md },
 });

@@ -92,12 +92,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
-    paddingBottom: 100,
+    paddingBottom: 80, // ✨ espace tab bar
   },
   tile: {
     width: '47%',
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg, // ✨ coins 16px
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     minHeight: 120,
     ...(shadows.sm as object),
@@ -105,7 +107,7 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 48,
     height: 48,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     backgroundColor: LUNA_COLORS.infoLight,
     alignItems: 'center',
     justifyContent: 'center',

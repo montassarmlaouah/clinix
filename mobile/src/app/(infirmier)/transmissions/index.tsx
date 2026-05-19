@@ -35,6 +35,6 @@ export default function TransmissionsScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg, gap: spacing.md },
+  body: { padding: spacing.lg, gap: spacing.md, paddingBottom: 80 }, // ✨ ScrollView tab bar
   hint: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
 });

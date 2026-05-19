@@ -26,7 +26,7 @@ import {
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface PatientDetail {
@@ -454,7 +454,12 @@ const styles = StyleSheet.create({
   headerName: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   headerMeta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
   fabHeader: { padding: spacing.xs },
-  tabBar: { flexGrow: 0, backgroundColor: LUNA_COLORS.surface, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.border },
+  tabBar: {
+    flexGrow: 0,
+    backgroundColor: LUNA_COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur subtil
+  },
   tabContent: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, gap: spacing.sm },
   tab: {
     flexDirection: 'row',
@@ -474,15 +479,22 @@ const styles = StyleSheet.create({
   tabPanel: { gap: spacing.md },
   cardRow: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     gap: spacing.xs,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   cardRowLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.tertiary },
   cardRowValue: { fontSize: fontSize.base, color: LUNA_COLORS.darkest },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
-  sectionTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: LUNA_COLORS.secondary },
+  sectionTitle: {
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
+  }, // ✨
   link: { fontSize: fontSize.sm, color: LUNA_COLORS.secondary, fontWeight: fontWeight.semibold },
   constantesGrid: {
     flexDirection: 'row',
@@ -506,13 +518,14 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, textAlign: 'center', marginVertical: spacing.lg },
   actionBtn: {
     flexDirection: 'row',
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
     backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     paddingVertical: spacing.md,
-  },
+  }, // ✨
   actionBtnText: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textInverse },
   listCard: {
     backgroundColor: LUNA_COLORS.surface,
@@ -539,6 +552,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-  },
+  }, // ✨
   signBtnText: { fontSize: fontSize.xs, color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
 });

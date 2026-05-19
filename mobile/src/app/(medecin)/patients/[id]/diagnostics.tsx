@@ -7,7 +7,7 @@ import { apiGet } from '@/src/api/client';
 import { CONSULTATIONS } from '@/src/api/endpoints';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 export default function PatientDiagnosticsScreen(): React.JSX.Element {
@@ -42,7 +42,9 @@ export default function PatientDiagnosticsScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
   list: { padding: spacing.lg },
-  card: { backgroundColor: LUNA_COLORS.surface, padding: spacing.lg, borderRadius: borderRadius.md, marginBottom: spacing.sm },
+  card: { backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.sm }, // ✨
   title: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
 });

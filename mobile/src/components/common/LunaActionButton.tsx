@@ -4,15 +4,16 @@ import React from 'react';
 import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius } from '@/src/theme/spacing';
 
 type IonIcon = ComponentProps<typeof Ionicons>['name'];
 
-/** Aligné web `btn-action` : 36px ; `sm` = 50 % (compact). */
+/** Aligné adminTable actionBtn : 32px rond, fond semi-transparent. */
 export type LunaActionButtonSize = 'sm' | 'md';
 
-const SIZES: Record<LunaActionButtonSize, { btn: number; icon: number; radius: number }> = {
-  sm: { btn: 32, icon: 16, radius: 6 },
-  md: { btn: 36, icon: 18, radius: 8 },
+const SIZES: Record<LunaActionButtonSize, { btn: number; icon: number }> = {
+  sm: { btn: 28, icon: 14 },
+  md: { btn: 32, icon: 16 },
 };
 
 export interface LunaActionButtonProps {
@@ -20,15 +21,17 @@ export interface LunaActionButtonProps {
   onPress: () => void;
   disabled?: boolean;
   size?: LunaActionButtonSize;
+  color?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-/** Bouton d’action carré bleu foncé (aligné web `btn-action`). */
+/** Bouton d'action icône rond (tableaux admin). */
 export function LunaActionButton({
   icon,
   onPress,
   disabled = false,
   size = 'md',
+  color = LUNA_COLORS.secondary,
   style,
 }: LunaActionButtonProps): React.JSX.Element {
   const dim = SIZES[size];
@@ -39,7 +42,7 @@ export function LunaActionButton({
         {
           width: dim.btn,
           height: dim.btn,
-          borderRadius: dim.radius,
+          backgroundColor: `${color}1F`, // ✨ fond semi-transparent
         },
         disabled && styles.btnDisabled,
         style,
@@ -47,19 +50,18 @@ export function LunaActionButton({
       onPress={onPress}
       disabled={disabled}
     >
-      <Ionicons name={icon} size={dim.icon} color={LUNA_COLORS.textInverse} />
+      <Ionicons name={icon} size={dim.icon} color={color} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   btn: {
-    backgroundColor: LUNA_COLORS.tertiary,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnDisabled: {
-    backgroundColor: LUNA_COLORS.borderDark,
-    opacity: 0.6,
+    opacity: 0.45,
   },
 });

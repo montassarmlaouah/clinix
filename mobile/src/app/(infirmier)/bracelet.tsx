@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 export default function InfirmierBraceletScreen(): React.JSX.Element {
@@ -37,14 +37,15 @@ const styles = StyleSheet.create({
   body: { padding: spacing.xxl, gap: spacing.md },
   hint: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     padding: spacing.md,
     fontSize: fontSize.base,
-  },
-  btn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
+  }, // ✨
+  btn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.md, borderRadius: borderRadius.full, minHeight: 48,
+    alignItems: 'center' }, // ✨
   btnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
   link: { alignItems: 'center', padding: spacing.md },
   linkText: { color: LUNA_COLORS.secondary, fontSize: fontSize.sm },

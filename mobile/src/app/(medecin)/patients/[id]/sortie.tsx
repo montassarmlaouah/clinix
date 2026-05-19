@@ -25,6 +25,6 @@ export default function PatientSortieScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.xxl },
+  body: { padding: spacing.xxl, paddingBottom: 80 }, // ✨ contenu scroll
   text: { fontSize: fontSize.base, color: LUNA_COLORS.textPrimary },
 });

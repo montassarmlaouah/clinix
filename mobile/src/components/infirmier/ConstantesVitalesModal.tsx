@@ -116,7 +116,7 @@ export function ConstantesVitalesModal({ visible, onClose, onSubmit, loading }: 
               <Text style={styles.fieldLabel}>Douleur EVA</Text>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={[styles.input, { borderColor: LUNA_COLORS.borderDark }]}
+                  style={[styles.input, { borderColor: LUNA_COLORS.borderInput }]} // ✨
                   placeholder="0-10"
                   placeholderTextColor={LUNA_COLORS.textDisabled}
                   value={form.douleurEVA ?? ''}
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.border,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   title: {
     fontSize: fontSize.lg,
@@ -181,7 +181,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.md,
   },
   fieldLabel: {
@@ -197,8 +199,9 @@ const styles = StyleSheet.create({
   },
   input: {
     width: 80,
-    borderWidth: 2,
-    borderRadius: borderRadius.sm,
+    borderWidth: 1.5,
+    borderRadius: borderRadius.md, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     padding: spacing.sm,
     fontSize: fontSize.md,
     color: LUNA_COLORS.textPrimary,
@@ -207,14 +210,17 @@ const styles = StyleSheet.create({
   unit: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, width: 32 },
   observationsContainer: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.md,
     gap: spacing.sm,
   },
   observations: {
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    borderRadius: borderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
+    borderRadius: borderRadius.md, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     padding: spacing.sm,
     fontSize: fontSize.sm,
     color: LUNA_COLORS.textPrimary,
@@ -224,7 +230,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.border,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   submitBtn: { width: '100%' },
 });

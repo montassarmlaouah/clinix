@@ -100,8 +100,10 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: spacing.xxl, paddingVertical: spacing.lg, backgroundColor: LUNA_COLORS.surface, ...(shadows.sm as object) },
   title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   sub: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
-  list: { paddingTop: spacing.md, paddingBottom: 60 },
-  contactCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md, padding: spacing.md, marginHorizontal: spacing.xxl, marginBottom: spacing.sm, ...(shadows.sm as object) },
+  // ✨ Liste — paddingBottom tab bar
+  list: { paddingTop: spacing.md, paddingBottom: 80 },
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
+  contactCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.md, marginHorizontal: spacing.xxl, marginBottom: spacing.sm, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object) },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: LUNA_COLORS.secondary, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold, fontSize: fontSize.base },
   info: { flex: 1 },

@@ -11,7 +11,7 @@ import { apiGet, apiPatch } from '@/src/api/client';
 import { RAPPORTS } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Rapport {
@@ -179,10 +179,17 @@ const styles = StyleSheet.create({
   scroll: { padding: spacing.xxl, paddingBottom: 80 },
   signedBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: LUNA_COLORS.successLight, padding: spacing.md, borderRadius: borderRadius.md, marginBottom: spacing.lg },
   signedBannerText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.success },
-  card: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.xxl, marginBottom: spacing.lg, ...(shadows.sm as object) },
-  sectionTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.secondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.md },
+  card: { backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, borderRadius: borderRadius.lg, padding: spacing.xxl, marginBottom: spacing.lg, ...(shadows.sm as object) }, // ✨
+  sectionTitle: {
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
+  }, // ✨
   textBody: { fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, lineHeight: 22 },
-  textarea: { backgroundColor: LUNA_COLORS.background, borderWidth: 1, borderColor: LUNA_COLORS.borderDark, borderRadius: borderRadius.md, padding: spacing.md, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, minHeight: 100, marginBottom: spacing.md },
+  textarea: { backgroundColor: LUNA_COLORS.inputBg, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, borderRadius: borderRadius.md, padding: spacing.md, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, minHeight: 100, marginBottom: spacing.md }, // ✨
   validateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, backgroundColor: LUNA_COLORS.success, paddingVertical: spacing.md, borderRadius: borderRadius.md },
   validateBtnText: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse },
 });

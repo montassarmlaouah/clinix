@@ -68,10 +68,11 @@ export function TransmissionEditor({
           {(['NORMALE', 'URGENTE'] as const).map((p) => (
             <Pressable
               key={p}
-              style={[
+              style={({ pressed }) => [
                 styles.prioriteBtn,
                 priorite === p && (p === 'URGENTE' ? styles.prioriteUrgente : styles.prioriteNormale),
-              ]}
+                pressed && { opacity: 0.75 },
+              ]} // ✨
               onPress={() => onPrioriteChange(p)}
             >
               <Text
@@ -92,7 +93,11 @@ export function TransmissionEditor({
         <Text style={styles.label}>Templates SBAR</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.templatesRow}>
           {(Object.keys(SBAR_TEMPLATES) as Array<keyof typeof SBAR_TEMPLATES>).map((key) => (
-            <Pressable key={key} style={styles.templateBtn} onPress={() => insertTemplate(key)}>
+            <Pressable
+              key={key}
+              style={({ pressed }) => [styles.templateBtn, pressed && { opacity: 0.75 }]}
+              onPress={() => insertTemplate(key)}
+            >
               <Text style={styles.templateBtnText}>{key}</Text>
             </Pressable>
           ))}
@@ -123,7 +128,7 @@ export function TransmissionEditor({
             return (
               <Pressable
                 key={tag}
-                style={[styles.tag, selected && styles.tagSelected]}
+                style={({ pressed }) => [styles.tag, selected && styles.tagSelected, pressed && { opacity: 0.75 }]}
                 onPress={() => toggleTag(tag)}
               >
                 <Text style={[styles.tagText, selected && styles.tagTextSelected]}>
@@ -153,8 +158,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     alignItems: 'center',
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   prioriteNormale: { backgroundColor: LUNA_COLORS.infoLight, borderColor: LUNA_COLORS.secondary },
   prioriteUrgente: { backgroundColor: LUNA_COLORS.errorLight, borderColor: LUNA_COLORS.error },
@@ -174,14 +180,14 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   textArea: {
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: fontSize.sm,
     color: LUNA_COLORS.textPrimary,
     minHeight: 120,
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   tagsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   tag: {
@@ -189,8 +195,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: borderRadius.full ?? 99,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    backgroundColor: LUNA_COLORS.background,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   tagSelected: {
     backgroundColor: LUNA_COLORS.secondary,

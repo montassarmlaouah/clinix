@@ -71,11 +71,13 @@ const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingBottom: 80 },
   card: {
     backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   name: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
 });

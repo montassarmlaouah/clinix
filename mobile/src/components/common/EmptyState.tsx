@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from './Button';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { iconSize, spacing } from '@/src/theme/spacing';
+import { borderRadius, iconSize, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -30,8 +30,8 @@ export function EmptyState({
       <View style={styles.iconWrapper}>
         <Ionicons
           name={icon}
-          size={iconSize.xxl}
-          color={LUNA_COLORS.primary}
+          size={iconSize.xl}
+          color={LUNA_COLORS.secondary}
         />
       </View>
 
@@ -58,34 +58,36 @@ export function EmptyState({
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
     paddingHorizontal: spacing.xxxl,
     paddingVertical:   spacing.huge,
   },
   iconWrapper: {
-    width:           iconSize.xxl + spacing.xxl,
-    height:          iconSize.xxl + spacing.xxl,
-    borderRadius:    (iconSize.xxl + spacing.xxl) / 2,
-    backgroundColor: LUNA_COLORS.surfaceLight,
+    width:           80,
+    height:          80,
+    borderRadius:    borderRadius.full,
+    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ cercle doux
     alignItems:      'center',
     justifyContent:  'center',
     marginBottom:    spacing.xl,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
   },
   title: {
-    fontSize:   fontSize.xl,
-    fontWeight: fontWeight.semibold,
-    color:      LUNA_COLORS.textPrimary,
-    textAlign:  'center',
+    fontSize:     fontSize.lg,
+    fontWeight:   fontWeight.semibold,
+    color:        LUNA_COLORS.textPrimary,
+    textAlign:    'center',
     marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize:   fontSize.base,
-    fontWeight: fontWeight.regular,
-    color:      LUNA_COLORS.textSecondary,
-    textAlign:  'center',
-    lineHeight: 24,
+    fontSize:     fontSize.sm, // ✨ message centré textSecondary 14px
+    fontWeight:   fontWeight.regular,
+    color:        LUNA_COLORS.textSecondary,
+    textAlign:    'center',
+    lineHeight:   22,
     marginBottom: spacing.md,
   },
   actionWrapper: {

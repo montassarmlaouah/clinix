@@ -24,7 +24,10 @@ export function WardFilterChip({
 
   return (
     <>
-      <Pressable style={styles.chip} onPress={() => setOpen(true)}>
+      <Pressable
+        style={({ pressed }) => [styles.chip, pressed && { opacity: 0.75 }]} // ✨
+        onPress={() => setOpen(true)}
+      >
         <Text style={styles.chipText} numberOfLines={1}>
           {current}
         </Text>
@@ -39,7 +42,11 @@ export function WardFilterChip({
               {options.map((opt) => (
                 <Pressable
                   key={opt.value}
-                  style={[styles.option, value === opt.value && styles.optionActive]}
+                  style={({ pressed }) => [
+                    styles.option,
+                    value === opt.value && styles.optionActive,
+                    pressed && { opacity: 0.75 },
+                  ]} // ✨
                   onPress={() => {
                     onChange(opt.value);
                     setOpen(false);
@@ -83,16 +90,20 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg, // ✨
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.lg,
     maxHeight: '70%',
   },
   sheetTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: LUNA_COLORS.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
     marginBottom: spacing.md,
-  },
+  }, // ✨ sectionTitle
   option: {
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,

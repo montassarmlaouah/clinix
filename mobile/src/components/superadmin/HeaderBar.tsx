@@ -6,6 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 
 interface HeaderBarProps {
   title: string;
@@ -37,7 +38,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showLogout = true, 
       <View style={styles.container}>
         <View style={styles.leftContainer}>
           {onBack && (
-            <TouchableOpacity onPress={onBack} style={styles.iconButton}>
+            <TouchableOpacity onPress={onBack} style={styles.iconButton} activeOpacity={0.75}>
               <Ionicons name="arrow-back-outline" size={24} color={LUNA_COLORS.textInverse} />
             </TouchableOpacity>
           )}
@@ -45,7 +46,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showLogout = true, 
         <Text style={styles.title} numberOfLines={1}>{title}</Text>
         <View style={styles.rightContainer}>
           {showLogout && (
-            <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>
+            <TouchableOpacity onPress={handleLogout} style={styles.iconButton} activeOpacity={0.75}>
               <Ionicons name="log-out-outline" size={24} color={LUNA_COLORS.error} />
             </TouchableOpacity>
           )}
@@ -56,14 +57,15 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({ title, showLogout = true, 
 };
 
 const styles = StyleSheet.create({
+  // ✨ Header primary HeroUI
   safeArea: {
-    backgroundColor: LUNA_COLORS.darkest,
+    backgroundColor: LUNA_COLORS.primary,
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     height: 56,
   },
   leftContainer: {
@@ -81,8 +83,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-end',
   },
+  // ✨ Boutons icônes ronds — fond semi-transparent
   iconButton: {
-    padding: 8,
-    margin: -8,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 });
