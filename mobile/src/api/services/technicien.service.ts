@@ -8,8 +8,13 @@ export interface Equipement {
   categorie?: string;
   statut?: string;
   etatTechnique?: string;
-  chambre?: { numero?: string };
+  criticite?: string;
+  localisation?: string;
   descriptionPanne?: string;
+  datePanne?: string;
+  updatedAt?: string;
+  chambre?: { id?: string | number; numero?: string };
+  service?: { nom?: string };
 }
 
 export interface TraiterPannePayload {
