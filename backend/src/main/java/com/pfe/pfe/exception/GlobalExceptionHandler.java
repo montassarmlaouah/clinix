@@ -3,6 +3,8 @@ package com.pfe.pfe.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -101,6 +103,30 @@ public class GlobalExceptionHandler {
         body.put("path", request.getDescription(false).replace("uri=", ""));
         body.put("hint", "Ex. pour la connexion : POST /auth/login avec Content-Type: application/json et le corps {\"username\":\"...\",\"password\":\"...\"}");
         return new ResponseEntity<>(body, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDeniedException(
+            AccessDeniedException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", "Accès refusé. Vous n'avez pas les permissions nécessaires.");
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationException(
+            AuthenticationException ex, WebRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", "Authentification requise.");
+        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("error", "Unauthorized");
+        body.put("path", request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

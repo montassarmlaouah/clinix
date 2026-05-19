@@ -57,7 +57,7 @@ public class BillingController {
     }
 
     @GetMapping("/offres/actives")
-    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','SUPER_ADMIN','MEDECIN')")
     public List<Map<String, Object>> listActives() {
         return billingManagementService.listActiveClinicOffers().stream().map(this::toOffreMap).collect(Collectors.toList());
     }
