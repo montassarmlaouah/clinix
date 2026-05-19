@@ -13,6 +13,19 @@ Ce dossier contient les diagrammes de sequence principaux du projet.
 - `diagramme_sequence_presences.puml`: Pointage de presence des employes.
 - `diagramme_sequence_conges.puml`: Demande et validation de conges.
 - `diagramme_sequence_chatbot.puml`: Echange utilisateur avec chatbot.
+- `diagramme_sequence_abonnement.puml`: Souscription abonnement clinique via Stripe Checkout et webhooks.
+- `diagramme_sequence_facturation_patient.puml`: Facturation patient a la sortie d'hospitalisation (brouillon, emission, paiement, CNAM, PDF).
+
+## Diagrammes de cas d'utilisation
+
+- `diagramme_cas_utilisation_abonnement.puml`: Acteurs super admin, admin clinique, secretaire, Stripe.
+- `diagramme_cas_utilisation_facturation.puml`: Acteurs secretaire et admin clinique, workflow facture patient.
+
+## Rapport PFE
+
+- Texte complet des sprints : `rapport sprint.txt` (racine du projet)
+- Diagrammes organises par sprint : `docs/rapport/diagrammes/sprint-0` … `sprint-6`
+- Detail abonnements + facturation : `docs/RAPPORT_PFE.md`
 
 ## Generation rapide (optionnel)
 

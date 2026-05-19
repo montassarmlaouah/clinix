@@ -43,7 +43,7 @@ export function RoleDrawer(): React.JSX.Element {
 
   function navigate(item: RoleMenuItem) {
     closeDrawer();
-    router.push(item.route as never);
+    router.navigate(item.route as never);
   }
 
   return (
@@ -83,7 +83,7 @@ export function RoleDrawer(): React.JSX.Element {
             {items.map((item) => (
               <Pressable
                 key={item.route}
-                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]} // ✨ opacity 0.75
                 onPress={() => navigate(item)}
               >
                 <Ionicons name={item.icon} size={22} color={LUNA_COLORS.secondary} />
@@ -94,7 +94,7 @@ export function RoleDrawer(): React.JSX.Element {
 
           <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
             <Pressable
-              style={styles.footerRow}
+              style={({ pressed }) => [styles.footerRow, pressed && { opacity: 0.75 }]} // ✨
               onPress={() => {
                 closeDrawer();
                 void logout();
@@ -103,7 +103,10 @@ export function RoleDrawer(): React.JSX.Element {
               <Ionicons name="log-out-outline" size={22} color={LUNA_COLORS.secondary} />
               <Text style={styles.footerLabel}>Déconnexion</Text>
             </Pressable>
-            <Pressable style={styles.helpRow} onPress={closeDrawer}>
+            <Pressable
+              style={({ pressed }) => [styles.helpRow, pressed && { opacity: 0.75 }]} // ✨
+              onPress={closeDrawer}
+            >
               <Ionicons name="help-circle-outline" size={20} color={LUNA_COLORS.textDisabled} />
               <Text style={styles.helpLabel}>Aide & Formation</Text>
             </Pressable>
@@ -134,6 +137,8 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     height: '100%',
     backgroundColor: LUNA_COLORS.surface,
+    borderRightWidth: 1,
+    borderRightColor: LUNA_COLORS.borderSubtle, // ✨
     shadowColor: LUNA_COLORS.darkest,
     shadowOffset: { width: 4, height: 0 },
     shadowOpacity: 0.18,
@@ -161,22 +166,22 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    color: LUNA_COLORS.textInverse, // ✨ sur fond primary
   },
   clinicLine: {
     fontSize: fontSize.sm,
-    color: LUNA_COLORS.tertiary,
+    color: 'rgba(255,255,255,0.85)', // ✨
     marginTop: 2,
   },
   userLine: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.dark,
+    color: LUNA_COLORS.textInverse, // ✨
     marginTop: 2,
   },
   roleLine: {
     fontSize: fontSize.xs,
-    color: LUNA_COLORS.tertiary,
+    color: 'rgba(255,255,255,0.75)', // ✨
     marginTop: 2,
   },
   list: { flex: 1 },
@@ -188,9 +193,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.borderDark,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur
   },
-  rowPressed: { backgroundColor: LUNA_COLORS.surfaceLight },
+  rowPressed: { backgroundColor: LUNA_COLORS.surfaceLight, opacity: 0.75 }, // ✨
   rowLabel: {
     flex: 1,
     fontSize: fontSize.base,
@@ -200,7 +205,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.borderDark,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
     paddingTop: spacing.sm,
     paddingHorizontal: spacing.lg,
   },

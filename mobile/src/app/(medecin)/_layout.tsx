@@ -65,48 +65,56 @@ export default function MedecinLayout(): React.JSX.Element {
           tabBarIcon: createTabBarIcon('chatbubbles-outline', { badge: unread }),
         }}
       />
-      <Tabs.Screen name="planning" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="operations" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="taches-soins" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="notes" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="ordonnances" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="hospitalisations" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="change-organisation" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="scanner" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="tarifs" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="alertes" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="conges" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="rendez-vous" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="examens" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/consultation" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/ordonnance" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/examens" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/constantes" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/observations" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/hospitalisations" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/diagnostics" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/dossier" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/prescriptions" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/rapport/[rapportId]" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/sortie" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/[id]/transfert" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="operations/[id]" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="operations/[id]/plan" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="operations/[id]/compte-rendu" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="messagerie/[contactId]" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="transferts/creer" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="patients/nouveau" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="operations/nouveau" options={hiddenTabScreenOptions} />
+      <Tabs.Screen
+        name="menu"
+        options={{
+          title: 'Menu',
+          tabBarIcon: createTabBarIcon('menu-outline'),
+        }}
+      />
+      {/* ── Écrans cachés : dossiers spécifiques ── */}
+      <Tabs.Screen name="operations"                          options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="profil"                              options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="examens"                             options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="conges"                              options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="rendez-vous"                         options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques"                        options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-medicament"                 options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="demandes-operation"                  options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="alertes"                             options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="hospitalisations"                    options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="ordonnances"                         options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="taches-soins"                        options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="notes"                               options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="planning"                            options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="scanner"                             options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement"                          options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="abonnement-paiement"                 options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="tarifs"                              options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="change-organisation"                 options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="notifications"                       options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]"                       options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/consultation"          options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/ordonnance"            options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/examens"               options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/constantes"            options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/observations"          options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/hospitalisations"      options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/diagnostics"           options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/dossier"               options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/prescriptions"         options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/rapport/[rapportId]"   options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/sortie"                options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/[id]/transfert"             options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]"                     options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]/plan"                options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/[id]/compte-rendu"        options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="messagerie/[contactId]"              options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="transferts/creer"                    options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="patients/nouveau"                    options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="operations/nouveau"                  options={hiddenTabScreenOptions} />
+      {/* ── Routeur dynamique (doit être déclaré en dernier) ── */}
+      <Tabs.Screen name="[screen]"                            options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );

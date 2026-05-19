@@ -137,7 +137,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   headerCount: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
-  filterBar: { flexGrow: 0, backgroundColor: LUNA_COLORS.surface, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.border },
+  filterBar: {
+    flexGrow: 0,
+    backgroundColor: LUNA_COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur subtil
+  },
   filterContent: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },
   filterChip: {
     paddingVertical: spacing.sm,
@@ -153,11 +158,13 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: spacing.xxl, paddingTop: spacing.md, paddingBottom: 80 },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
     padding: spacing.lg,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   cardRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
   cardInfo: { flex: 1 },
   patientName: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },

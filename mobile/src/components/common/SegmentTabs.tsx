@@ -32,7 +32,7 @@ export function SegmentTabs<T extends string>({
           <Pressable
             key={opt.key}
             onPress={() => onChange(opt.key)}
-            style={[
+            style={({ pressed }) => [
               styles.tab,
               onDark
                 ? active
@@ -41,6 +41,7 @@ export function SegmentTabs<T extends string>({
                 : active
                   ? styles.tabActiveLight
                   : styles.tabIdleLight,
+              pressed && { opacity: 0.75 }, // ✨
             ]}
           >
             <Text
@@ -72,7 +73,11 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   wrapDark: { backgroundColor: 'rgba(255,255,255,0.12)' },
-  wrapLight: { backgroundColor: LUNA_COLORS.surface },
+  wrapLight: {
+    backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
+  },
   tab: {
     flex: 1,
     paddingVertical: spacing.sm,

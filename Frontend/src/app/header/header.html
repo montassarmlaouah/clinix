@@ -116,13 +116,13 @@
         <span *ngIf="!isSidebarCollapsed">Demandes d’opération</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      
+
       <a routerLink="/facturation-patient" routerLinkActive="active" class="nav-link">
         <i class="bi bi-receipt"></i>
         <span *ngIf="!isSidebarCollapsed">Facturation patient</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      
+     
     </div>
     <div class="menu-section" *ngIf="hasAnyRole(['ROLE_MEDECIN'])">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
@@ -134,6 +134,36 @@
       <a routerLink="/medecin-statistiques" routerLinkActive="active" class="nav-link">
         <i class="bi bi-graph-up-arrow"></i>
         <span *ngIf="!isSidebarCollapsed">Statistiques</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-consultation" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-journal-medical"></i>
+        <span *ngIf="!isSidebarCollapsed">Consultation</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-examens" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-clipboard2-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Examens</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-hospitalisations" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-hospital"></i>
+        <span *ngIf="!isSidebarCollapsed">Hospitalisations</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-urgences" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span *ngIf="!isSidebarCollapsed">Urgences</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-messagerie" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-chat-dots"></i>
+        <span *ngIf="!isSidebarCollapsed">Messagerie</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/medecin-dossier" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-folder2-open"></i>
+        <span *ngIf="!isSidebarCollapsed">Dossier médical</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       <a routerLink="/medecin-taches-soins" routerLinkActive="active" class="nav-link">
@@ -174,6 +204,22 @@
       <a routerLink="/demandes-medicament" routerLinkActive="active" class="nav-link">
         <i class="bi bi-capsule"></i>
         <span *ngIf="!isSidebarCollapsed">Demandes Médicaments</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a *ngIf="auth.isMedecin()" routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-credit-card-2-front"></i>
+        <span *ngIf="!isSidebarCollapsed">Mon abonnement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.peutGererAbonnementCabinet()"
+        routerLink="/tarifs-abonnement"
+        [queryParams]="{ scope: 'cabinet' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-grid-3x3-gap"></i>
+        <span *ngIf="!isSidebarCollapsed">Forfaits cabinet</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
     </div>
@@ -224,6 +270,41 @@
       <a routerLink="/infirmier-soins" routerLinkActive="active" class="nav-link">
         <i class="bi bi-heart-pulse"></i>
         <span *ngIf="!isSidebarCollapsed">Soins &amp; Urgences</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/rendez-vous" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-calendar-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Rendez-vous</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/chambres" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-door-closed"></i>
+        <span *ngIf="!isSidebarCollapsed">Chambres</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-bracelet" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-upc-scan"></i>
+        <span *ngIf="!isSidebarCollapsed">Bracelet patient</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/demandes-operation" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-heart-pulse"></i>
+        <span *ngIf="!isSidebarCollapsed">Demandes d'opération</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-check-list" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-check2-square"></i>
+        <span *ngIf="!isSidebarCollapsed">Check-list sécurité</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-sspi" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-activity"></i>
+        <span *ngIf="!isSidebarCollapsed">SSPI</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a routerLink="/infirmier-transmissions" routerLinkActive="active" class="nav-link">
+        <i class="bi bi-chat-left-text"></i>
+        <span *ngIf="!isSidebarCollapsed">Transmissions SBAR</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       <a routerLink="/presences" routerLinkActive="active" class="nav-link">

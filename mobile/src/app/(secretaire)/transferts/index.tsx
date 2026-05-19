@@ -96,11 +96,14 @@ const styles = StyleSheet.create({
   title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   subtitle: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
   list: { padding: spacing.xxl, paddingBottom: 80 },
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

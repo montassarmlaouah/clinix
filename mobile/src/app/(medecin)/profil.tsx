@@ -8,7 +8,7 @@ import { apiGet, apiPut } from '@/src/api/client';
 import { MEDECINS } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface MedecinProfile {
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.borderDark,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   actionText: { flex: 1, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary },
 });

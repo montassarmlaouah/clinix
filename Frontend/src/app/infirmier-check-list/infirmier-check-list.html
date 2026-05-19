@@ -1,0 +1,33 @@
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/infirmier"><i class="bi bi-arrow-left"></i> Espace infirmier</a>
+  </nav>
+
+  <header class="page-header">
+    <h1><i class="bi bi-check2-square header-icon"></i> Check-list sécurité</h1>
+    <p class="page-subtitle">Contrôles pré-intervention. Cochez chaque point avant de procéder.</p>
+  </header>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" [style.width.%]="(done / total) * 100"></div>
+    <span class="progress-label">{{ done }} / {{ total }} validés</span>
+  </div>
+
+  <div class="alert alert-luna-success" *ngIf="allMandatoryDone">
+    <i class="bi bi-check-circle me-2"></i>Tous les points obligatoires sont validés.
+  </div>
+
+  <ul class="check-list">
+    <li *ngFor="let item of items" class="check-item" [class.checked]="item.checked">
+      <label class="check-label">
+        <input type="checkbox" [(ngModel)]="item.checked" />
+        <span class="check-text">{{ item.libelle }}</span>
+        <span class="badge-obligatoire" *ngIf="item.obligatoire">Obligatoire</span>
+      </label>
+    </li>
+  </ul>
+
+  <button class="btn-reset" (click)="reset()">
+    <i class="bi bi-arrow-counterclockwise me-2"></i>Réinitialiser
+  </button>
+</div>

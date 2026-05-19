@@ -36,7 +36,7 @@ export function LunaPatientRowCard({ row, onPress }: LunaPatientRowCardProps): R
   const daysLabel = daysAdmitted != null ? `${daysAdmitted}j` : null;
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={({ pressed }) => [styles.card, pressed && { opacity: 0.75 }]} onPress={onPress}>
       <View style={styles.avatarWrap}>
         <View style={styles.avatar}>
           <Text style={styles.avatarTxt}>{initials || '?'}</Text>
@@ -80,11 +80,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: LUNA_COLORS.surface,
+    borderRadius: borderRadius.lg, // ✨
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
     paddingVertical: spacing.md,
     paddingLeft: spacing.lg,
     paddingRight: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: LUNA_COLORS.borderDark,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
   avatarWrap: {
     width: 56,
@@ -155,7 +158,7 @@ const styles = StyleSheet.create({
     width: 4,
     alignSelf: 'stretch',
     borderRadius: borderRadius.sm,
-    backgroundColor: LUNA_COLORS.borderDark,
+    backgroundColor: 'rgba(197, 220, 234, 0.6)', // ✨
     marginLeft: spacing.xs,
   },
   statusBarAlert: {

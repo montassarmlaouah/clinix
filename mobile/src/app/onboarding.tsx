@@ -125,7 +125,7 @@ export default function OnboardingScreen() {
       <TouchableOpacity
         style={styles.button}
         onPress={isLast ? finishOnboarding : handleNext}
-        activeOpacity={0.85}
+        activeOpacity={0.75}
       >
         <Text style={styles.buttonText}>{isLast ? 'Commencer' : 'Suivant'}</Text>
       </TouchableOpacity>
@@ -169,6 +169,8 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: 90,
     backgroundColor: LUNA_COLORS.surfaceLight,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,

@@ -1,10 +1,10 @@
-import { Tabs } from 'expo-router';
+﻿import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icônes — Accueil · Planning · Présences */
+/** Barre du bas : 3 icÃ´nes â€” Accueil Â· Planning Â· PrÃ©sences */
 export default function ChefPersonnelLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
@@ -28,7 +28,7 @@ export default function ChefPersonnelLayout(): React.JSX.Element {
       <Tabs.Screen
         name="presences"
         options={{
-          title: 'Présences',
+          title: 'PrÃ©sences',
           tabBarIcon: createTabBarIcon('time-outline'),
         }}
       />
@@ -36,7 +36,9 @@ export default function ChefPersonnelLayout(): React.JSX.Element {
       <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );
 }
+

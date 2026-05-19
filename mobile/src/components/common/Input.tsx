@@ -43,7 +43,7 @@ export function Input({
     ? LUNA_COLORS.error
     : isFocused
     ? LUNA_COLORS.secondary
-    : LUNA_COLORS.borderDark;
+    : LUNA_COLORS.borderInput;
 
   return (
     <View style={styles.wrapper}>
@@ -102,29 +102,37 @@ const styles = StyleSheet.create({
   label: {
     fontSize:     fontSize.sm,
     fontWeight:   fontWeight.medium,
-    color:        LUNA_COLORS.textPrimary,
+    color:        LUNA_COLORS.textSecondary, // ✨ label flottant style HeroUI
     marginBottom: spacing.xs,
   },
   inputContainer: {
     flexDirection:   'row',
     alignItems:      'center',
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond inputBg
     borderWidth:     1.5,
     borderRadius:    borderRadius.md,
-    minHeight:       48,
+    minHeight:       52, // ✨ hauteur 52px
   },
   focused: {
+    borderWidth: 2,
     borderColor: LUNA_COLORS.secondary,
+    // ✨ halo focus bleu (approximation RN sans box-shadow)
+    shadowColor: '#2d9cdb',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 2,
   },
   errorBorder: {
     borderColor: LUNA_COLORS.error,
+    borderWidth: 2,
   },
   input: {
-    flex:             1,
-    paddingVertical:  spacing.md,
-    paddingHorizontal:spacing.lg,
-    fontSize:         fontSize.base,
-    color:            LUNA_COLORS.textPrimary,
+    flex:              1,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.lg,
+    fontSize:          fontSize.base,
+    color:             LUNA_COLORS.textPrimary,
     includeFontPadding: false,
   },
   inputWithLeft: {
@@ -134,13 +142,13 @@ const styles = StyleSheet.create({
     paddingRight: spacing.xs,
   },
   iconLeft: {
-    paddingLeft:  spacing.lg,
-    alignItems:   'center',
+    paddingLeft:    spacing.lg,
+    alignItems:     'center',
     justifyContent: 'center',
   },
   iconRight: {
-    paddingRight: spacing.lg,
-    alignItems:   'center',
+    paddingRight:   spacing.lg,
+    alignItems:     'center',
     justifyContent: 'center',
   },
   errorText: {

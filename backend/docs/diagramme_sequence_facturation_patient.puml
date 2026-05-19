@@ -1,0 +1,52 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Facturation patient (sortie hospitalisation)
+
+autonumber
+
+actor Secretaire as "Secretaire / Admin clinique"
+boundary UI as "Angular / Mobile"
+control API as "FacturationPatientController"
+control Service as "FacturationPatientService"
+control PDF as "FacturePatientPdfService"
+database DB as "Base de donnees"
+
+Secretaire -> UI: Selectionner hospitalisation terminee
+UI -> API: POST /api/facturation-patient/generer
+API -> Service: genererDepuisHospitalisation(request)
+Service -> DB: Charger hospitalisation + patient
+Service -> Service: Cloturer sejour (date sortie, chambre liberee)
+Service -> Service: Calculer jours + lignes prestations CNAM
+Service -> DB: Sauver facture (statut BROUILLON)
+DB --> Service: FacturePatient
+Service --> API: Facture brouillon
+API --> UI: Facture creee
+
+Secretaire -> UI: Emettre la facture
+UI -> API: POST /api/facturation-patient/{id}/emettre
+API -> Service: emettre(id)
+Service -> Service: BROUILLON -> EMISE
+Service --> API: Facture emise
+
+Secretaire -> UI: Valider paiement ticket moderateur
+UI -> API: POST /api/facturation-patient/{id}/valider-paiement
+API -> Service: validerPaiement(id, {montantPaye, modePaiement})
+Service -> Service: EMISE -> PAYEE
+Service --> API: Facture payee
+
+Secretaire -> UI: Teletransmettre CNAM
+UI -> API: POST /api/facturation-patient/{id}/teletransmettre
+API -> Service: teletransmettre(id)
+Service -> Service: Generer ref CNAM + PAYEE -> TELETRANSMIS
+Service --> API: TeletransmissionResult
+API --> UI: Reference teletransmission
+
+Secretaire -> UI: Telecharger PDF
+UI -> API: GET /api/facturation-patient/{id}/pdf
+API -> PDF: genererPdf(id)
+PDF -> DB: Detail facture + lignes
+PDF --> API: bytes PDF
+API --> UI: application/pdf
+
+@enduml

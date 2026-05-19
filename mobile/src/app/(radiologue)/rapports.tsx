@@ -116,6 +116,7 @@ export default function RapportsScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  // ✨ Liste — paddingBottom tab bar
   list: { padding: spacing.lg, paddingBottom: 80 },
   statut: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold },
 });

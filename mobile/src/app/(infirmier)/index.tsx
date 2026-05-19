@@ -9,111 +9,297 @@ import {
   Text,
   View,
 } from 'react-native';
-import { DashboardQuickLinks, EmptyState, LoadingOverlay, LunaHeroHeader, LunaScreen } from '@/src/components/common';
-import { apiGet } from '@/src/api/client';
-import { ADMINISTRATIONS } from '@/src/api/endpoints';
-import { useAuthStore } from '@/src/store/auth.store';
-import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
 
-interface OperationSummary {
+import { apiGet } from '@/src/api/client';
+import {
+  ADMINISTRATIONS,
+  SURVEILLANCES,
+  PRESENCES,
+} from '@/src/api/endpoints';
+import { useAuthStore } from '@/src/store/auth.store';
+import {
+  DashboardQuickLinks,
+  EmptyState,
+  LoadingOverlay,
+  LunaHeroHeader,
+  LunaScreen,
+} from '@/src/components/common';
+import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Administration {
   id: string;
-  typeOperation: string;
-  heureDebutPrevue?: string;
-  statut: string;
-  patient?: { nom: string; prenom: string };
+  statut?: string;
+  dateAdministration?: string;
 }
 
+interface Surveillance {
+  id: string;
+  alerte?: boolean;
+  niveauAlerte?: string;
+}
+
+interface Presence {
+  id: string;
+  present?: boolean;
+  statut?: string;
+}
+
+interface DashboardStats {
+  soinsAFaire:      number;
+  soinsFaits:       number;
+  patientsSuivis:   number;
+  alertesCritiques: number;
+  presentsAujourdhui: number;
+}
+
+// ── Composant action rapide ───────────────────────────────────────────────────
+
+function QuickAction({
+  icon,
+  label,
+  onPress,
+  badge,
+}: {
+  icon: string;
+  label: string;
+  onPress: () => void;
+  badge?: number;
+}) {
+  return (
+    <Pressable style={styles.quickAction} onPress={onPress}>
+      <View style={styles.quickIconWrap}>
+        <Ionicons name={icon as never} size={22} color={LUNA_COLORS.secondary} />
+        {badge != null && badge > 0 && (
+          <View style={styles.quickBadge}>
+            <Text style={styles.quickBadgeTxt}>{badge > 99 ? '99+' : badge}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={styles.quickLabel} numberOfLines={1}>{label}</Text>
+    </Pressable>
+  );
+}
+
+// ── Composant carte KPI ───────────────────────────────────────────────────────
+
+function KpiCard({
+  icon,
+  value,
+  label,
+  color,
+  bg,
+  onPress,
+}: {
+  icon: string;
+  value: number | string;
+  label: string;
+  color: string;
+  bg: string;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      style={[styles.kpiCard, { backgroundColor: bg }]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <Ionicons name={icon as never} size={22} color={color} />
+      <Text style={[styles.kpiValue, { color }]}>{value}</Text>
+      <Text style={styles.kpiLabel}>{label}</Text>
+    </Pressable>
+  );
+}
+
+// ── Écran principal ───────────────────────────────────────────────────────────
+
 export default function InfirmierDashboard() {
-  const router = useRouter();
-  const { userId: userIdRaw, cliniqueId } = useAuthStore();
-  const userId = String(userIdRaw ?? '');
+  const router   = useRouter();
+  const { userId: userIdRaw } = useAuthStore();
+  const userId   = String(userIdRaw ?? '');
 
-  const [loading, setLoading] = useState(true);
+  const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [operations, setOperations] = useState<OperationSummary[]>([]);
-  const [pendingTasks, setPendingTasks] = useState(0);
+  const [stats,      setStats]      = useState<DashboardStats>({
+    soinsAFaire:        0,
+    soinsFaits:         0,
+    patientsSuivis:     0,
+    alertesCritiques:   0,
+    presentsAujourdhui: 0,
+  });
 
+  // ── Chargement des données ─────────────────────────────────────────────────
   const load = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) { setLoading(false); return; }
     try {
-      const administrations = await apiGet<{ statut?: string }[]>(
-        ADMINISTRATIONS.BY_INFIRMIER(userId)
-      ).catch(() => []);
-      setPendingTasks(administrations.filter((item) => item.statut !== 'ADMINISTRE' && item.statut !== 'FAIT').length);
+      // Appels parallèles — tous avec endpoints réels vérifiés dans endpoints.ts
+      const [administrations, surveillances, presences] = await Promise.all([
+        apiGet<Administration[]>(ADMINISTRATIONS.BY_INFIRMIER(userId)).catch(() => [] as Administration[]),
+        apiGet<Surveillance[]>(SURVEILLANCES.BY_INFIRMIER(userId)).catch(() => [] as Surveillance[]),
+        apiGet<Presence[]>(PRESENCES.AUJOURDHUI).catch(() => [] as Presence[]),
+      ]);
 
-      // Planning — endpoint optionnel
-      try {
-        const today = new Date().toISOString().split('T')[0];
-        const ops = await apiGet<OperationSummary[]>(
-          `/api/infirmiers/${userId}/planning?date=${today}${cliniqueId ? `&organisationId=${cliniqueId}` : ''}`,
-        );
-        setOperations(ops);
-      } catch {
-        // Endpoint peut ne pas exister — ignorer
-      }
+      // Calcul cohérent avec soins.tsx et _layout.tsx
+      const soinsAFaire = administrations.filter(
+        (a) => a.statut !== 'ADMINISTRE' && a.statut !== 'FAIT',
+      ).length;
+
+      const soinsFaits = administrations.filter(
+        (a) => a.statut === 'ADMINISTRE' || a.statut === 'FAIT',
+      ).length;
+
+      const alertesCritiques = surveillances.filter(
+        (s) => s.alerte === true || s.niveauAlerte === 'CRITIQUE',
+      ).length;
+
+      const presentsAujourdhui = presences.filter(
+        (p) => p.present === true || p.statut === 'PRESENT',
+      ).length;
+
+      setStats({
+        soinsAFaire,
+        soinsFaits,
+        patientsSuivis:   surveillances.length,
+        alertesCritiques,
+        presentsAujourdhui,
+      });
     } catch {
-      // ignore
+      // Les erreurs individuelles sont absorbées dans les .catch() ci-dessus
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [userId, cliniqueId]);
+  }, [userId]);
 
   useEffect(() => { load(); }, [load]);
+
   const onRefresh = () => { setRefreshing(true); load(); };
 
   if (loading) return <LoadingOverlay />;
 
   const today = new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long',
+    weekday: 'long',
+    day:     'numeric',
+    month:   'long',
   });
 
+  // ── Rendu ──────────────────────────────────────────────────────────────────
   return (
     <LunaScreen edges={[]}>
-      <LunaHeroHeader title="Accueil infirmier" subtitle={today} showBack={false} />
+      <LunaHeroHeader
+        title="Espace infirmier"
+        subtitle={today}
+        showBack={false}
+      />
 
       <FlatList
         data={[]}
         keyExtractor={() => ''}
         renderItem={null}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={LUNA_COLORS.secondary}
+            colors={[LUNA_COLORS.secondary]}
+          />
+        }
         ListHeaderComponent={
           <>
-            <View style={styles.metricsRow}>
-              <Pressable
-                style={[styles.metricCard, { backgroundColor: LUNA_COLORS.infoLight }]}
+            {/* ── KPIs principaux ─────────────────────────────────────── */}
+            <View style={styles.kpiGrid}>
+              <KpiCard
+                icon="medkit-outline"
+                value={stats.soinsAFaire}
+                label="Soins à faire"
+                color={LUNA_COLORS.error}
+                bg={LUNA_COLORS.errorLight}
                 onPress={() => router.push('/(infirmier)/soins')}
-              >
-                <Ionicons name="medical-outline" size={24} color={LUNA_COLORS.info} />
-                <Text style={styles.metricValue}>{pendingTasks}</Text>
-                <Text style={styles.metricLabel}>Soins à faire</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.metricCard, { backgroundColor: LUNA_COLORS.successLight }]}
+              />
+              <KpiCard
+                icon="checkmark-circle-outline"
+                value={stats.soinsFaits}
+                label="Soins effectués"
+                color={LUNA_COLORS.success}
+                bg={LUNA_COLORS.successLight}
+                onPress={() => router.push('/(infirmier)/soins')}
+              />
+              <KpiCard
+                icon="people-outline"
+                value={stats.patientsSuivis}
+                label="Patients suivis"
+                color={LUNA_COLORS.info}
+                bg={LUNA_COLORS.infoLight}
                 onPress={() => router.push('/(infirmier)/patients')}
-              >
-                <Ionicons name="people-outline" size={24} color={LUNA_COLORS.success} />
-                <Text style={styles.metricValue}>Patients</Text>
-                <Text style={styles.metricLabel}>Liste</Text>
-              </Pressable>
+              />
+              <KpiCard
+                icon="alert-circle-outline"
+                value={stats.alertesCritiques}
+                label="Alertes critiques"
+                color={LUNA_COLORS.warning}
+                bg={LUNA_COLORS.warningLight}
+                onPress={() => router.push('/(infirmier)/alertes')}
+              />
             </View>
 
-            <DashboardQuickLinks maxItems={6} excludeRoutes={['/(infirmier)/index']} />
+            {/* ── Présence du jour ─────────────────────────────────────── */}
+            <Pressable
+              style={styles.presenceBar}
+              onPress={() => router.push('/(infirmier)/presences')}
+            >
+              <Ionicons
+                name="people-circle-outline"
+                size={20}
+                color={LUNA_COLORS.secondary}
+              />
+              <Text style={styles.presenceText}>
+                {stats.presentsAujourdhui} personnel présent aujourd&apos;hui
+              </Text>
+              <Ionicons
+                name="chevron-forward-outline"
+                size={16}
+                color={LUNA_COLORS.textSecondary}
+                style={{ marginLeft: 'auto' }}
+              />
+            </Pressable>
 
+            {/* ── Raccourcis rapides ───────────────────────────────────── */}
             <Text style={styles.sectionTitle}>Actions rapides</Text>
-            <View style={styles.actionsRow}>
+            <View style={styles.actionsGrid}>
               <QuickAction
                 icon="thermometer-outline"
-                label="Constantes"
-                onPress={() => router.push('/(infirmier)/patients')}
+                label="Surveillance"
+                onPress={() => router.push('/(infirmier)/surveillance-soins' as never)}
               />
               <QuickAction
                 icon="medkit-outline"
                 label="Soins"
+                badge={stats.soinsAFaire}
                 onPress={() => router.push('/(infirmier)/soins')}
+              />
+              <QuickAction
+                icon="calendar-outline"
+                label="RDV"
+                onPress={() => router.push('/(infirmier)/rendez-vous' as never)}
+              />
+              <QuickAction
+                icon="bed-outline"
+                label="Chambres"
+                onPress={() => router.push('/(infirmier)/chambres' as never)}
+              />
+              <QuickAction
+                icon="alert-circle-outline"
+                label="Alertes"
+                badge={stats.alertesCritiques}
+                onPress={() => router.push('/(infirmier)/alertes')}
+              />
+              <QuickAction
+                icon="home-outline"
+                label="Visites"
+                onPress={() => router.push('/(infirmier)/visites-jour')}
               />
               <QuickAction
                 icon="calendar-outline"
@@ -121,45 +307,53 @@ export default function InfirmierDashboard() {
                 onPress={() => router.push('/(infirmier)/planning')}
               />
               <QuickAction
-                icon="alert-circle-outline"
-                label="Alertes"
-                onPress={() => router.push('/(infirmier)/alertes')}
-              />
-              <QuickAction
-                icon="home-outline"
-                label="Visites"
-                onPress={() => router.push('/(infirmier)/visites-jour' as never)}
-              />
-              <QuickAction
                 icon="bandage-outline"
                 label="Bracelet"
-                onPress={() => router.push('/(infirmier)/bracelet' as never)}
+                onPress={() => router.push('/(infirmier)/bracelet')}
               />
               <QuickAction
                 icon="bed-outline"
                 label="Hospi."
-                onPress={() => router.push('/(infirmier)/hospitalisations' as never)}
+                onPress={() => router.push('/(infirmier)/hospitalisations')}
               />
               <QuickAction
                 icon="airplane-outline"
                 label="Congés"
-                onPress={() => router.push('/(infirmier)/congie' as never)}
+                onPress={() => router.push('/(infirmier)/congie')}
+              />
+              <QuickAction
+                icon="warning-outline"
+                label="Signalements"
+                onPress={() => router.push('/(infirmier)/signalements')}
+              />
+              <QuickAction
+                icon="scan-outline"
+                label="Scanner"
+                onPress={() => router.push('/(infirmier)/scanner')}
+              />
+              <QuickAction
+                icon="time-outline"
+                label="Présences"
+                onPress={() => router.push('/(infirmier)/presences')}
+              />
+              <QuickAction
+                icon="list-outline"
+                label="Tâches"
+                badge={stats.soinsAFaire}
+                onPress={() => router.push('/(infirmier)/taches-soins' as never)}
+              />
+              <QuickAction
+                icon="checklist-outline"
+                label="Check-list"
+                onPress={() => router.push('/(infirmier)/check-list')}
               />
             </View>
 
-            {operations.length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Planning du jour</Text>
-                {operations.map((op) => (
-                  <View key={op.id} style={styles.opCard}>
-                    <Text style={styles.opTitle}>{op.typeOperation}</Text>
-                    <Text style={styles.opMeta}>
-                      {op.patient?.nom} {op.patient?.prenom} · {op.heureDebutPrevue?.slice(0, 5) ?? ''}
-                    </Text>
-                  </View>
-                ))}
-              </>
-            )}
+            {/* ── Liens rapides dynamiques (DashboardQuickLinks) ──────── */}
+            <DashboardQuickLinks
+              maxItems={4}
+              excludeRoutes={['/(infirmier)/index']}
+            />
           </>
         }
         ListEmptyComponent={
@@ -169,68 +363,120 @@ export default function InfirmierDashboard() {
             subtitle="Sélectionnez un patient pour commencer les soins."
           />
         }
+        contentContainerStyle={styles.listContent}
       />
     </LunaScreen>
   );
 }
 
-function QuickAction({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
-  return (
-    <Pressable style={styles.quickAction} onPress={onPress}>
-      <View style={styles.quickIconWrap}>
-        <Ionicons name={icon as any} size={22} color={LUNA_COLORS.secondary} />
-      </View>
-      <Text style={styles.quickLabel}>{label}</Text>
-    </Pressable>
-  );
-}
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  listContent: { paddingBottom: 80 },
+
+  // ── KPI grid ────────────────────────────────────────────────────────────────
+  kpiGrid: {
+    flexDirection:    'row',
+    flexWrap:         'wrap',
+    gap:              spacing.md,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
+    paddingTop:       spacing.lg,
+    marginBottom:     spacing.md,
   },
-  greeting: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
-  date: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs },
-  notifBtn: {
-    width: 44, height: 44, borderRadius: borderRadius.full,
-    backgroundColor: LUNA_COLORS.secondary,
-    alignItems: 'center', justifyContent: 'center',
+  kpiCard: {
+    width:          '47%',
+    borderRadius:   borderRadius.lg,
+    padding:        spacing.lg,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderWidth:    1,
+    borderColor:    LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
-  metricsRow: { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
-  metricCard: {
-    flex: 1, borderRadius: borderRadius.lg, padding: spacing.lg,
-    alignItems: 'center', justifyContent: 'center',
+  kpiValue: {
+    fontSize:   fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    marginTop:  spacing.sm,
   },
-  metricValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest, marginTop: spacing.sm },
-  metricLabel: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs },
-  sectionTitle: {
-    fontSize: fontSize.base, fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.darkest, paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md, marginTop: spacing.lg,
+  kpiLabel: {
+    fontSize:  fontSize.xs,
+    color:     LUNA_COLORS.textSecondary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
-  actionsRow: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: spacing.xl, gap: spacing.md,
-  },
-  quickAction: { width: '22%', alignItems: 'center' },
-  quickIconWrap: {
-    width: 52, height: 52, borderRadius: borderRadius.lg,
+
+  // ── Barre présence ───────────────────────────────────────────────────────────
+  presenceBar: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             spacing.sm,
+    marginHorizontal: spacing.xl,
+    marginBottom:    spacing.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     backgroundColor: LUNA_COLORS.surface,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: LUNA_COLORS.border,
+    borderRadius:    borderRadius.md,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
   },
-  quickLabel: { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs, textAlign: 'center' },
-  opCard: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
-    padding: spacing.lg, marginHorizontal: spacing.xl, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: LUNA_COLORS.border,
+  presenceText: {
+    fontSize: fontSize.sm,
+    color:    LUNA_COLORS.textPrimary,
+    flex:     1,
   },
-  opTitle: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
-  opMeta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs },
+
+  // ── Titre de section ─────────────────────────────────────────────────────────
+  sectionTitle: {
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom:      spacing.md,
+    marginTop:         spacing.sm,
+  },
+
+  // ── Grille actions rapides ───────────────────────────────────────────────────
+  actionsGrid: {
+    flexDirection:    'row',
+    flexWrap:         'wrap',
+    paddingHorizontal: spacing.xl,
+    gap:              spacing.md,
+    marginBottom:     spacing.lg,
+  },
+  quickAction: {
+    width:      '22%',
+    alignItems: 'center',
+  },
+  quickIconWrap: {
+    width:           52,
+    height:          52,
+    borderRadius:    borderRadius.lg,
+    backgroundColor: LUNA_COLORS.surface,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
+  },
+  quickLabel: {
+    fontSize:  fontSize.xs,
+    color:     LUNA_COLORS.textSecondary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  // Badge sur icône action rapide
+  quickBadge: {
+    position:        'absolute',
+    top:             -4,
+    right:           -4,
+    backgroundColor: LUNA_COLORS.error,
+    borderRadius:    8,
+    minWidth:        16,
+    height:          16,
+    alignItems:      'center',
+    justifyContent:  'center',
+    paddingHorizontal: 3,
+  },
+  quickBadgeTxt: {
+    color:      '#fff',
+    fontSize:   9,
+    fontWeight: fontWeight.bold,
+  },
 });

@@ -16,7 +16,7 @@ import { apiGet } from '@/src/api/client';
 import { CONSTANTES } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface ConstanteEntry {
   id: string;
@@ -161,13 +161,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: spacing.md,
-    borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.border,
+    borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
     backgroundColor: LUNA_COLORS.surface,
   },
   backBtn: { padding: spacing.xs },
   title: { flex: 1, fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
 
-  scroll: { padding: spacing.md, paddingBottom: spacing.xl },
+  scroll: { padding: spacing.md, paddingBottom: 80 },
 
   latestCard: {
     backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
@@ -188,9 +188,16 @@ const styles = StyleSheet.create({
   vitalUnit: { fontSize: fontSize.xs, fontWeight: fontWeight.regular, color: LUNA_COLORS.textDisabled },
 
   sectionTitle: {
-    fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.secondary,
-    textTransform: 'uppercase', letterSpacing: 0.8, marginTop: spacing.md, marginBottom: spacing.sm,
-  },
+
+    ...typography.sectionTitle,
+
+    paddingHorizontal: spacing.xl,
+
+    marginBottom: spacing.md,
+
+    marginTop: spacing.lg,
+
+  }, // ✨
 
   historyCard: {
     backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,

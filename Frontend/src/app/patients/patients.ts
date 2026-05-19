@@ -124,7 +124,7 @@ export class PatientComponent implements OnInit {
       this.isLoading = false;
     };
 
-    if (this.auth.isMedecinCabinet() && this.auth.getUserId()) {
+    if (this.auth.isMedecinCabinetExclusif() && this.auth.getUserId()) {
       this.medecinService.listerPatientsCabinet(this.auth.getUserId() as string).subscribe({
         next: handleSuccess,
         error: handleError
@@ -175,7 +175,7 @@ export class PatientComponent implements OnInit {
   }
 
   openModal(): void {
-    const isCab = this.auth.isMedecinCabinet();
+    const isCab = this.auth.isMedecinCabinetExclusif();
     this.selectedMedecinIds = [];
     this.medecinReferentId = '';
     this.newPatient = {
@@ -317,7 +317,7 @@ export class PatientComponent implements OnInit {
       this.medecinReferentId || this.selectedMedecinIds[0] || undefined;
 
     const userId = this.auth.getUserId();
-    if (this.auth.isMedecinCabinet() && userId) {
+    if (this.auth.isMedecinCabinetExclusif() && userId) {
       const dto: PatientDTO = {
         ...this.newPatient,
         typeAdmission: this.newPatient.typeAdmission || 'CABINET'

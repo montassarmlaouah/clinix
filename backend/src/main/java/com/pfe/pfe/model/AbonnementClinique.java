@@ -28,9 +28,14 @@ public class AbonnementClinique {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "clinique_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clinique_id")
     private Clinique clinique;
+
+    /** Cabinet médical (médecin sans clinique) — exclusif avec clinique. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "medecin_cabinet_id")
+    private Medecin medecinCabinet;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offre_id", nullable = false)

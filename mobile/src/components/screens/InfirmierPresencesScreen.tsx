@@ -78,5 +78,5 @@ export function InfirmierPresencesScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: spacing.lg, paddingBottom: 80 },
+  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
 });

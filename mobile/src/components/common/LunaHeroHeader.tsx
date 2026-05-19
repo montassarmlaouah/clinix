@@ -55,6 +55,7 @@ export function LunaHeroHeaderView({
 
   return (
     <View style={styles.wrap}>
+      <View style={styles.gradientFade} pointerEvents="none" />
       <View style={styles.navRow}>
         {showBack ? (
           <Pressable
@@ -174,30 +175,40 @@ export function LunaHeroHeader(props: LunaHeroHeaderProps): React.JSX.Element | 
 
 const styles = StyleSheet.create({
   wrap: {
-    backgroundColor: LUNA_COLORS.secondary,
+    backgroundColor: LUNA_COLORS.primary, // ✨ fond primary avec fade secondary
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    overflow: 'hidden',
+  },
+  gradientFade: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '55%',
+    backgroundColor: LUNA_COLORS.secondary,
+    opacity: 0.45,
   },
   navRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.xs,
-    minHeight: 44,
+    minHeight: 48,
   },
   iconBtn: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.12)', // ✨ boutons semi-transparents
   },
   iconPlaceholder: { width: 44 },
   logoTap: {
     marginTop: 6,
     marginLeft: spacing.xs,
   },
-  spacer: { flex: 1 },
   titleRow: {
     flex: 1,
     minWidth: 0,
@@ -206,18 +217,18 @@ const styles = StyleSheet.create({
   },
   textCol: { flex: 1 },
   pageTitle: {
-    fontSize: fontSize.md,
+    fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: LUNA_COLORS.textInverse,
   },
   pageSub: {
-    fontSize: fontSize.xs,
-    color: 'rgba(255,255,255,0.92)',
-    marginTop: 1,
+    fontSize: fontSize.sm,
+    color: 'rgba(255,255,255,0.90)',
+    marginTop: 2,
   },
   tagline: {
     fontSize: fontSize.xs,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.70)',
     marginTop: 2,
   },
   rightSlot: {

@@ -437,12 +437,17 @@
     </ng-container>
 
     <!-- ========== Admin clinique ========== -->
-    <ng-container *ngIf="!isSuperAdmin && !loading">
+    <ng-container *ngIf="!isSuperAdmin && peutConsulterAbonnement && !loading">
       <div class="logistics-header">
-        <h2><i class="fas fa-credit-card"></i> Mon abonnement — Clinique</h2>
-        <p class="header-sub">
-          Les forfaits sont créés par le super administrateur. Choisissez un plan sur la page dédiée, puis saisissez une
-          carte de test sur Stripe (ex. 4242 4242 4242 4242).
+        <h2>
+          <i class="fas fa-credit-card"></i>
+          {{ isVueCabinet ? 'Mon abonnement — Cabinet médical' : 'Mon abonnement — Clinique' }}
+        </h2>
+        <p class="header-sub" *ngIf="isVueCabinet">
+          Consultez votre forfait cabinet et l'historique des souscriptions.
+        </p>
+        <p class="header-sub" *ngIf="!isVueCabinet">
+          Consultez l'abonnement de la clinique et l'historique des souscriptions.
         </p>
       </div>
 
@@ -461,14 +466,58 @@
         </div>
       </div>
 
-      <div class="cta-strip">
+      <div class="cta-strip" *ngIf="peutSouscrireAbonnement">
         <div class="cta-strip-text">
           <h3><i class="fas fa-layer-group"></i> Choisir un forfait</h3>
           <p>Grille des offres (mensuel / annuel), puis page récapitulative et redirection vers Stripe Checkout.</p>
         </div>
-        <a routerLink="/tarifs-abonnement" class="btn btn-cta-tarifs">
+        <a
+          routerLink="/tarifs-abonnement"
+          [queryParams]="isVueCabinet ? { scope: 'cabinet' } : {}"
+          class="btn btn-cta-tarifs"
+        >
           <i class="fas fa-arrow-right"></i> Voir les forfaits et payer
         </a>
+      </div>
+
+      <div class="form-card sms-quota-card" *ngIf="authService.isAdminClinique()">
+        <h3 class="form-title"><i class="fas fa-sms"></i> Quota SMS (offre active)</h3>
+        <div class="form-body">
+          <div class="loader-inline" *ngIf="loadingSmsQuota">
+            <i class="fas fa-spinner fa-spin"></i> Chargement du quota…
+          </div>
+          <ng-container *ngIf="!loadingSmsQuota && smsQuota as q">
+            <p class="quota-message" [class.quota-blocked]="!q.autorise">{{ q.message }}</p>
+            <div class="quota-meta" *ngIf="q.offreNom">
+              <span><i class="fas fa-box-open"></i> Offre : <strong>{{ q.offreNom }}</strong></span>
+              <span *ngIf="q.periodeDebut && q.periodeFin">
+                <i class="fas fa-calendar"></i>
+                Période : {{ q.periodeDebut | date : 'dd/MM/yyyy' }} — {{ q.periodeFin | date : 'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <div class="quota-progress-wrap" *ngIf="q.limite > 0">
+              <div class="quota-progress-head">
+                <span>{{ q.utilises }} / {{ q.limite }} SMS utilisés</span>
+                <span class="quota-restants">{{ q.restants }} restant(s)</span>
+              </div>
+              <div class="quota-progress-track">
+                <div
+                  class="quota-progress-fill"
+                  [ngClass]="smsQuotaBarClass"
+                  [style.width.%]="smsQuotaPourcentage"
+                ></div>
+              </div>
+            </div>
+            <div class="quota-stats-row" *ngIf="q.limite <= 0">
+              <span class="badge-luna badge-warn">Aucun SMS inclus dans l'offre actuelle</span>
+            </div>
+          </ng-container>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline-secondary btn-sm" (click)="chargerQuotaSms()">
+              <i class="fas fa-rotate"></i> Actualiser le quota
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="form-card" *ngIf="abonnementCourant">
@@ -512,17 +561,20 @@
         <p class="mb-0">Aucun abonnement actif pour le moment. Ouvrez les forfaits pour souscrire.</p>
       </div>
 
-      <div class="table-container" *ngIf="historiqueAbonnements.length">
-        <h3 class="form-title mb-3"><i class="fas fa-history"></i> Historique</h3>
-        <table class="offres-table">
+      <div class="table-container historique-section">
+        <h3 class="form-title mb-3"><i class="fas fa-history"></i> Historique des souscriptions</h3>
+        <p class="header-sub mb-3" *ngIf="!historiqueAbonnements.length">
+          Aucune souscription enregistrée pour votre clinique.
+        </p>
+        <table class="offres-table" *ngIf="historiqueAbonnements.length">
           <thead>
             <tr>
               <th>Offre</th>
               <th>Statut</th>
-              <th>Période</th>
-              <th>Début</th>
-              <th>Fin</th>
-              <th>Montant</th>
+              <th>Période facturation</th>
+              <th>Date début</th>
+              <th>Date fin</th>
+              <th>Montant payé</th>
             </tr>
           </thead>
           <tbody>

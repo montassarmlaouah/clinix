@@ -1,41 +1,49 @@
+// src/theme/colors.ts  — LUNA palette, light-only (HeroUI v3 inspired)
 export const LUNA_COLORS = {
-  // ── Core palette ─────────────────────────────────────────────
-  primary:       '#A7EBF2',   // bleu clair — fond splash / accents légers
-  secondary:     '#54ACBF',   // bleu moyen — boutons, icônes actives
-  tertiary:      '#26658C',   // bleu profond — bordures, éléments secondaires
-  dark:          '#023859',   // bleu très foncé — textes forts
-  darkest:       '#011C40',   // bleu nuit — titres principaux
+  // Backgrounds
+  background:    '#f0f6fb',
+  surface:       '#ffffff',
+  surfaceLight:  '#e8f3fa',
+  surfaceActive: '#daeef8',
 
-  // ── Surfaces ─────────────────────────────────────────────────
-  surface:       '#FFFFFF',
-  background:    '#EBF4F6',
-  surfaceLight:  '#E8F7F9',
+  // Brand
+  primary:    '#26658c',
+  secondary:  '#2d9cdb',
+  tertiary:   '#4ecdc4',
+  secondaryLight: '#e0f2fe', // ✨ fond léger badges/états secondaires
+  accentGold: '#d97706',     // ✨ accent pharmacien / alertes dorées
 
-  // ── Textes ───────────────────────────────────────────────────
-  textPrimary:   '#1A3A52',
-  textSecondary: '#023859',
-  textDisabled:  '#BDBDBD',
-  textInverse:   '#FFFFFF',
+  // Text
+  textPrimary:   '#0d2336',
+  textSecondary: '#4a6f8a',
+  textDisabled:  '#9ab8cc',
+  textInverse:   '#ffffff',
 
-  // ── États sémantiques ─────────────────────────────────────────
-  success:       '#4CAF50',
-  successLight:  '#E8F5E9',
-  error:         '#F44336',
-  errorLight:    '#FFEBEE',
-  warning:       '#FF9500',
-  warningLight:  '#FFF3E0',
-  info:          '#54ACBF',
-  infoLight:     '#E3F4F7',
-  secondaryLight:'#D6EDF2',
+  // Status
+  success:      '#16a34a',
+  successLight: '#dcfce7',
+  error:        '#dc2626',
+  errorLight:   '#fee2e2',
+  warning:      '#d97706',
+  warningLight: '#fef3c7',
+  info:         '#0284c7',
+  infoLight:    '#e0f2fe',
 
-  // ── Accents ──────────────────────────────────────────────────
-  accentOrange:  '#FF9500',
-  accentGold:    '#FFB800',
+  // UI elements
+  border:       '#c5dcea',
+  borderStrong: '#93bdd4',
+  borderDark:   '#c5dcea', // ✨ alias rétrocompat — séparateurs subtils
+  dark:         '#1a4a66',
+  darkest:      '#0d2336',
+  inputBg:      '#f4f9fd',
 
-  // ── Utilitaires ──────────────────────────────────────────────
-  border:        'rgba(167,235,242,0.3)',
-  borderDark:    'rgba(2,56,89,0.15)',
-  overlay:       'rgba(1,28,64,0.5)',
+  // ✨ Bordures semi-transparentes (cartes, inputs HeroUI)
+  borderSubtle: 'rgba(38, 101, 140, 0.12)',
+  borderInput:  'rgba(38, 101, 140, 0.25)',
+  borderFocus:  'rgba(45, 156, 219, 0.15)',
+  overlay:      'rgba(1, 28, 64, 0.45)',
+  tabInactive:  '#9CA3AF',
+  tabActiveBg:  'rgba(45, 156, 219, 0.12)',
 } as const;
 
 export type LunaColor = keyof typeof LUNA_COLORS;

@@ -136,7 +136,7 @@ export default function WelcomeScreen() {
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => router.push('/(auth)/login')}
-            activeOpacity={0.85}
+            activeOpacity={0.75}
           >
             <Text style={styles.loginText}>Se connecter</Text>
           </TouchableOpacity>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 80,
     alignItems: 'center',
   },
   header: {
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: LUNA_COLORS.surfaceLight,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle,
   },
   badgeText: {
     fontSize: 11,
@@ -259,6 +259,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...Platform.select({
       ios: {
         shadowColor: LUNA_COLORS.dark,

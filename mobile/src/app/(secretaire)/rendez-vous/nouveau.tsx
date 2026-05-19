@@ -609,9 +609,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color:     LUNA_COLORS.dark,
   },
+  // ✨ ScrollView — paddingBottom tab bar
   scroll: {
     padding:      spacing.xxl,
-    paddingBottom: spacing.huge,
+    paddingBottom: 80,
   },
   stepContent: {
     marginTop: spacing.xl,
@@ -621,7 +622,7 @@ const styles = StyleSheet.create({
     paddingVertical:   spacing.lg,
     backgroundColor:   LUNA_COLORS.surface,
     borderTopWidth:    1,
-    borderTopColor:    LUNA_COLORS.border,
+    borderTopColor:    'rgba(197, 220, 234, 0.6)',
   },
 });
 
@@ -729,7 +730,7 @@ const step1Styles = StyleSheet.create({
     paddingVertical:  spacing.md,
     paddingHorizontal: spacing.lg,
     borderBottomWidth: 0.5,
-    borderBottomColor: LUNA_COLORS.border,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)',
   },
   resultAvatar: {
     width:           36,
@@ -777,9 +778,9 @@ const step2Styles = StyleSheet.create({
     padding:           spacing.lg,
     marginBottom:      spacing.md,
     backgroundColor:   LUNA_COLORS.surface,
-    borderRadius:      borderRadius.md,
-    borderWidth:       1.5,
-    borderColor:       LUNA_COLORS.border,
+    borderRadius:      borderRadius.lg,
+    borderWidth:       1,
+    borderColor:       LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   cardSelected: {

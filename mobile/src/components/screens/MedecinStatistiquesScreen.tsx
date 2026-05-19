@@ -8,7 +8,8 @@ import { LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontWeight, typography } from '@/src/theme/typography';
 
 export function MedecinStatistiquesScreen(): React.JSX.Element {
   const medecinId = useAuthStore((s) => s.userId);
@@ -76,16 +77,19 @@ export function MedecinStatistiquesScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.lg, paddingBottom: 80, gap: spacing.md },
+  body: { padding: spacing.lg, paddingBottom: 80, gap: spacing.md }, // ✨ espace tab bar
   row: { flexDirection: 'row', gap: spacing.md },
   extra: {
     marginTop: spacing.lg,
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: 12,
+    backgroundColor: LUNA_COLORS.surface, // ✨ carte surface
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
+    ...(shadows.sm as object),
   },
-  extraTitle: { fontWeight: '600', marginBottom: spacing.sm, color: LUNA_COLORS.darkest },
+  extraTitle: { ...typography.sectionTitle, marginBottom: spacing.sm }, // ✨ titre section
   extraRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
   extraKey: { color: LUNA_COLORS.textSecondary, flex: 1 },
-  extraVal: { fontWeight: '600', color: LUNA_COLORS.darkest },
+  extraVal: { fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
 });

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.pfe.pfe.dto.GenererFactureRequest;
 import com.pfe.pfe.dto.LignePrestationRequest;
+import com.pfe.pfe.dto.PrestationFacturationRequest;
 import com.pfe.pfe.dto.TeletransmissionResult;
 import com.pfe.pfe.dto.ValiderPaiementRequest;
 import com.pfe.pfe.model.Chambre;
@@ -46,13 +47,47 @@ public class FacturationPatientService {
 
     @Transactional(readOnly = true)
     public List<PrestationFacturation> listerPrestations(String cliniqueId) {
+        return listerPrestations(cliniqueId, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PrestationFacturation> listerPrestations(String cliniqueId, boolean inclureInactives) {
         ensurePrestationsClinique(cliniqueId);
+        if (inclureInactives) {
+            return prestationRepository.findByCliniqueIdOrderByTypeAscCodeAsc(cliniqueId);
+        }
         return prestationRepository.findByCliniqueIdAndActifTrueOrderByTypeAscCodeAsc(cliniqueId);
     }
 
     @Transactional(readOnly = true)
     public List<FacturePatient> listerParClinique(String cliniqueId) {
-        return facturePatientRepository.findByCliniqueWithDetails(cliniqueId);
+        return listerParClinique(cliniqueId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FacturePatient> listerParClinique(String cliniqueId, StatutFacturePatient statut) {
+        if (statut == null) {
+            return facturePatientRepository.findByCliniqueWithDetails(cliniqueId);
+        }
+        return facturePatientRepository.findByCliniqueAndStatutWithDetails(cliniqueId, statut);
+    }
+
+    public PrestationFacturation modifierPrestation(String id, PrestationFacturationRequest request) {
+        PrestationFacturation p = prestationRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Prestation non trouvée"));
+        validerPrestationRequest(request, p.getCliniqueId(), p.getType(), id);
+        appliquerPrestationRequest(p, request);
+        return prestationRepository.save(p);
+    }
+
+    public List<PrestationFacturation> forcerInitialisationCatalogue(String cliniqueId) {
+        cliniqueRepository.findById(cliniqueId)
+            .orElseThrow(() -> new RuntimeException("Clinique non trouvée"));
+        if (prestationRepository.existsByCliniqueId(cliniqueId)) {
+            throw new RuntimeException("Le catalogue existe déjà. Modifiez les prestations existantes.");
+        }
+        initialiserPrestationsParDefaut(cliniqueId);
+        return prestationRepository.findByCliniqueIdOrderByTypeAscCodeAsc(cliniqueId);
     }
 
     @Transactional(readOnly = true)
@@ -268,5 +303,37 @@ public class FacturationPatientService {
 
     private static BigDecimal bd(String value) {
         return new BigDecimal(value);
+    }
+
+    private void validerPrestationRequest(
+            PrestationFacturationRequest request, String cliniqueId, TypePrestation typeExistant, String idExclu) {
+        if (request.getCode() == null || request.getCode().isBlank()) {
+            throw new RuntimeException("Le code acte est obligatoire");
+        }
+        if (request.getLibelle() == null || request.getLibelle().isBlank()) {
+            throw new RuntimeException("Le libellé est obligatoire");
+        }
+        if (request.getTarifUnitaire() == null || request.getTarifUnitaire().compareTo(BigDecimal.ZERO) < 0) {
+            throw new RuntimeException("Tarif unitaire invalide");
+        }
+        int taux = request.getTauxRemboursementPct() != null ? request.getTauxRemboursementPct() : 80;
+        if (taux < 0 || taux > 100) {
+            throw new RuntimeException("Taux de remboursement CNAM entre 0 et 100 %");
+        }
+        TypePrestation type = request.getType() != null ? request.getType() : typeExistant;
+        if (type != null && idExclu != null
+                && prestationRepository.existsByCliniqueIdAndTypeAndIdNot(cliniqueId, type, idExclu)) {
+            throw new RuntimeException("Une prestation de ce type existe déjà pour la clinique");
+        }
+    }
+
+    private void appliquerPrestationRequest(PrestationFacturation p, PrestationFacturationRequest request) {
+        p.setCode(request.getCode().trim());
+        p.setLibelle(request.getLibelle().trim());
+        p.setTarifUnitaire(request.getTarifUnitaire().setScale(3, RoundingMode.HALF_UP));
+        p.setTauxRemboursementPct(request.getTauxRemboursementPct() != null ? request.getTauxRemboursementPct() : 80);
+        if (request.getActif() != null) {
+            p.setActif(request.getActif());
+        }
     }
 }

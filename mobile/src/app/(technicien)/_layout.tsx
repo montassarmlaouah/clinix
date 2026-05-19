@@ -1,10 +1,10 @@
-import { Tabs } from 'expo-router';
+﻿import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas alignée header.html : Dashboard · Équipements (Pannes via menu latéral) */
+/** Barre du bas alignÃ©e header.html : Dashboard Â· Ã‰quipements (Pannes via menu latÃ©ral) */
 export default function TechnicienLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
@@ -21,7 +21,7 @@ export default function TechnicienLayout(): React.JSX.Element {
       <Tabs.Screen
         name="equipements"
         options={{
-          title: 'Équipements',
+          title: 'Ã‰quipements',
           tabBarIcon: createTabBarIcon('construct-outline'),
         }}
       />
@@ -30,7 +30,9 @@ export default function TechnicienLayout(): React.JSX.Element {
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="chambres" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );
 }
+

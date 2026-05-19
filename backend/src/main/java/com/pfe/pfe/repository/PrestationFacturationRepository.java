@@ -16,5 +16,9 @@ public interface PrestationFacturationRepository extends JpaRepository<Prestatio
 
     Optional<PrestationFacturation> findByCliniqueIdAndTypeAndActifTrue(String cliniqueId, TypePrestation type);
 
+    Optional<PrestationFacturation> findByCliniqueIdAndType(String cliniqueId, TypePrestation type);
+
     boolean existsByCliniqueId(String cliniqueId);
+
+    boolean existsByCliniqueIdAndTypeAndIdNot(String cliniqueId, TypePrestation type, String id);
 }

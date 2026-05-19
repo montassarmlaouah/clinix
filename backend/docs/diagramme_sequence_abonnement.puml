@@ -1,0 +1,48 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Souscription abonnement clinique (Stripe)
+
+autonumber
+
+actor Admin as "Admin clinique / Secretaire"
+boundary UI as "Angular / Mobile"
+control API as "BillingController"
+control Flow as "StripeSubscriptionFlowService"
+participant Stripe as "Stripe Checkout"
+database DB as "Base de donnees"
+
+Admin -> UI: Choisir offre + periode (mensuel/annuel)
+UI -> API: POST /api/billing/checkout {offreId, interval, successUrl, cancelUrl}
+API -> Flow: createCheckoutSession(cliniqueId, offreId, interval, urls)
+Flow -> DB: Charger clinique + offre (prix Stripe)
+Flow -> Stripe: Creer session Checkout
+Stripe --> Flow: sessionId + checkoutUrl
+Flow --> API: Session Stripe
+API --> UI: {checkoutUrl, sessionId}
+UI -> Stripe: Redirection navigateur vers paiement
+
+alt Paiement reussi
+  Stripe -> API: POST /api/webhooks/stripe (checkout.session.completed)
+  API -> Flow: handleCheckoutCompleted(session)
+  Flow -> DB: Creer/maj AbonnementClinique (ACTIF)
+  Flow -> DB: Journaliser evenement webhook
+  Stripe --> Admin: Redirection successUrl
+  Admin -> UI: Consulter mon abonnement
+  UI -> API: GET /api/billing/abonnement-courant
+  API -> DB: Abonnement actif de la clinique
+  DB --> API: Abonnement + offre
+  API --> UI: 200 OK
+else Paiement annule ou session expiree
+  Stripe -> API: webhook checkout.session.expired
+  API -> Flow: handleCheckoutExpired(session)
+  Flow -> DB: Marquer tentative expiree
+  Stripe --> Admin: Redirection cancelUrl
+end
+
+note over Admin, DB
+  Mode developpement : POST /api/billing/souscription-simulee
+  enregistre un abonnement sans passage Stripe.
+end note
+
+@enduml

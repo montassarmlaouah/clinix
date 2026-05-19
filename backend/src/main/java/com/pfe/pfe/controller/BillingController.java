@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.pfe.pfe.billing.BillingConstants;
@@ -61,6 +62,13 @@ public class BillingController {
         return billingManagementService.listActiveClinicOffers().stream().map(this::toOffreMap).collect(Collectors.toList());
     }
 
+    /** Forfaits actifs pour cabinet médical (médecin sans clinique). */
+    @GetMapping("/offres/actives-cabinet")
+    @PreAuthorize("hasAnyRole('MEDECIN','SUPER_ADMIN')")
+    public List<Map<String, Object>> listActivesCabinet() {
+        return billingManagementService.listActiveCabinetOffers().stream().map(this::toOffreMap).collect(Collectors.toList());
+    }
+
     @PostMapping("/offres")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> createOffer(@RequestBody OffreAbonnement body) {
@@ -103,22 +111,28 @@ public class BillingController {
 
     /** Admin clinique : démarre Stripe Checkout (URL de redirection hébergée par Stripe). */
     @PostMapping("/checkout")
-    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','MEDECIN')")
     public ResponseEntity<?> checkout(@AuthenticationPrincipal CustomUserDetails user, @RequestBody Map<String, String> req) {
         try {
             if (user == null) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Utilisateur non authentifié."));
             }
-            String cliniqueId = user.getCliniqueId();
-            if (!StringUtils.hasText(cliniqueId)) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));
-            }
             String offreId = req.get("offreId");
             String interval = req.getOrDefault("interval", BillingConstants.INTERVAL_MONTHLY);
             String successUrl = req.get("successUrl");
             String cancelUrl = req.get("cancelUrl");
-            Session session = stripeSubscriptionFlowService.createCheckoutSession(cliniqueId, offreId, interval, successUrl,
-                    cancelUrl);
+            Session session;
+            if (resolveBillingScope(user, req.get("scope")) == BillingScope.CABINET) {
+                session = stripeSubscriptionFlowService.createCheckoutSessionForMedecinCabinet(
+                        user.getId(), offreId, interval, successUrl, cancelUrl);
+            } else {
+                String cliniqueId = user.getCliniqueId();
+                if (!StringUtils.hasText(cliniqueId)) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));
+                }
+                session = stripeSubscriptionFlowService.createCheckoutSession(cliniqueId, offreId, interval, successUrl,
+                        cancelUrl);
+            }
             Map<String, Object> payload = new HashMap<>();
             payload.put("checkoutUrl", session.getUrl());
             payload.put("sessionId", session.getId());
@@ -129,43 +143,63 @@ public class BillingController {
     }
 
     @PostMapping("/souscription-simulee")
-    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE')")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','MEDECIN')")
     public ResponseEntity<?> simule(@AuthenticationPrincipal CustomUserDetails user, @RequestBody Map<String, String> req) {
         try {
-            String cliniqueId = user.getCliniqueId();
-            if (!StringUtils.hasText(cliniqueId)) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée."));
+            if (user == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Utilisateur non authentifié."));
             }
-            billingManagementService.simulateSubscribe(cliniqueId,
-                    req.get("offreId"),
-                    req.getOrDefault("interval", BillingConstants.INTERVAL_MONTHLY));
+            String offreId = req.get("offreId");
+            String interval = req.getOrDefault("interval", BillingConstants.INTERVAL_MONTHLY);
+            if (resolveBillingScope(user, req.get("scope")) == BillingScope.CABINET) {
+                billingManagementService.simulateSubscribeCabinet(user.getId(), offreId, interval);
+            } else {
+                String cliniqueId = user.getCliniqueId();
+                if (!StringUtils.hasText(cliniqueId)) {
+                    return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée."));
+                }
+                billingManagementService.simulateSubscribe(cliniqueId, offreId, interval);
+            }
             return ResponseEntity.ok(Map.of("message", "Abonnement enregistré (simulation sans paiement)."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    /** Quota SMS de l'offre active (clinique). */
+    /** Quota SMS — clinique du compte connecté (admin clinique). */
+    @GetMapping("/sms-quota")
+    @PreAuthorize("hasRole('ADMIN_CLINIQUE')")
+    public ResponseEntity<?> smsQuotaCourant(@AuthenticationPrincipal CustomUserDetails user) {
+        if (user == null || !StringUtils.hasText(user.getCliniqueId())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));
+        }
+        return ResponseEntity.ok(toSmsQuotaMap(cliniqueSmsQuotaService.verifierQuota(user.getCliniqueId())));
+    }
+
+    /** Quota SMS de l'offre active (clinique par id — super admin). */
     @GetMapping("/clinique/{cliniqueId}/sms-quota")
     @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SUPER_ADMIN')")
     public ResponseEntity<Map<String, Object>> smsQuota(@PathVariable String cliniqueId) {
-        var q = cliniqueSmsQuotaService.verifierQuota(cliniqueId);
-        Map<String, Object> m = new HashMap<>();
-        m.put("autorise", q.autorise());
-        m.put("message", q.message());
-        m.put("limite", q.limite());
-        m.put("utilises", q.utilises());
-        m.put("restants", q.restants());
-        m.put("offreNom", q.offreNom());
-        m.put("periodeDebut", q.periodeDebut());
-        m.put("periodeFin", q.periodeFin());
-        return ResponseEntity.ok(m);
+        return ResponseEntity.ok(toSmsQuotaMap(cliniqueSmsQuotaService.verifierQuota(cliniqueId)));
     }
 
+    /**
+     * Abonnement courant : admin clinique / secrétaire (clinique) ou médecin cabinet (sans clinique).
+     */
     @GetMapping("/abonnement-courant")
-    @PreAuthorize("hasRole('ADMIN_CLINIQUE')")
-    public ResponseEntity<?> currentSubscription(@AuthenticationPrincipal CustomUserDetails user) {
-        if (user == null || !StringUtils.hasText(user.getCliniqueId())) {
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','MEDECIN')")
+    public ResponseEntity<?> currentSubscription(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(name = "scope", required = false) String scope) {
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Utilisateur non authentifié."));
+        }
+        if (resolveBillingScope(user, scope) == BillingScope.CABINET) {
+            return billingManagementService.getCurrentSubscriptionForMedecinCabinet(user.getId())
+                    .<ResponseEntity<?>>map(a -> ResponseEntity.ok(toAbonnementMap(a)))
+                    .orElseGet(() -> ResponseEntity.noContent().build());
+        }
+        if (!StringUtils.hasText(user.getCliniqueId())) {
             return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));
         }
 
@@ -196,17 +230,29 @@ public class BillingController {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Historique des souscriptions : clinique ou cabinet médical selon le compte.
+     */
     @GetMapping("/abonnements/historique")
-    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE')")
-    public ResponseEntity<?> subscriptionHistory(@AuthenticationPrincipal CustomUserDetails user) {
-        if (user == null || !StringUtils.hasText(user.getCliniqueId())) {
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','MEDECIN')")
+    public ResponseEntity<?> subscriptionHistory(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(name = "scope", required = false) String scope) {
+        if (user == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Utilisateur non authentifié."));
+        }
+
+        List<com.pfe.pfe.model.AbonnementClinique> rows;
+        if (resolveBillingScope(user, scope) == BillingScope.CABINET) {
+            rows = billingManagementService.getSubscriptionHistoryForMedecinCabinet(user.getId());
+        } else if (StringUtils.hasText(user.getCliniqueId())) {
+            rows = billingManagementService.getSubscriptionHistory(user.getCliniqueId());
+        } else {
             return ResponseEntity.badRequest().body(Map.of("message", "Aucune clinique liée au compte."));
         }
 
-        List<Map<String, Object>> rows = billingManagementService.getSubscriptionHistory(user.getCliniqueId()).stream()
-                .map(this::toAbonnementMap)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(rows);
+        List<Map<String, Object>> payload = rows.stream().map(this::toAbonnementMap).collect(Collectors.toList());
+        return ResponseEntity.ok(payload);
     }
 
     @GetMapping("/stripe-config")
@@ -314,7 +360,54 @@ public class BillingController {
             m.put("cliniqueId", a.getClinique().getId());
             m.put("cliniqueNom", a.getClinique().getNom());
         }
+        if (a.getMedecinCabinet() != null) {
+            m.put("medecinCabinetId", a.getMedecinCabinet().getId());
+            String prenom = a.getMedecinCabinet().getPrenom() != null ? a.getMedecinCabinet().getPrenom() : "";
+            String nom = a.getMedecinCabinet().getNom() != null ? a.getMedecinCabinet().getNom() : "";
+            m.put("medecinCabinetNom", (prenom + " " + nom).trim());
+        }
         return m;
+    }
+
+    private enum BillingScope {
+        CLINIQUE, CABINET
+    }
+
+    /**
+     * Médecin : cabinet si pas de clinique ou scope=cabinet ; clinique si scope=clinique ou clinique rattachée.
+     * Admin / secrétaire : toujours clinique.
+     */
+    private BillingScope resolveBillingScope(CustomUserDetails user, String scopeParam) {
+        if (!isMedecinRole(user)) {
+            return BillingScope.CLINIQUE;
+        }
+        if (StringUtils.hasText(scopeParam)) {
+            if ("cabinet".equalsIgnoreCase(scopeParam.trim())) {
+                return BillingScope.CABINET;
+            }
+            if ("clinique".equalsIgnoreCase(scopeParam.trim())) {
+                return BillingScope.CLINIQUE;
+            }
+        }
+        if (!StringUtils.hasText(user.getCliniqueId())) {
+            return BillingScope.CABINET;
+        }
+        return BillingScope.CLINIQUE;
+    }
+
+    private boolean isMedecinRole(CustomUserDetails user) {
+        if (user == null) {
+            return false;
+        }
+        String role = user.getRole();
+        if (!StringUtils.hasText(role)) {
+            return false;
+        }
+        String r = role.toUpperCase().replace("-", "_");
+        if (r.startsWith("ROLE_")) {
+            r = r.substring(5);
+        }
+        return "MEDECIN".equals(r);
     }
 
     /**
@@ -334,5 +427,18 @@ public class BillingController {
             return pk != null ? "…" : "";
         }
         return pk.substring(0, 10) + "…" + pk.substring(pk.length() - 6);
+    }
+
+    private Map<String, Object> toSmsQuotaMap(com.pfe.pfe.billing.CliniqueSmsQuotaService.SmsQuotaStatus q) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("autorise", q.autorise());
+        m.put("message", q.message());
+        m.put("limite", q.limite());
+        m.put("utilises", q.utilises());
+        m.put("restants", q.restants());
+        m.put("offreNom", q.offreNom());
+        m.put("periodeDebut", q.periodeDebut());
+        m.put("periodeFin", q.periodeFin());
+        return m;
     }
 }

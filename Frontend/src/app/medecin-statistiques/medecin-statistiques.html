@@ -1,0 +1,59 @@
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1><i class="bi bi-graph-up-arrow header-icon"></i> Statistiques</h1>
+      <p class="page-subtitle">Vue d'ensemble de votre activité médicale.</p>
+    </div>
+  </header>
+
+  <div class="alert alert-luna-danger" *ngIf="error">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+
+  <div class="loading-block" *ngIf="loading">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <p>Chargement des indicateurs…</p>
+  </div>
+
+  <div class="stats-grid" *ngIf="stats && !loading">
+    <article class="stat-card">
+      <i class="bi bi-people"></i>
+      <strong>{{ stats.patientsCabinet }}</strong>
+      <span>Patients cabinet</span>
+    </article>
+    <article class="stat-card">
+      <i class="bi bi-person-check"></i>
+      <strong>{{ stats.patientsConsultationsDistincts }}</strong>
+      <span>Patients consultés</span>
+    </article>
+    <article class="stat-card">
+      <i class="bi bi-journal-medical"></i>
+      <strong>{{ stats.consultationsTotal }}</strong>
+      <span>Consultations totales</span>
+    </article>
+    <article class="stat-card">
+      <i class="bi bi-calendar-month"></i>
+      <strong>{{ stats.consultationsCeMois }}</strong>
+      <span>Ce mois</span>
+    </article>
+    <article class="stat-card">
+      <i class="bi bi-prescription2"></i>
+      <strong>{{ stats.ordonnancesTotal }}</strong>
+      <span>Ordonnances</span>
+    </article>
+    <article class="stat-card">
+      <i class="bi bi-calendar-day"></i>
+      <strong>{{ stats.rendezVousAujourdhui }}</strong>
+      <span>RDV aujourd'hui</span>
+    </article>
+    <article class="stat-card accent">
+      <i class="bi bi-clipboard2-check"></i>
+      <strong>{{ stats.soinsEnAttenteValidation }}</strong>
+      <span>Soins à valider</span>
+    </article>
+  </div>
+</div>

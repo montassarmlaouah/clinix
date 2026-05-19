@@ -12,7 +12,7 @@ import { IMAGERIES, RAPPORTS, MESSAGES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface PatientInfo {
@@ -357,9 +357,11 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   urgenceBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: LUNA_COLORS.errorLight, padding: spacing.md, borderRadius: borderRadius.md, marginBottom: spacing.lg },
   urgenceText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.error },
-  card: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.xxl, marginBottom: spacing.lg, ...(shadows.sm as object) },
-  sectionTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.secondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.md },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark },
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
+  card: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.xxl, marginBottom: spacing.lg, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object) },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)' },
   infoLabel: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   infoValue: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark, flex: 1, textAlign: 'right' },
   textBody: { fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, lineHeight: 22 },

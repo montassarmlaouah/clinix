@@ -35,7 +35,17 @@ export const routes: Routes = [
         path: 'mon-abonnement',
         loadComponent: () => import('./mon-abonnement/mon-abonnement').then(m => m.MonAbonnementComponent),
         canActivate: [RoleGuard],
-        data: { role: ['ROLE_SUPER_ADMIN', 'ROLE_ADMIN_CLINIQUE', 'ADMIN_CLINIQUE', 'ROLE_SECRETAIRE', 'SECRETAIRE'] }
+        data: {
+          role: [
+            'ROLE_SUPER_ADMIN',
+            'ROLE_ADMIN_CLINIQUE',
+            'ADMIN_CLINIQUE',
+            'ROLE_SECRETAIRE',
+            'SECRETAIRE',
+            'ROLE_MEDECIN',
+            'MEDECIN',
+          ],
+        },
       },
       {
         path: 'facturation-patient',
@@ -48,7 +58,16 @@ export const routes: Routes = [
         path: 'tarifs-abonnement',
         loadComponent: () => import('./abonnement-tarifs/abonnement-tarifs').then(m => m.AbonnementTarifsComponent),
         canActivate: [RoleGuard],
-        data: { role: ['ROLE_ADMIN_CLINIQUE', 'ADMIN_CLINIQUE', 'ROLE_SECRETAIRE', 'SECRETAIRE'] }
+        data: {
+          role: [
+            'ROLE_ADMIN_CLINIQUE',
+            'ADMIN_CLINIQUE',
+            'ROLE_SECRETAIRE',
+            'SECRETAIRE',
+            'ROLE_MEDECIN',
+            'MEDECIN',
+          ],
+        },
       },
       {
         path: 'abonnement-paiement',
@@ -249,6 +268,21 @@ export const routes: Routes = [
         canActivate: [AuthGuard]
       },
 
+      // ——— Hub médecin ———
+      {
+        path: 'medecin',
+        loadComponent: () => import('./medecin-hub/medecin-hub').then(m => m.MedecinHubComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
+      },
+      // ——— Statistiques médecin ———
+      {
+        path: 'medecin-statistiques',
+        loadComponent: () => import('./medecin-statistiques/medecin-statistiques').then(m => m.MedecinStatistiquesComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
+      },
+
       // ——— Espace médecin (hub + modules métier) ———
 
       {
@@ -319,6 +353,33 @@ export const routes: Routes = [
         loadComponent: () => import('./medecin-ordonnances/medecin-ordonnances').then(m => m.MedecinOrdonnancesComponent),
         canActivate: [RoleGuard],
         data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
+      },
+
+      // ——— Hub infirmier ———
+      {
+        path: 'infirmier',
+        loadComponent: () => import('./infirmier-hub/infirmier-hub').then(m => m.InfirmierHubComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['INFIRMIER', 'ROLE_INFIRMIER'] }
+      },
+      // ——— Check-list / SSPI / Transmissions ———
+      {
+        path: 'infirmier-check-list',
+        loadComponent: () => import('./infirmier-check-list/infirmier-check-list').then(m => m.InfirmierCheckListComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['INFIRMIER', 'ROLE_INFIRMIER'] }
+      },
+      {
+        path: 'infirmier-sspi',
+        loadComponent: () => import('./infirmier-sspi/infirmier-sspi').then(m => m.InfirmierSspiComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['INFIRMIER', 'ROLE_INFIRMIER'] }
+      },
+      {
+        path: 'infirmier-transmissions',
+        loadComponent: () => import('./infirmier-transmissions/infirmier-transmissions').then(m => m.InfirmierTransmissionsComponent),
+        canActivate: [RoleGuard],
+        data: { role: ['INFIRMIER', 'ROLE_INFIRMIER'] }
       },
 
       // ——— Espace infirmier ———

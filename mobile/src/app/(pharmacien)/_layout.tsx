@@ -1,10 +1,10 @@
-import { Tabs } from 'expo-router';
+﻿import { Tabs } from 'expo-router';
 import React from 'react';
 
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icônes — Accueil · Stock · Demandes */
+/** Barre du bas : 3 icÃ´nes â€” Accueil Â· Stock Â· Demandes */
 export default function PharmacienLayout(): React.JSX.Element {
   const screenOptions = useLunaTabBarOptions();
 
@@ -37,7 +37,9 @@ export default function PharmacienLayout(): React.JSX.Element {
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="pharmacie" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );
 }
+

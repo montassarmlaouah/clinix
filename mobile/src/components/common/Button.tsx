@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   TouchableOpacityProps,
-  View,
   ViewStyle,
 } from 'react-native';
 
@@ -31,12 +30,13 @@ export interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
 // ── Configurations par variant ────────────────────────────────────────────────
 const variantStyles: Record<
   ButtonVariant,
-  { container: object; text: object; loaderColor: string }
+  { container: object; text: object; loaderColor: string; shadow?: object }
 > = {
   primary: {
     container:   { backgroundColor: LUNA_COLORS.secondary, borderWidth: 0 },
     text:        { color: LUNA_COLORS.textInverse },
     loaderColor: LUNA_COLORS.textInverse,
+    shadow:      shadows.button as object,
   },
   secondary: {
     container: {
@@ -56,14 +56,20 @@ const variantStyles: Record<
     container:   { backgroundColor: LUNA_COLORS.error, borderWidth: 0 },
     text:        { color: LUNA_COLORS.textInverse },
     loaderColor: LUNA_COLORS.textInverse,
+    shadow:      {
+      shadowColor: '#dc2626',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.30,
+      shadowRadius: 12,
+    },
   },
 };
 
 // ── Configurations par taille ─────────────────────────────────────────────────
-const sizeConfig: Record<ButtonSize, { py: number; px: number; fs: number; loaderSize: number }> = {
-  sm: { py: spacing.sm,  px: spacing.lg,   fs: fontSize.sm,   loaderSize: 14 },
-  md: { py: spacing.md,  px: spacing.xl,   fs: fontSize.base, loaderSize: 16 },
-  lg: { py: spacing.lg,  px: spacing.xxl,  fs: fontSize.lg,   loaderSize: 18 },
+const sizeConfig: Record<ButtonSize, { height: number; px: number; fs: number; loaderSize: number }> = {
+  sm: { height: 40, px: spacing.lg,   fs: fontSize.sm,   loaderSize: 14 },
+  md: { height: 48, px: spacing.xl,   fs: fontSize.base, loaderSize: 16 }, // ✨ hauteur 48px standard
+  lg: { height: 52, px: spacing.xxl,  fs: fontSize.lg,   loaderSize: 18 },
 };
 
 // ── Composant ─────────────────────────────────────────────────────────────────
@@ -91,11 +97,11 @@ export function Button({
         styles.base,
         vStyle.container,
         {
-          paddingVertical:   sConf.py,
+          height:            sConf.height,
           paddingHorizontal: sConf.px,
-          borderRadius:      borderRadius.xxl,
+          borderRadius:      borderRadius.full, // ✨ coins full pill
         },
-        variant === 'primary' && (shadows.button as object),
+        !isDisabled && vStyle.shadow,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -111,7 +117,7 @@ export function Button({
             vStyle.text,
             {
               fontSize:   sConf.fs,
-              fontWeight: fontWeight.semibold,
+              fontWeight: fontWeight.bold,
             },
           ]}
           numberOfLines={1}
@@ -129,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection:  'row',
     alignItems:     'center',
     justifyContent: 'center',
-    minWidth:       44, // accessibilité — taille minimale touchable
+    minWidth:       44,
   },
   text: {
     textAlign: 'center',
@@ -139,7 +145,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   disabled: {
-    opacity: 0.45,
+    opacity: 0.45, // ✨ disabled sans ombre
   },
 });
 

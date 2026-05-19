@@ -1,32 +1,33 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-/** Modales LUNA — palette simple bleu clair (#A7EBF2), fond blanc, pied léger. */
+/** Modales LUNA — style HeroUI v3 : overlay profond, carte arrondie, en-tête primary. */
 export const lunaModalStyles = StyleSheet.create({
   overlayCenter: {
     flex: 1,
-    backgroundColor: 'rgba(1, 28, 64, 0.35)',
+    backgroundColor: LUNA_COLORS.overlay, // ✨ overlay plus profond
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
   },
   overlaySheet: {
     flex: 1,
-    backgroundColor: 'rgba(1, 28, 64, 0.35)',
+    backgroundColor: LUNA_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   card: {
     width: '100%',
     maxWidth: 480,
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: 20, // ✨ coins très arrondis HeroUI
     borderWidth: 1,
-    borderColor: LUNA_COLORS.primary,
+    borderColor: LUNA_COLORS.borderSubtle,
     overflow: 'hidden',
     maxHeight: '90%',
+    ...(shadows.xl as object),
   },
   cardSheet: {
     width: '100%',
@@ -35,68 +36,80 @@ export const lunaModalStyles = StyleSheet.create({
     borderTopRightRadius: borderRadius.xl,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: LUNA_COLORS.primary,
+    borderColor: LUNA_COLORS.borderSubtle,
     maxHeight: '92%',
+    ...(shadows.lg as object),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: LUNA_COLORS.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(84, 172, 191, 0.45)',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    backgroundColor: LUNA_COLORS.primary, // ✨ en-tête primary, texte blanc
+    borderBottomWidth: 0,
   },
   headerTitle: {
     flex: 1,
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    color: LUNA_COLORS.textInverse, // ✨ texte blanc sur primary
   },
   headerIcon: {
-    color: LUNA_COLORS.tertiary,
+    color: LUNA_COLORS.tertiary, // ✨ icône accent
   },
   body: {
-    padding: spacing.lg,
+    padding: spacing.xl, // ✨ padding généreux 20px
     maxHeight: 420,
     backgroundColor: LUNA_COLORS.surface,
   },
   footer: {
     flexDirection: 'row',
     gap: spacing.md,
-    padding: spacing.lg,
+    padding: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.primary,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur subtil
     backgroundColor: LUNA_COLORS.surfaceLight,
   },
   footerSingle: {
-    padding: spacing.lg,
+    padding: spacing.xl,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.primary,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)',
     backgroundColor: LUNA_COLORS.surfaceLight,
     alignItems: 'center',
   },
   btnGhost: {
     flex: 1,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
+    minHeight: 48,
+    borderRadius: borderRadius.full, // ✨ boutons pill
+    borderWidth: 1.5,
     borderColor: LUNA_COLORS.secondary,
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: 'transparent',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   btnGhostTxt: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.dark,
+    color: LUNA_COLORS.secondary,
   },
   btnPrimary: {
     flex: 1,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    minHeight: 48,
+    borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.secondary,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'ios'
+      ? {
+          shadowColor: '#2d9cdb',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.35,
+          shadowRadius: 12,
+        }
+      : { elevation: 4 }),
   },
   btnPrimaryTxt: {
     fontSize: fontSize.base,
@@ -104,31 +117,51 @@ export const lunaModalStyles = StyleSheet.create({
     color: LUNA_COLORS.textInverse,
   },
   btnCloseOnly: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.secondary,
-    minWidth: 120,
-    maxWidth: 200,
+    minHeight: 48,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'ios'
+      ? {
+          shadowColor: '#2d9cdb',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.35,
+          shadowRadius: 12,
+        }
+      : { elevation: 4 }),
   },
   btnCloseOnlyTxt: {
     fontSize: fontSize.base,
-    fontWeight: fontWeight.semibold,
+    fontWeight: fontWeight.bold,
     color: LUNA_COLORS.textInverse,
   },
   btnDanger: {
     flex: 1,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    minHeight: 48,
+    borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.error,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...(Platform.OS === 'ios'
+      ? {
+          shadowColor: '#dc2626',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.30,
+          shadowRadius: 12,
+        }
+      : { elevation: 4 }),
   },
   detailLabel: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.tertiary,
+    color: LUNA_COLORS.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
     marginTop: spacing.sm,
   },
   detailValue: {
@@ -138,18 +171,19 @@ export const lunaModalStyles = StyleSheet.create({
   },
   fieldLabel: {
     fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.dark,
+    fontWeight: fontWeight.medium,
+    color: LUNA_COLORS.textSecondary,
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: 'rgba(84, 172, 191, 0.5)',
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
+    minHeight: 52,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
   },

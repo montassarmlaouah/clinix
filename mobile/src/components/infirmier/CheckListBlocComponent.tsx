@@ -42,7 +42,7 @@ export function CheckListBlocComponent({ items, onChange, disabled = false }: Pr
       {sortedItems.map((item) => (
         <View key={item.id} style={[styles.item, item.checked && styles.itemChecked]}>
           <Pressable
-            style={styles.itemRow}
+            style={({ pressed }) => [styles.itemRow, pressed && { opacity: 0.75 }]} // ✨
             onPress={() => !disabled && onChange(item.id, !item.checked, item.commentaire)}
           >
             <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: LUNA_COLORS.border,
+    backgroundColor: 'rgba(197, 220, 234, 0.6)', // ✨
     overflow: 'hidden',
   },
   progressFill: {
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
   itemChecked: {
     borderColor: LUNA_COLORS.success,
@@ -169,9 +169,10 @@ const styles = StyleSheet.create({
   },
   commentaireInput: {
     marginTop: spacing.sm,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    borderRadius: borderRadius.sm,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
+    borderRadius: borderRadius.md, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     padding: spacing.sm,
     fontSize: fontSize.xs,
     color: LUNA_COLORS.textPrimary,

@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   headerInfo: { flex: 1 },
   headerName: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
 
-  listContent: { paddingVertical: spacing.lg, paddingBottom: spacing.md },
+  listContent: { paddingVertical: spacing.lg, paddingBottom: 80 },
 
   emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80, gap: spacing.md },
   emptyTxt:  { fontSize: fontSize.base, color: LUNA_COLORS.textSecondary },
@@ -312,30 +312,31 @@ const styles = StyleSheet.create({
     gap:               spacing.sm,
     paddingHorizontal: spacing.xxl,
     paddingVertical:   spacing.md,
-    backgroundColor:   LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderTopWidth:    1,
-    borderTopColor:    LUNA_COLORS.border,
-  },
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
+  }, // ✨
   textInput: {
     flex:              1,
     minHeight:         40,
     maxHeight:         120,
-    backgroundColor:   LUNA_COLORS.surfaceLight,
+    backgroundColor: LUNA_COLORS.inputBgLight,
     borderRadius:      borderRadius.xl,
     borderWidth:       1,
-    borderColor:       LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: spacing.lg,
     paddingVertical:   spacing.sm,
     fontSize:          fontSize.base,
     color:             LUNA_COLORS.textPrimary,
-  },
+  }, // ✨
   sendBtn: {
     width:          40,
     height:         40,
     borderRadius:   20,
     backgroundColor: LUNA_COLORS.secondary,
-    alignItems:     'center',
+    minHeight: 48,
+    alignItems: 'center',
     justifyContent: 'center',
-  },
+  }, // ✨
   sendBtnDisabled: { backgroundColor: LUNA_COLORS.borderDark },
 });

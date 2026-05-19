@@ -31,19 +31,24 @@ export const ROLE_TAB_ROUTES: Record<string, readonly string[]> = {
   ROLE_ADMIN_CLINIQUE: [...ADMIN_NAV_TAB_ROUTES],
   ROLE_SECRETAIRE: [
     '/(secretaire)/index',
+    '/(secretaire)/patients',
     '/(secretaire)/rendez-vous',
+    '/(secretaire)/demandes-operation',
+    '/(secretaire)/conges-medecin',
+    '/(secretaire)/chambres',
     '/(secretaire)/abonnement',
-    '/(secretaire)/profil',
-  ],
-  ROLE_MEDECIN: [
-    '/(medecin)/index',
-    '/(medecin)/patients',
-    '/(medecin)/messagerie',
   ],
   ROLE_INFIRMIER: [
     '/(infirmier)/index',
     '/(infirmier)/patients',
     '/(infirmier)/soins',
+    '/(infirmier)/menu',
+  ],
+  ROLE_MEDECIN: [
+    '/(medecin)/index',
+    '/(medecin)/patients',
+    '/(medecin)/messagerie',
+    '/(medecin)/menu',
   ],
   ROLE_RADIOLOGUE: [
     '/(radiologue)/index',

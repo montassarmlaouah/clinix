@@ -62,12 +62,13 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
   form: { padding: spacing.xxl, gap: spacing.md },
   hint: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  // ✨ input HeroUI
   area: {
-    minHeight: 160,
-    backgroundColor: LUNA_COLORS.surface,
+    minHeight: 52,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     padding: spacing.md,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,

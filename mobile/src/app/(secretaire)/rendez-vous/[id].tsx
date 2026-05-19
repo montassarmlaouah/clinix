@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -225,7 +224,8 @@ const styles = StyleSheet.create({
   backBtn: { padding: spacing.xs },
   title: { flex: 1, fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
 
-  scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  // ✨ ScrollView — paddingBottom tab bar
+  scrollContent: { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
 
   statutBanner: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
@@ -234,11 +234,12 @@ const styles = StyleSheet.create({
   },
   statutText: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
 
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   card: {
-    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.md,
-    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.border,
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
+    padding: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
     gap: spacing.sm,
-    ...shadows.sm as object,
+    ...(shadows.sm as object),
   },
   detailRow: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,

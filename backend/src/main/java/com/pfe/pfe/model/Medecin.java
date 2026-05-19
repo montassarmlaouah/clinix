@@ -27,4 +27,7 @@ public class Medecin extends User {
     // Généré automatiquement (MED-2025-001, MED-2025-002, etc.)
     @Column(nullable = true, unique = true)
     private String numeroOrdre;
+
+    @Column(name = "stripe_customer_id", length = 128)
+    private String stripeCustomerId;
 }

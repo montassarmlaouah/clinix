@@ -34,6 +34,7 @@ export default function AdminLayout(): React.JSX.Element {
       <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );

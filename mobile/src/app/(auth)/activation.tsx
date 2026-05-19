@@ -255,6 +255,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xl,
+    paddingBottom: 80,
   },
   heroWrap: {
     alignItems: 'center',
@@ -271,8 +272,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     padding: spacing.xl,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...shadows.lg,
   },
   title: {
@@ -302,9 +305,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     borderRadius: borderRadius.md,
-    backgroundColor: LUNA_COLORS.surfaceLight,
+    backgroundColor: LUNA_COLORS.inputBg,
     paddingHorizontal: spacing.md,
     height: 52,
   },
@@ -384,9 +387,8 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: LUNA_COLORS.borderDark,
+    backgroundColor: LUNA_COLORS.borderSubtle,
     marginVertical: spacing.lg,
-    opacity: 0.4,
   },
   btnSecondary: {
     flexDirection: 'row',

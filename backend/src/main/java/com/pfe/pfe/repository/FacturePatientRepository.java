@@ -8,11 +8,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.pfe.pfe.model.FacturePatient;
+import com.pfe.pfe.model.StatutFacturePatient;
 
 public interface FacturePatientRepository extends JpaRepository<FacturePatient, String> {
 
     @Query("SELECT f FROM FacturePatient f JOIN FETCH f.patient JOIN FETCH f.clinique WHERE f.clinique.id = :cliniqueId ORDER BY f.dateFacture DESC, f.numeroFacture DESC")
     List<FacturePatient> findByCliniqueWithDetails(@Param("cliniqueId") String cliniqueId);
+
+    @Query("""
+        SELECT f FROM FacturePatient f JOIN FETCH f.patient JOIN FETCH f.clinique
+        WHERE f.clinique.id = :cliniqueId AND f.statut = :statut
+        ORDER BY f.dateFacture DESC, f.numeroFacture DESC
+        """)
+    List<FacturePatient> findByCliniqueAndStatutWithDetails(
+            @Param("cliniqueId") String cliniqueId,
+            @Param("statut") StatutFacturePatient statut);
 
     @Query("SELECT f FROM FacturePatient f JOIN FETCH f.patient JOIN FETCH f.clinique WHERE f.patient.id = :patientId ORDER BY f.dateFacture DESC")
     List<FacturePatient> findByPatientWithDetails(@Param("patientId") String patientId);

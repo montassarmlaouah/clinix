@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AbonnementService } from '../service/abonnement.service';
 import { AuthService } from '../service/auth-service';
 import { OffreAbonnement } from '../model/abonnement.model';
@@ -20,24 +20,46 @@ export class AbonnementTarifsComponent implements OnInit {
   simulatingId: string | null = null;
   simSuccess = '';
   intervalSelection: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+  /** cabinet = forfaits médecin ; clinique = forfaits établissement */
+  billingScope: 'clinique' | 'cabinet' = 'clinique';
 
   constructor(
     private abonnementService: AbonnementService,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    if (!this.auth.getCliniqueId()) {
-      this.error = 'Aucune clinique associée à ce compte.';
+    const qScope = (this.route.snapshot.queryParamMap.get('scope') || '').toLowerCase();
+    if (qScope === 'cabinet') {
+      this.billingScope = 'cabinet';
+    } else if (this.auth.isMedecinCabinetExclusif() || this.auth.peutGererAbonnementCabinet()) {
+      this.billingScope = qScope === 'clinique' && this.auth.hasMedecinClinique() ? 'clinique' : 'cabinet';
+    } else {
+      this.billingScope = 'clinique';
+    }
+
+    if (this.auth.isMedecinCabinetExclusif()) {
+      this.billingScope = 'cabinet';
+    }
+
+    const load$ =
+      this.billingScope === 'cabinet'
+        ? this.abonnementService.listerOffresActivesCabinet()
+        : this.auth.getCliniqueId() || this.auth.isAdminClinique()
+          ? this.abonnementService.listerOffresActives()
+          : null;
+
+    if (!load$) {
+      this.error = 'Aucune clinique ni cabinet médical associé à ce compte.';
       this.loading = false;
       return;
     }
-    this.abonnementService.listerOffresActives().subscribe({
+
+    load$.subscribe({
       next: (list) => {
-        this.offres = (list || []).filter(
-          (o) => o.actif !== false && (o.categorie == null || o.categorie === 'CLINIQUE')
-        );
+        this.offres = (list || []).filter((o) => o.actif !== false);
         this.loading = false;
       },
       error: () => {
@@ -61,7 +83,11 @@ export class AbonnementTarifsComponent implements OnInit {
 
   choisirForfait(o: OffreAbonnement): void {
     this.router.navigate(['/abonnement-paiement'], {
-      queryParams: { offreId: o.id, interval: this.intervalSelection },
+      queryParams: {
+        offreId: o.id,
+        interval: this.intervalSelection,
+        scope: this.billingScope,
+      },
     });
   }
 
@@ -85,7 +111,8 @@ export class AbonnementTarifsComponent implements OnInit {
     this.error = '';
     this.simSuccess = '';
     this.simulatingId = o.id;
-    this.abonnementService.souscriptionSimulee(o.id, this.intervalSelection).subscribe({
+    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    this.abonnementService.souscriptionSimulee(o.id, this.intervalSelection, scope).subscribe({
       next: (r) => {
         this.simulatingId = null;
         this.simSuccess = typeof r['message'] === 'string' ? r['message'] : 'Abonnement enregistré (simulation).';

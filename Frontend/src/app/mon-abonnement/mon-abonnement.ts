@@ -6,7 +6,12 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AbonnementService } from '../service/abonnement.service';
 import { AuthService } from '../service/auth-service';
-import { AbonnementCliniqueSummary, OffreAbonnement, StripeConfigAdminDTO } from '../model/abonnement.model';
+import {
+  AbonnementCliniqueSummary,
+  OffreAbonnement,
+  SmsQuotaStatus,
+  StripeConfigAdminDTO,
+} from '../model/abonnement.model';
 
 @Component({
   selector: 'app-mon-abonnement',
@@ -50,6 +55,8 @@ export class MonAbonnementComponent implements OnInit {
 
   abonnementCourant: AbonnementCliniqueSummary | null = null;
   historiqueAbonnements: AbonnementCliniqueSummary[] = [];
+  smsQuota: SmsQuotaStatus | null = null;
+  loadingSmsQuota = false;
 
   /** Super admin : abonnements clinique au statut Actif (toutes cliniques). */
   abonnementsActifs: AbonnementCliniqueSummary[] = [];
@@ -60,9 +67,12 @@ export class MonAbonnementComponent implements OnInit {
   showModalOffre = false;
   showModalStripe = false;
 
+  /** Clinique ou cabinet (médecin rattaché à une clinique peut basculer). */
+  vueScope: 'clinique' | 'cabinet' = 'clinique';
+
   constructor(
     private abonnementService: AbonnementService,
-    private authService: AuthService,
+    readonly authService: AuthService,
     private route: ActivatedRoute
   ) {}
 
@@ -81,12 +91,16 @@ export class MonAbonnementComponent implements OnInit {
     if (this.authService.isSuperAdmin()) {
       forkJoin({
         offres: this.abonnementService.listerToutesOffres().pipe(catchError(() => of([] as OffreAbonnement[]))),
+        actifs: this.abonnementService.listerAbonnementsActifsSuperAdmin().pipe(
+          catchError(() => of([] as AbonnementCliniqueSummary[]))
+        ),
         payes: this.abonnementService.listerAbonnementsPayesSuperAdmin().pipe(
           catchError(() => of([] as AbonnementCliniqueSummary[]))
         ),
       }).subscribe({
-        next: ({ offres, payes }) => {
+        next: ({ offres, actifs, payes }) => {
           this.offres = offres || [];
+          this.abonnementsActifs = actifs || [];
           this.abonnementsPayes = payes || [];
           this.loading = false;
         },
@@ -106,24 +120,61 @@ export class MonAbonnementComponent implements OnInit {
           /* ignorer */
         },
       });
-    } else {
+    } else if (this.peutConsulterAbonnement) {
+      this.initVueScope();
       this.offres = [];
-      forkJoin({
-        cur: this.abonnementService.getCurrentSubscription().pipe(catchError(() => of(null))),
-        hist: this.abonnementService
-          .getSubscriptionHistory()
-          .pipe(catchError(() => of([] as AbonnementCliniqueSummary[]))),
-      }).subscribe({
-        next: ({ cur, hist }) => {
-          this.abonnementCourant = cur;
-          this.historiqueAbonnements = hist || [];
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
-      });
+      this.chargerAbonnementEtHistorique();
+    } else {
+      this.loading = false;
+      this.error = 'Votre compte n’est pas autorisé à consulter un abonnement.';
     }
+  }
+
+  private initVueScope(): void {
+    if (this.authService.isMedecinCabinetExclusif()) {
+      this.vueScope = 'cabinet';
+    } else if (this.authService.hasMedecinClinique() && this.authService.isMedecin()) {
+      this.vueScope = 'clinique';
+    } else {
+      this.vueScope = 'clinique';
+    }
+  }
+
+  chargerAbonnementEtHistorique(): void {
+    const scope = this.scopeApi;
+    const quota$ = this.authService.isAdminClinique() && this.vueScope === 'clinique'
+      ? this.abonnementService.getSmsQuotaCourant().pipe(catchError(() => of(null)))
+      : of(null);
+
+    this.loading = true;
+    forkJoin({
+      cur: this.abonnementService.getCurrentSubscription(scope).pipe(catchError(() => of(null))),
+      hist: this.abonnementService
+        .getSubscriptionHistory(scope)
+        .pipe(catchError(() => of([] as AbonnementCliniqueSummary[]))),
+      quota: quota$,
+    }).subscribe({
+      next: ({ cur, hist, quota }) => {
+        this.abonnementCourant = cur;
+        this.historiqueAbonnements = hist || [];
+        this.smsQuota = quota;
+        this.loading = false;
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.error = err?.error?.message || 'Impossible de charger l’abonnement.';
+        this.loading = false;
+      },
+    });
+  }
+
+  basculerVueScope(scope: 'clinique' | 'cabinet'): void {
+    if (this.vueScope === scope) {
+      return;
+    }
+    this.vueScope = scope;
+    this.abonnementCourant = null;
+    this.historiqueAbonnements = [];
+    this.chargerAbonnementEtHistorique();
   }
 
   get cliniqueId(): string | null {
@@ -132,6 +183,48 @@ export class MonAbonnementComponent implements OnInit {
 
   get isSuperAdmin(): boolean {
     return this.authService.isSuperAdmin();
+  }
+
+  /** Admin clinique, secrétaire ou médecin (clinique et/ou cabinet). */
+  get peutConsulterAbonnement(): boolean {
+    return (
+      this.authService.isAdminClinique() ||
+      this.authService.isSecretaire() ||
+      this.authService.isMedecin()
+    );
+  }
+
+  /** Médecin avec clinique + cabinet : onglets clinique / cabinet. */
+  get medecinDoubleContexte(): boolean {
+    return this.authService.isMedecin() && this.authService.hasMedecinClinique();
+  }
+
+  get isVueCabinet(): boolean {
+    return this.vueScope === 'cabinet';
+  }
+
+  get isMedecinCabinetExclusif(): boolean {
+    return this.authService.isMedecinCabinetExclusif();
+  }
+
+  private get scopeApi(): 'clinique' | 'cabinet' | undefined {
+    if (this.authService.isAdminClinique() || this.authService.isSecretaire()) {
+      return undefined;
+    }
+    if (this.authService.isMedecinCabinetExclusif()) {
+      return 'cabinet';
+    }
+    if (this.medecinDoubleContexte) {
+      return this.vueScope;
+    }
+    return this.authService.hasMedecinClinique() ? 'clinique' : 'cabinet';
+  }
+
+  get peutSouscrireAbonnement(): boolean {
+    if (this.authService.isAdminClinique()) {
+      return this.vueScope === 'clinique';
+    }
+    return this.authService.peutGererAbonnementCabinet() && this.vueScope === 'cabinet';
   }
 
   get offresActivesCount(): number {
@@ -395,7 +488,7 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   chargerAbonnementCourant(): void {
-    this.abonnementService.getCurrentSubscription().subscribe({
+    this.abonnementService.getCurrentSubscription(this.scopeApi).subscribe({
       next: (row) => {
         this.abonnementCourant = row;
       },
@@ -406,7 +499,7 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   chargerHistoriqueAbonnements(): void {
-    this.abonnementService.getSubscriptionHistory().subscribe({
+    this.abonnementService.getSubscriptionHistory(this.scopeApi).subscribe({
       next: (rows) => {
         this.historiqueAbonnements = rows || [];
       },
@@ -419,6 +512,42 @@ export class MonAbonnementComponent implements OnInit {
   rafraichirAbonnement(): void {
     this.chargerAbonnementCourant();
     this.chargerHistoriqueAbonnements();
+    this.chargerQuotaSms();
+  }
+
+  chargerQuotaSms(): void {
+    if (!this.authService.isAdminClinique()) {
+      return;
+    }
+    this.loadingSmsQuota = true;
+    this.abonnementService.getSmsQuotaCourant().subscribe({
+      next: (q) => {
+        this.smsQuota = q;
+        this.loadingSmsQuota = false;
+      },
+      error: () => {
+        this.smsQuota = null;
+        this.loadingSmsQuota = false;
+      },
+    });
+  }
+
+  get smsQuotaPourcentage(): number {
+    if (!this.smsQuota || this.smsQuota.limite <= 0) {
+      return 0;
+    }
+    return Math.min(100, Math.round((this.smsQuota.utilises / this.smsQuota.limite) * 100));
+  }
+
+  get smsQuotaBarClass(): string {
+    const p = this.smsQuotaPourcentage;
+    if (p >= 90) {
+      return 'quota-bar-danger';
+    }
+    if (p >= 70) {
+      return 'quota-bar-warn';
+    }
+    return 'quota-bar-ok';
   }
 
   libelleStatutAbonnement(statut?: string | null): string {

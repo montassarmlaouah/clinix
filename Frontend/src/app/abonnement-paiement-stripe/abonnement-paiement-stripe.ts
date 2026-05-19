@@ -16,6 +16,7 @@ import { economieAnnuelleCalc, prixPourCarte } from '../abonnement/abonnement-pr
 export class AbonnementPaiementStripeComponent implements OnInit {
   offre: OffreAbonnement | null = null;
   interval: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
+  billingScope: 'clinique' | 'cabinet' = 'clinique';
   loading = true;
   preparing = false;
   error = '';
@@ -28,12 +29,22 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    if (!this.auth.getCliniqueId()) {
-      this.error = 'Aucune clinique associée.';
+    const q = this.route.snapshot.queryParamMap;
+    const qScope = (q.get('scope') || '').toLowerCase();
+    if (qScope === 'cabinet' || this.auth.isMedecinCabinetExclusif()) {
+      this.billingScope = 'cabinet';
+    } else if (this.auth.getCliniqueId()) {
+      this.billingScope = 'clinique';
+    } else if (this.auth.peutGererAbonnementCabinet()) {
+      this.billingScope = 'cabinet';
+    }
+
+    if (!this.auth.getCliniqueId() && this.billingScope === 'clinique' && !this.auth.peutGererAbonnementCabinet()) {
+      this.error = 'Aucune clinique ni cabinet médical associé.';
       this.loading = false;
       return;
     }
-    const q = this.route.snapshot.queryParamMap;
+
     const id = q.get('offreId') || '';
     const iv = (q.get('interval') || 'MONTHLY').toUpperCase();
     this.interval = iv === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
@@ -49,7 +60,12 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   private chargerOffre(id: string): void {
     this.loading = true;
     this.error = '';
-    this.abonnementService.listerOffresActives().subscribe({
+    const list$ =
+      this.billingScope === 'cabinet'
+        ? this.abonnementService.listerOffresActivesCabinet()
+        : this.abonnementService.listerOffresActives();
+
+    list$.subscribe({
       next: (list) => {
         const found = (list || []).find((o) => o.id === id);
         if (!found) {
@@ -74,7 +90,6 @@ export class AbonnementPaiementStripeComponent implements OnInit {
     return prixPourCarte(this.offre, this.interval);
   }
 
-  /** Montant affiché comme « aujourd’hui » si essai Stripe > 0 (approximation côté UI). */
   aujourdhuiEstime(): number {
     if (!this.offre) {
       return 0;
@@ -107,14 +122,14 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   }
 
   continuerVersStripe(): void {
-    if (!this.offre || !this.auth.getCliniqueId()) {
+    if (!this.offre) {
       return;
     }
     this.error = '';
     this.preparing = true;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const successUrl = `${origin}/mon-abonnement?checkout=success`;
-    const cancelUrl = `${origin}/abonnement-paiement?offreId=${encodeURIComponent(this.offre.id)}&interval=${this.interval}`;
+    const cancelUrl = `${origin}/abonnement-paiement?offreId=${encodeURIComponent(this.offre.id)}&interval=${this.interval}&scope=${this.billingScope}`;
 
     this.abonnementService
       .demarrerStripeCheckout({
@@ -122,6 +137,7 @@ export class AbonnementPaiementStripeComponent implements OnInit {
         interval: this.interval,
         successUrl,
         cancelUrl,
+        scope: this.billingScope === 'cabinet' ? 'cabinet' : undefined,
       })
       .subscribe({
         next: (r) => {
@@ -141,6 +157,8 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   }
 
   retourTarifs(): void {
-    this.router.navigate(['/tarifs-abonnement']);
+    this.router.navigate(['/tarifs-abonnement'], {
+      queryParams: this.billingScope === 'cabinet' ? { scope: 'cabinet' } : {},
+    });
   }
 }

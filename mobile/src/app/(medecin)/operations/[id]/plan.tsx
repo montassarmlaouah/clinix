@@ -7,7 +7,7 @@ import { demandesOperationService } from '@/src/api/services/demandes-operation.
 import { Button, LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize } from '@/src/theme/typography';
 
 export default function OperationPlanScreen(): React.JSX.Element {
@@ -49,11 +49,11 @@ const styles = StyleSheet.create({
   form: { padding: spacing.xxl, gap: spacing.md },
   label: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     padding: spacing.md,
-  },
+  }, // ✨
   hint: { fontSize: fontSize.xs, color: LUNA_COLORS.textDisabled },
 });

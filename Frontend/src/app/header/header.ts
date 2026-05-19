@@ -52,7 +52,10 @@ export class Header implements OnInit {
     const pageInfo: Record<string, { title: string; subtitle: string }> = {
       '/dashboard': { title: 'Dashboard', subtitle: 'Vue d\'ensemble du système' },
       '/clinique': { title: 'Gestion des Cliniques', subtitle: 'Créer, modifier et gérer toutes les cliniques' },
-      '/mon-abonnement': { title: 'Abonnements & Stripe', subtitle: 'Offres, Stripe Checkout et configuration réservée au super admin' },
+      '/mon-abonnement': {
+        title: 'Mon abonnement',
+        subtitle: 'Abonnement courant, historique et quota SMS',
+      },
       '/facturation-patient': { title: 'Facturation patient', subtitle: 'Sortie, codes CNAM, PDF et validation du paiement' },
       '/tarifs-abonnement': { title: 'Forfaits clinique', subtitle: 'Choisir un abonnement (mensuel / annuel) défini par le super admin' },
       '/abonnement-paiement': { title: 'Paiement Stripe (test)', subtitle: 'Récapitulatif du forfait et redirection vers Stripe Checkout' },

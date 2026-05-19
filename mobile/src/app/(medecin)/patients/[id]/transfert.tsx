@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 export default function PatientTransfertScreen(): React.JSX.Element {
@@ -30,6 +30,7 @@ export default function PatientTransfertScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
   body: { padding: spacing.xxl },
-  btn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.lg, borderRadius: borderRadius.md, alignItems: 'center' },
+  btn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.lg, borderRadius: borderRadius.full, minHeight: 48,
+    alignItems: 'center' }, // ✨
   btnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold, fontSize: fontSize.base },
 });

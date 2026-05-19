@@ -12,11 +12,14 @@ import com.pfe.pfe.model.AbonnementClinique;
 
 public interface AbonnementCliniqueRepository extends JpaRepository<AbonnementClinique, String> {
 
-    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.clinique JOIN FETCH a.offre WHERE a.clinique.id = :cid ORDER BY a.dateDebut DESC")
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.clinique.id = :cid ORDER BY a.dateDebut DESC")
     List<AbonnementClinique> findByCliniqueIdOrderByDateDebutDesc(@Param("cid") String cliniqueId);
 
-    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.clinique JOIN FETCH a.offre WHERE a.clinique.id = :cid ORDER BY a.dateCreation DESC")
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.clinique.id = :cid ORDER BY a.dateCreation DESC")
     List<AbonnementClinique> findByCliniqueIdOrderByDateCreationDesc(@Param("cid") String cliniqueId);
+
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.medecinCabinet.id = :mid ORDER BY a.dateCreation DESC")
+    List<AbonnementClinique> findByMedecinCabinetIdOrderByDateCreationDesc(@Param("mid") String medecinId);
 
     List<AbonnementClinique> findByCliniqueIdAndStatut(String cliniqueId, String statut);
 
@@ -28,13 +31,13 @@ public interface AbonnementCliniqueRepository extends JpaRepository<AbonnementCl
      * Abonnements au statut Actif (toutes cliniques, super admin).
      * Le statut est stocké en majuscules côté application ({@code ACTIF}).
      */
-    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.clinique JOIN FETCH a.offre WHERE a.statut = :statut ORDER BY a.dateCreation DESC")
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.statut = :statut ORDER BY a.dateCreation DESC")
     List<AbonnementClinique> findByStatutForSuperAdmin(@Param("statut") String statut);
 
     /**
      * Abonnements avec montant payé strictement positif (super admin).
      * Comparaison via paramètre {@link BigDecimal} pour éviter les ambiguïtés JPQL (literal 0 vs DECIMAL).
      */
-    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.clinique JOIN FETCH a.offre WHERE a.montantPaye > :zero ORDER BY a.dateCreation DESC")
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.montantPaye > :zero ORDER BY a.dateCreation DESC")
     List<AbonnementClinique> findPaidSubscriptionsOrderByDateCreationDesc(@Param("zero") BigDecimal zero);
 }

@@ -250,7 +250,10 @@ export class AuthService {
   }
 
   isAdminClinique(): boolean {
-    return this.hasRole('ROLE_ADMIN_CLINIQUE');
+    const role = this.getRole();
+    if (!role) return false;
+    const r = role.toUpperCase().replace(/-/g, '_');
+    return r === 'ROLE_ADMIN_CLINIQUE' || r === 'ADMIN_CLINIQUE';
   }
 
   isPatient(): boolean {
@@ -258,19 +261,38 @@ export class AuthService {
   }
 
   isMedecin(): boolean {
-    return this.hasRole('ROLE_MEDECIN');
+    const role = this.getRole();
+    if (!role) return false;
+    const r = role.toUpperCase().replace(/-/g, '_');
+    return r === 'ROLE_MEDECIN' || r === 'MEDECIN';
   }
 
-  /** Médecin de cabinet (pas de clinique rattachée dans le JWT) — ex. pratique libérale. */
-  isMedecinCabinet(): boolean {
+  /** Médecin sans clinique dans le JWT (cabinet indépendant / libéral). */
+  isMedecinCabinetExclusif(): boolean {
     if (!this.isMedecin()) {
       return false;
     }
     const cid = this.getCliniqueId();
-    if (!cid || cid === 'null' || cid === 'undefined') {
-      return true;
-    }
-    return false;
+    return !cid || cid === 'null' || cid === 'undefined';
+  }
+
+  /** Médecin rattaché à une clinique (JWT avec cliniqueId). */
+  hasMedecinClinique(): boolean {
+    const cid = this.getCliniqueId();
+    return !!cid && cid !== 'null' && cid !== 'undefined';
+  }
+
+  /**
+   * Médecin pouvant gérer un cabinet (patients cabinet, abonnement cabinet).
+   * Cabinet exclusif ou médecin de clinique avec activité cabinet.
+   */
+  isMedecinCabinet(): boolean {
+    return this.isMedecin();
+  }
+
+  /** Abonnement / forfaits cabinet médical (tout médecin). */
+  peutGererAbonnementCabinet(): boolean {
+    return this.isMedecin();
   }
 
   isInfirmier(): boolean {

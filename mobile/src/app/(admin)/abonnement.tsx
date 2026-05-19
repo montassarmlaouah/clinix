@@ -10,8 +10,8 @@ import { apiGet, apiPost } from '@/src/api/client';
 import { BILLING } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface SubscriptionStatus {
   statut: string;
@@ -122,21 +122,29 @@ export default function AbonnementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: LUNA_COLORS.background ?? '#0f172a' },
-  center:       { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: LUNA_COLORS.background ?? '#0f172a' },
-  title:        { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: '#fff', marginBottom: spacing.lg },
-  statusCard:   { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl },
-  label:        { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary ?? '#94a3b8', marginBottom: spacing.xs },
-  statut:       { fontSize: fontSize.xl, fontWeight: fontWeight.bold, marginBottom: spacing.xs },
-  offreName:    { fontSize: fontSize.base, color: '#fff', marginBottom: spacing.xs },
-  expiry:       { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary ?? '#94a3b8' },
-  sectionTitle: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: '#fff', marginBottom: spacing.md },
-  card:         { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.md },
-  offre:        { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: '#fff', marginBottom: spacing.xs },
+  container:    { flex: 1, backgroundColor: LUNA_COLORS.background },
+  center:       { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: LUNA_COLORS.background },
+  title:        { ...typography.sectionTitle, marginBottom: spacing.lg },
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
+  statusCard:   {
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl,
+    borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object),
+  },
+  label:        { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginBottom: spacing.xs },
+  statut:       { fontSize: fontSize.xl, fontWeight: fontWeight.bold, marginBottom: spacing.xs, color: LUNA_COLORS.textPrimary },
+  offreName:    { fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, marginBottom: spacing.xs },
+  expiry:       { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
+  card:         {
+    backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.md,
+    borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, ...(shadows.sm as object),
+  },
+  offre:        { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary, marginBottom: spacing.xs },
   prix:         { fontSize: fontSize.base, color: LUNA_COLORS.primary, marginBottom: spacing.xs },
-  desc:         { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary ?? '#94a3b8', marginBottom: spacing.md },
-  btn:          { backgroundColor: LUNA_COLORS.primary, borderRadius: borderRadius.md, paddingVertical: spacing.sm, alignItems: 'center' },
+  desc:         { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginBottom: spacing.md },
+  btn:          { backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center', minHeight: 52, justifyContent: 'center' },
   btnDisabled:  { opacity: 0.6 },
-  btnText:      { color: '#fff', fontWeight: fontWeight.bold, fontSize: fontSize.sm },
-  empty:        { color: LUNA_COLORS.textSecondary ?? '#94a3b8', textAlign: 'center', marginTop: spacing.xxl },
+  btnText:      { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold, fontSize: fontSize.sm },
+  empty:        { color: LUNA_COLORS.textSecondary, textAlign: 'center', marginTop: spacing.xxl },
 });

@@ -51,6 +51,20 @@ export interface AbonnementCliniqueSummary {
   offreCategorie?: string | null;
   cliniqueId?: string | null;
   cliniqueNom?: string | null;
+  medecinCabinetId?: string | null;
+  medecinCabinetNom?: string | null;
+}
+
+/** Réponse GET /api/billing/sms-quota */
+export interface SmsQuotaStatus {
+  autorise: boolean;
+  message: string;
+  limite: number;
+  utilises: number;
+  restants: number;
+  offreNom?: string | null;
+  periodeDebut?: string | null;
+  periodeFin?: string | null;
 }
 
 /** Réponse GET /api/billing/stripe-config (super admin) */

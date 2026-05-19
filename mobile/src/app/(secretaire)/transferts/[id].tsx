@@ -69,13 +69,17 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  content: { padding: spacing.xxl },
+  // ✨ ScrollView — paddingBottom tab bar
+  content: { padding: spacing.xxl, paddingBottom: 80 },
   title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest, marginBottom: spacing.lg },
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
     gap: spacing.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   row: { gap: 4 },

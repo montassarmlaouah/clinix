@@ -1158,3 +1158,85 @@
   background: linear-gradient(135deg, var(--luna-primary), var(--luna-deep));
   color: #fff;
 }
+
+.sms-quota-card {
+  margin-bottom: 1.25rem;
+}
+
+.loader-inline {
+  color: var(--luna-primary);
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.quota-message {
+  margin: 0 0 1rem;
+  font-weight: 500;
+  color: var(--luna-dark);
+  line-height: 1.5;
+}
+
+.quota-message.quota-blocked {
+  color: #dc2626;
+}
+
+.quota-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--luna-dark);
+}
+
+.quota-meta i {
+  color: var(--luna-primary);
+  margin-right: 0.35rem;
+}
+
+.quota-progress-wrap {
+  margin-bottom: 1rem;
+}
+
+.quota-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--luna-deep);
+}
+
+.quota-restants {
+  color: var(--luna-primary);
+}
+
+.quota-progress-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(167, 235, 242, 0.35);
+  overflow: hidden;
+}
+
+.quota-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+
+.quota-bar-ok {
+  background: linear-gradient(90deg, var(--luna-primary), var(--luna-deep));
+}
+
+.quota-bar-warn {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.quota-bar-danger {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.historique-section {
+  margin-top: 1.5rem;
+}

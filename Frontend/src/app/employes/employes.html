@@ -1,3 +1,4 @@
+
 <div class="main-card">
   <div class="licences-container">
     <header class="page-header">
@@ -16,24 +17,10 @@
     </header>
 
     <section class="messages-section">
-      <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2" *ngIf="pdfInvitationBase64">
-        <span><i class="fas fa-file-pdf me-2"></i> PDF d’identifiants disponible. Vous pouvez l’ouvrir ou le télécharger ici.</span>
-        <div class="btn-group btn-group-sm flex-shrink-0">
-          <button type="button" class="btn btn-outline-primary" (click)="voirPdfInvitation()">
-            <i class="fas fa-eye"></i> Voir le PDF
-          </button>
-          <button type="button" class="btn btn-primary" (click)="telechargerPdfInvitation()">
-            <i class="fas fa-download"></i> Télécharger
-          </button>
-          <button type="button" class="btn btn-outline-secondary" (click)="effacerBandeauPdf()" title="Masquer">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
       <div class="alert alert-luna-success" *ngIf="success">
         <i class="fas fa-check-circle"></i> {{ success }}
       </div>
-      <div class="alert alert-luna-danger" *ngIf="error && !showModal">
+      <div class="alert alert-luna-danger" *ngIf="error">
         <i class="fas fa-exclamation-circle"></i> {{ error }}
       </div>
     </section>
@@ -124,10 +111,6 @@
         <i class="fas fa-user-plus"></i> Ajouter {{getRoleLabel() || 'Personnel'}}
       </button>
     </div>
-    <div class="alert alert-warning d-flex align-items-start gap-2 mt-2 mx-0" *ngIf="isSuperAdmin && activeTab === 'medecins'" role="status">
-      <i class="fas fa-info-circle mt-1"></i>
-      <span>Super administrateur : l’ajout de médecins depuis cette liste n’est pas disponible ici (réservé à l’administration par clinique).</span>
-    </div>
 
     <!-- Tableau du Personnel -->
     <div class="table-container luna-shadow">
@@ -180,19 +163,12 @@
               </span>
             </td>
             <td class="date-cell">
-              {{ personnel.dateCreation ? (personnel.dateCreation | date:'dd/MM/yyyy') : '—' }}
+              {{ personnel.dateCreation | date:'dd/MM/yyyy' }}
             </td>
             <td>
               <div class="action-group">
                 <button class="btn-action btn-view" (click)="viewPersonnel(personnel)" title="Voir détails">
                   <i class="fas fa-eye"></i>
-                </button>
-                <button
-                  class="btn-action btn-deactivate"
-                  *ngIf="isAdminClinique && personnel.actif"
-                  (click)="desactiverCompte(personnel)"
-                  title="Désactiver le compte">
-                  <i class="fas fa-user-slash"></i>
                 </button>
               </div>
             </td>
@@ -228,11 +204,11 @@
     </div>
 
     <!-- Modal Ajout Personnel -->
-    <div class="modal fade show" *ngIf="showModal" style="display: block; background: rgba(0,0,0,0.5);" role="dialog" aria-modal="true" aria-labelledby="modalAjoutPersonnelTitle">
+    <div class="modal fade show" *ngIf="showModal" style="display: block; background: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content luna-glass">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalAjoutPersonnelTitle">
+            <h5 class="modal-title">
               <i class="fas fa-user-plus"></i> Ajouter {{getRoleLabel()}}
             </h5>
             <button type="button" class="btn-close" (click)="fermerModal()"></button>
@@ -245,59 +221,88 @@
                   Étape {{ modalStep }} sur 3
                 </div>
                 <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 1" [class.btn-outline-secondary]="modalStep !== 1" disabled>1. CIN</button>
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 2" [class.btn-outline-secondary]="modalStep !== 2" disabled>2. Identité</button>
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 3" [class.btn-outline-secondary]="modalStep !== 3" disabled>3. Envoi</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 1" [class.btn-outline-secondary]="modalStep !== 1" disabled>1. Identité</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 2" [class.btn-outline-secondary]="modalStep !== 2" disabled>2. E-mails</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 3" [class.btn-outline-secondary]="modalStep !== 3" disabled>3. Profil</button>
                 </div>
               </div>
 
-              <div class="alert alert-luna-danger" *ngIf="error">
-                <i class="fas fa-exclamation-circle"></i> {{ error }}
-              </div>
-              <div class="alert alert-info" *ngIf="isAdminClinique && nouveauPersonnel.role === 'MEDECIN'">
-                <i class="fas fa-hospital"></i>
-                Le médecin sera rattaché à votre clinique.
-              </div>
+             
 
-              <!-- Étape 1 : CIN -->
+              <!-- Étape 1 : mode + CIN -->
               <div class="detail-section" *ngIf="modalStep === 1">
                 <h6 class="section-title">
-                  <i class="fas fa-id-card"></i> Carte d’identité (CIN)
+                  <i class="fas fa-paper-plane"></i> Envoi des identifiants
                 </h6>
-                <div class="row">
-                  <div class="col-md-12">
-                    <label>Numéro CIN <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.numeroPieceIdentite" name="cinEtape1"
-                           placeholder="Numéro de carte d’identité" autocomplete="off">
-                    <small class="text-muted">Obligatoire. Si vous sélectionnez un médecin existant à l’étape 2, le CIN peut être repris depuis son dossier.</small>
+                <p class="text-muted small mb-2">
+                  TunisieSMS (SMS), e-mail, ou PDF joint (identifiants dans le PDF ; e-mail obligatoire).
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'TUNISIE_SMS'"
+                          (click)="setModeEnvoi('TUNISIE_SMS')">
+                    <i class="fas fa-sms"></i> TunisieSMSmedecin
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'EMAIL'"
+                          (click)="setModeEnvoi('EMAIL')">
+                    <i class="fas fa-envelope"></i> E-mail
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_CODE'"
+                          (click)="setModeEnvoi('PDF_CODE')">
+                    <i class="fas fa-file-pdf"></i> PDF (e-mail)
+                  </button>
+                </div>
+                <div class="row" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL' || nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  <div class="col-md-12 mb-2">
+                    <label>Carte d'identité (CIN) <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.numeroPieceIdentite" name="cinStep1"
+                           placeholder="Numéro CIN">
                   </div>
                 </div>
               </div>
 
-              <!-- Étape 2 : identité (nom, prénom, téléphone, clinique, médecin…) -->
-              <ng-container *ngIf="modalStep === 2">
-
-              <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN'">
+              <!-- Étape 2 : e-mails -->
+              <div class="detail-section" *ngIf="modalStep === 2">
                 <h6 class="section-title">
-                  <i class="fas fa-search"></i> Médecin déjà dans le système (optionnel)
+                  <i class="fas fa-at"></i> Destinataires
                 </h6>
-                <p class="text-muted small">Recherchez par nom, prénom ou téléphone pour rattacher un compte existant à votre clinique.</p>
-                <p class="text-muted small mb-2">Le numéro CIN saisi à l’étape 1 est aussi transmis au serveur pour affiner les résultats.</p>
-                <div class="row g-2 align-items-end mb-2">
-                  <div class="col-md-6">
-                    <label class="small">Recherche</label>
-                    <input type="text" class="form-control luna-input" [(ngModel)]="rechercheMedecinQuery" name="rq" placeholder="Nom, prénom ou téléphone (min. 2 caractères)">
+                <div class="row" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL' || nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  <div class="col-md-12 mb-2">
+                    <label>E-mail du collaborateur <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.email" name="emailStep2"
+                           placeholder="nom@exemple.com">
                   </div>
+                  <div class="col-md-12 mb-2">
+                    <label>E-mail en copie cachée (optionnel)</label>
+                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.emailCopieInvitation" name="emailBcc"
+                           placeholder="Autre boîte (BCC), ex. autre clinique">
+                    <small class="text-muted">Reçoit une copie invisible du message de bienvenue.</small>
+                  </div>
+                </div>
+                <div class="alert alert-secondary py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
+                  Mode SMS : passez à l'étape suivante pour saisir le téléphone du collaborateur.
+                </div>
+              </div>
+
+              <ng-container *ngIf="modalStep === 3">
+
+               
+                  
                   <div class="col-md-3">
                     <button type="button" class="btn btn-outline-primary w-100" (click)="lancerRechercheMedecin()" [disabled]="rechercheMedecinLoading">
                       <i class="fas fa-search" *ngIf="!rechercheMedecinLoading"></i>
                       <i class="fas fa-spinner fa-spin" *ngIf="rechercheMedecinLoading"></i> Rechercher
                     </button>
                   </div>
-                  <div class="col-md-3" *ngIf="nouveauPersonnel.medecinExistantId">
+                  <div class="col-md-2" *ngIf="nouveauPersonnel.medecinExistantId">
                     <button type="button" class="btn btn-outline-secondary w-100" (click)="effacerSelectionMedecin()">Effacer</button>
                   </div>
-                </div>
+              
                 <div class="table-responsive" *ngIf="resultatsRechercheMedecin.length">
                   <table class="table table-sm table-bordered bg-white">
                     <thead><tr><th>Nom</th><th>Téléphone</th><th>Spécialité</th><th>Clinique actuelle</th><th></th></tr></thead>
@@ -315,32 +320,40 @@
                 <div class="alert alert-success py-2" *ngIf="nouveauPersonnel.medecinExistantId">
                   <i class="fas fa-link"></i> Rattachement : compte médecin existant sélectionné.
                 </div>
-              </div>
 
               <div class="detail-section">
                 <h6 class="section-title">
                   <i class="fas fa-user-circle"></i> Informations personnelles
                 </h6>
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="invMin"
+                         [(ngModel)]="nouveauPersonnel.profilInvitationMinimal" name="profilInvitationMinimal">
+                  <label class="form-check-label" for="invMin">
+                    Invitation sans nom / prénom (profil à compléter après première connexion)
+                  </label>
+                </div>
                 <div class="row">
                   <div class="col-md-6">
                     <div class="detail-item">
-                      <label>Nom <span class="text-danger">*</span></label>
+                      <label>Nom <span class="text-danger" *ngIf="!nouveauPersonnel.profilInvitationMinimal">*</span></label>
                       <input type="text"
                              class="form-control luna-input"
                              [(ngModel)]="nouveauPersonnel.nom"
                              name="nom"
-                             required
+                             [required]="!nouveauPersonnel.profilInvitationMinimal"
+                             [disabled]="nouveauPersonnel.profilInvitationMinimal ?? false"
                              placeholder="Nom de famille">
                     </div>
                   </div>
                   <div class="col-md-6">
                     <div class="detail-item">
-                      <label>Prénom <span class="text-danger">*</span></label>
+                      <label>Prénom <span class="text-danger" *ngIf="!nouveauPersonnel.profilInvitationMinimal">*</span></label>
                       <input type="text"
                              class="form-control luna-input"
                              [(ngModel)]="nouveauPersonnel.prenom"
                              name="prenom"
-                             required
+                             [required]="!nouveauPersonnel.profilInvitationMinimal"
+                             [disabled]="nouveauPersonnel.profilInvitationMinimal ?? false"
                              placeholder="Prénom">
                     </div>
                   </div>
@@ -351,37 +364,13 @@
                              class="form-control luna-input"
                              [(ngModel)]="nouveauPersonnel.telephone"
                              name="telephone"
-                             [required]="(nouveauPersonnel.medecinExistantId ?? '') === ''"
+                             [required]="!nouveauPersonnel.medecinExistantId"
                              minlength="8"
                              maxlength="8"
                              pattern="\d{8}"
                              inputmode="numeric"
                              placeholder="8 chiffres (sans 216)"
                              [disabled]="!!nouveauPersonnel.medecinExistantId">
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="detail-item">
-                      <label>E-mail du collaborateur</label>
-                      <input type="email"
-                             class="form-control luna-input"
-                             [(ngModel)]="nouveauPersonnel.email"
-                             name="emailStep2"
-                             placeholder="nom@exemple.com">
-                      <small class="text-muted">
-                        Requis seulement si vous choisissez <strong>E-mail + PDF</strong> à l'étape 3.
-                      </small>
-                    </div>
-                  </div>
-                  <div class="col-md-12">
-                    <div class="detail-item">
-                      <label>E-mail en copie cachée (optionnel)</label>
-                      <input type="email"
-                             class="form-control luna-input"
-                             [(ngModel)]="nouveauPersonnel.emailCopieInvitation"
-                             name="emailBcc"
-                             placeholder="Autre boîte (BCC), ex. autre clinique">
-                      <small class="text-muted">Reçoit une copie invisible du message de bienvenue.</small>
                     </div>
                   </div>
                   <div class="col-md-12" *ngIf="isSuperAdmin">
@@ -408,7 +397,7 @@
                 </div>
               </div>
 
-              <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN' && !nouveauPersonnel.medecinExistantId">
+              <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN'">
                 <h6 class="section-title">
                   <i class="fas fa-stethoscope"></i> Spécialité médicale
                 </h6>
@@ -430,68 +419,25 @@
                 </div>
               </div>
 
-              </ng-container>
-
-              <!-- Étape 3 : mode d’envoi (SMS / e-mail+PDF / PDF) -->
-              <div class="detail-section" *ngIf="modalStep === 3">
-                <h6 class="section-title">
-                  <i class="fas fa-paper-plane"></i> Envoi des identifiants
-                </h6>
-                <p class="text-muted small mb-2">
-                  <strong>Trois options</strong> : SMS <strong>TunisieSMS</strong>, <strong>e-mail avec PDF</strong>, ou <strong>PDF</strong>.
-                </p>
-                <div class="d-flex flex-wrap gap-2 mb-2">
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'TUNISIE_SMS'"
-                          (click)="setModeEnvoi('TUNISIE_SMS')">
-                    <i class="fas fa-sms"></i> TunisieSMS
-                  </button>
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_CODE'"
-                          (click)="setModeEnvoi('PDF_CODE')">
-                    <i class="fas fa-envelope"></i> E-mail + PDF
-                  </button>
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_ONLY'"
-                          (click)="setModeEnvoi('PDF_ONLY')">
-                    <i class="fas fa-file-pdf"></i> PDF
-                  </button>
-                </div>
-                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
-                  Mot de passe envoyé par SMS sur le numéro saisi à l’étape 2.
-                </p>
-                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
-                  Un PDF (téléphone + mot de passe) est joint à l’e-mail ; après création : <strong>Voir le PDF</strong> / <strong>Télécharger</strong> en haut de page.
-                </p>
-                <p class="text-muted small mb-3" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'">
-                  Aucun e-mail : le PDF sera disponible en haut de page après création.
-                </p>
-                <div class="form-check mt-2 pt-2 border-top">
-                  <input type="checkbox" class="form-check-input" id="profilInvitationMinimalChk" [(ngModel)]="nouveauPersonnel.profilInvitationMinimal" name="profilInvitationMinimal">
-                  <label class="form-check-label" for="profilInvitationMinimalChk">Invitation avec profil minimal (données réduites dans le message, si pris en charge par la clinique)</label>
-                </div>
-              </div>
-
-              <div class="detail-section" *ngIf="modalStep === 3">
+              <div class="detail-section">
                 <h6 class="section-title">
                   <i class="fas fa-lock"></i> Sécurité du compte
                 </h6>
                 <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
-                  <i class="fas fa-sms"></i>
-                  <strong>TunisieSMS</strong> : le mot de passe est envoyé par SMS sur le numéro de l’étape 2.
+                  <i class="fas fa-exclamation-triangle"></i>
+                  Mot de passe provisoire envoyé par <strong>TunisieSMS</strong>.
+                </div>
+                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'">
+                  <i class="fas fa-envelope"></i>
+                  Identifiants envoyés par <strong>e-mail</strong> (message de bienvenue mis en forme).
                 </div>
                 <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
                   <i class="fas fa-file-pdf"></i>
-                  <strong>E-mail + PDF</strong> : pièce jointe avec téléphone et mot de passe. Boutons <strong>Voir le PDF</strong> et <strong>Télécharger</strong> en haut de page après création.
-                </div>
-                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'">
-                  <i class="fas fa-file-pdf"></i>
-                  <strong>PDF</strong> : aucun e-mail. Utilisez <strong>Voir le PDF</strong> ou <strong>Télécharger</strong> en haut de page.
+                  E-mail avec PDF : <strong>téléphone + mot de passe</strong> dans le fichier uniquement. Les codes de vérification s’appliquent au changement / oubli de mot de passe dans l’app.
                 </div>
               </div>
+
+              </ng-container>
             </div>
 
             <div class="modal-footer">
@@ -515,11 +461,11 @@
     </div>
 
     <!-- Modal Détails -->
-    <div class="modal fade show" *ngIf="showDetailsModal && selectedPersonnel" style="display: block; background: rgba(0,0,0,0.5);" role="dialog" aria-modal="true" aria-labelledby="modalDetailsPersonnelTitle">
+    <div class="modal fade show" *ngIf="showDetailsModal && selectedPersonnel" style="display: block; background: rgba(0,0,0,0.5);">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content luna-glass">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalDetailsPersonnelTitle">
+            <h5 class="modal-title">
               <i class="fas fa-user-circle"></i> Détails du personnel
             </h5>
             <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
@@ -553,12 +499,6 @@
                   <div class="detail-item">
                     <label>Téléphone</label>
                     <p>{{ selectedPersonnel.telephone || 'N/A' }}</p>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="detail-item">
-                    <label>E-mail</label>
-                    <p>{{ selectedPersonnel.email || 'Non renseigné' }}</p>
                   </div>
                 </div>
 
@@ -610,7 +550,7 @@
                 <div class="col-md-6">
                   <div class="detail-item">
                     <label>Dernière connexion</label>
-                    <p>{{ getSelectedLastLogin() }}</p>
+                    <p>{{ selectedPersonnel.lastLogin || 'Jamais connecté' }}</p>
                   </div>
                 </div>
               </div>
@@ -624,5 +564,3 @@
         </div>
       </div>
     </div>
-  </div>
-</div>

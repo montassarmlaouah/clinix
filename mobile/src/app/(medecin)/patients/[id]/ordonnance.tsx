@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
     color:      LUNA_COLORS.dark,
   },
-  scroll: { padding: spacing.xxl, paddingBottom: 120 },
+  scroll: { padding: spacing.xxl, paddingBottom: 80 },
   intro: {
     fontSize:     fontSize.sm,
     color:        LUNA_COLORS.textSecondary,
@@ -485,27 +485,28 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     flexDirection:  'row',
-    alignItems:     'center',
+    minHeight: 48,
+    alignItems: 'center',
     justifyContent: 'center',
     gap:            spacing.sm,
     paddingVertical: spacing.md,
     borderWidth:    1.5,
     borderStyle:    'dashed',
     borderColor:    LUNA_COLORS.secondary,
-    borderRadius:   borderRadius.md,
+    borderRadius: borderRadius.full,
     marginTop:      spacing.sm,
-  },
+  }, // ✨
   addBtnTxt: {
     fontSize:   fontSize.base,
     color:      LUNA_COLORS.secondary,
     fontWeight: fontWeight.medium,
-  },
+  }, // ✨
   footer: {
     paddingHorizontal: spacing.xxl,
     paddingVertical:   spacing.lg,
     backgroundColor:   LUNA_COLORS.surface,
     borderTopWidth:    1,
-    borderTopColor:    LUNA_COLORS.border,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   // ── Tabs ──
   tabs: {
@@ -550,14 +551,15 @@ const styles = StyleSheet.create({
   ordMeds:             { fontSize: fontSize.xs, color: LUNA_COLORS.textDisabled },
   signerBtn: {
     flexDirection:   'row',
-    alignItems:      'center',
+    minHeight: 48,
+    alignItems: 'center',
     justifyContent:  'center',
     gap:             spacing.xs,
     marginTop:       spacing.sm,
     paddingVertical: spacing.sm,
     borderRadius:    borderRadius.sm,
     backgroundColor: LUNA_COLORS.secondary,
-  },
+  }, // ✨
   signerBtnDisabled: { opacity: 0.6 },
   signerBtnText:     { color: '#fff', fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
 });

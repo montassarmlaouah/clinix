@@ -25,7 +25,7 @@ export function LunaCard({
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} style={cardStyle}>
+      <Pressable onPress={onPress} style={cardStyle} android_ripple={{ color: LUNA_COLORS.surfaceActive }}>
         {children}
       </Pressable>
     );
@@ -37,10 +37,13 @@ export function LunaCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    borderRadius: 20, // ✨ coins très arrondis HeroUI
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     borderLeftWidth: 4,
-    ...(shadows.sm as object),
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨ bordure subtile
+    borderLeftColor: LUNA_COLORS.secondary,
+    ...(shadows.card as object),
   },
 });

@@ -34,7 +34,7 @@ import { adminTableStyles as tbl } from '@/src/theme/adminTable';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 const K = 1;
 const s = (n: number): number => Math.round(n * K);
@@ -1137,12 +1137,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: s(spacing.sm),
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    borderRadius: borderRadius.md,
+    borderColor: LUNA_COLORS.borderSubtle,
+    borderRadius: borderRadius.lg,
     paddingVertical: s(spacing.md),
     paddingHorizontal: s(spacing.md),
+    ...(shadows.sm as object),
   },
   btnSecondaryTxt: {
     fontSize: s(fontSize.sm),
@@ -1157,9 +1158,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: s(spacing.sm),
     backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨ coins 16px
     paddingVertical: s(spacing.md),
     paddingHorizontal: s(spacing.md),
+    minHeight: s(52),
     ...(shadows.button as object),
   },
   btnPrimaryTxt: {
@@ -1173,27 +1175,26 @@ const styles = StyleSheet.create({
     marginHorizontal: s(spacing.lg),
     marginBottom: s(spacing.md),
     padding: s(spacing.lg),
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ carte filtres
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     gap: s(spacing.sm),
     ...(shadows.sm as object),
   },
   filterLabel: {
-    fontSize: s(fontSize.xs),
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textSecondary,
-    letterSpacing: 0.5,
+    ...typography.sectionTitle, // ✨ titre section (aligné adminTable)
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: s(spacing.sm),
-    backgroundColor: LUNA_COLORS.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: s(spacing.md),
-    minHeight: s(48),
+    minHeight: s(52),
   },
   searchInput: {
     flex: 1,
@@ -1204,12 +1205,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: LUNA_COLORS.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: s(spacing.md),
-    minHeight: s(48),
+    minHeight: s(52),
   },
   selectTxt: { flex: 1, fontSize: s(fontSize.base), color: LUNA_COLORS.textPrimary },
   typeTabs: {
@@ -1227,7 +1228,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.surface,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
   },
   typeTabOn: { backgroundColor: LUNA_COLORS.darkest, borderColor: LUNA_COLORS.darkest },
   typeTabTxt: { fontSize: s(fontSize.sm), color: LUNA_COLORS.textPrimary },
@@ -1238,10 +1239,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: s(spacing.lg),
     marginBottom: s(spacing.sm),
   },
-  list: { paddingHorizontal: s(spacing.lg), paddingBottom: s(100) },
+  list: { paddingHorizontal: s(spacing.lg), paddingBottom: 80 }, // ✨ espace tab bar
   card: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche (carte mobile)
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: s(spacing.lg),
     marginBottom: s(spacing.md),
     ...(shadows.sm as object),
@@ -1270,10 +1273,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingHorizontal: s(spacing.md),
     paddingVertical: s(4),
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full, // ✨ aligné adminTable typeBadge
     backgroundColor: LUNA_COLORS.surfaceLight,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
     marginBottom: s(spacing.sm),
   },
   typeBadgeTxt: { fontSize: s(fontSize.sm), color: LUNA_COLORS.textPrimary, fontWeight: fontWeight.medium },
@@ -1300,7 +1301,7 @@ const styles = StyleSheet.create({
     gap: s(4),
     paddingHorizontal: s(spacing.sm),
     paddingVertical: s(4),
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full, // ✨ aligné adminTable statusBadge
   },
   statusTxt: { fontSize: s(fontSize.xs), fontWeight: fontWeight.bold },
   cardActions: { flexDirection: 'row', gap: s(spacing.sm), marginTop: s(spacing.sm) },
@@ -1324,13 +1325,14 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.surface, // ✨ modal surface
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
     borderWidth: 1,
     borderBottomWidth: 0,
-    borderColor: LUNA_COLORS.primary,
+    borderColor: LUNA_COLORS.borderSubtle,
     maxHeight: '92%',
+    ...(shadows.lg as object),
   },
   mHeader: {
     flexDirection: 'row',
@@ -1355,8 +1357,11 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.surface,
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     maxHeight: '50%',
     padding: s(spacing.lg),
+    ...(shadows.lg as object),
   },
   pickerTitle: {
     fontSize: s(fontSize.lg),
@@ -1371,22 +1376,20 @@ const styles = StyleSheet.create({
   },
   pickerRowTxt: { fontSize: s(fontSize.base), color: LUNA_COLORS.textPrimary },
   fLabel: {
-    fontSize: s(fontSize.sm),
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.dark,
+    ...typography.sectionTitle,
     marginBottom: s(spacing.xs),
     marginTop: s(spacing.sm),
   },
   inp: {
-    backgroundColor: LUNA_COLORS.background,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: s(spacing.md),
     paddingVertical: s(spacing.md),
     fontSize: s(fontSize.base),
     color: LUNA_COLORS.textPrimary,
-    minHeight: s(48),
+    minHeight: s(52),
   },
   inpErr: { borderColor: LUNA_COLORS.error },
   errTxt: { fontSize: s(fontSize.xs), color: LUNA_COLORS.error, marginTop: 4 },
@@ -1397,9 +1400,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: s(spacing.md),
     paddingVertical: s(spacing.sm),
     borderRadius: borderRadius.full,
-    backgroundColor: LUNA_COLORS.background,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     marginRight: s(spacing.sm),
   },
   chipOn: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
@@ -1413,21 +1416,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: s(spacing.md),
     marginBottom: s(spacing.sm),
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    backgroundColor: LUNA_COLORS.background,
+    borderColor: LUNA_COLORS.borderSubtle,
+    backgroundColor: LUNA_COLORS.surface,
   },
   eqCardOn: {
     borderColor: LUNA_COLORS.success,
-    backgroundColor: LUNA_COLORS.successLight,
+    backgroundColor: LUNA_COLORS.successLight, // ✨ successLight
   },
   eqCode: { fontSize: s(fontSize.sm), fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   eqName: { fontSize: s(fontSize.xs), color: LUNA_COLORS.textSecondary },
   eqHint: { fontSize: s(fontSize.xs), color: LUNA_COLORS.tertiary, marginTop: s(spacing.xs) },
   errBox: {
-    backgroundColor: LUNA_COLORS.errorLight,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.errorLight, // ✨ errorLight
+    borderRadius: borderRadius.lg,
     padding: s(spacing.md),
     marginTop: s(spacing.md),
   },
@@ -1437,9 +1440,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: s(spacing.md),
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
+    minHeight: s(52),
   },
   cancelBtnTxt: { fontSize: s(fontSize.base), fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   submitBtn: {
@@ -1447,8 +1451,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: s(spacing.md),
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     backgroundColor: LUNA_COLORS.secondary,
+    minHeight: s(52),
   },
   submitBtnTxt: { fontSize: s(fontSize.base), fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse },
   dangerBtn: {
@@ -1456,8 +1461,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: s(spacing.md),
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     backgroundColor: LUNA_COLORS.error,
+    minHeight: s(52),
   },
   detailRow: {
     flexDirection: 'row',

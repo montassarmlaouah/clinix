@@ -1,0 +1,51 @@
+@startuml
+!theme plain
+
+title Diagramme de cas d'utilisation - Facturation patient
+
+left to right direction
+
+actor "Secretaire" as SEC
+actor "Administrateur clinique" as AC
+
+rectangle "Module facturation patient" {
+  usecase "Consulter catalogue prestations CNAM" as UC1
+  usecase "Generer facture depuis hospitalisation" as UC2
+  usecase "Ajouter prestations supplementaires" as UC3
+  usecase "Emettre facture" as UC4
+  usecase "Valider paiement patient" as UC5
+  usecase "Teletransmettre prise en charge CNAM" as UC6
+  usecase "Telecharger facture PDF" as UC7
+  usecase "Consulter liste factures clinique" as UC8
+}
+
+SEC --> UC1
+SEC --> UC2
+SEC --> UC4
+SEC --> UC5
+SEC --> UC6
+SEC --> UC7
+SEC --> UC8
+
+AC --> UC1
+AC --> UC2
+AC --> UC4
+AC --> UC5
+AC --> UC6
+AC --> UC7
+AC --> UC8
+
+UC2 ..> UC3 : <<extend>>
+
+note right of UC2
+  Cloture automatique du sejour :
+  date de sortie, liberation chambre,
+  calcul jours hospitalisation.
+end note
+
+note right of UC6
+  Simulation SESAM-Vitale :
+  reference CNAM-AAAA-XXXXXXXX
+end note
+
+@enduml

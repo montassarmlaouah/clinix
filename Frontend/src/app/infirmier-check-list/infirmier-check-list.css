@@ -1,0 +1,65 @@
+:host { --luna-primary: #54acbf; --luna-deep: #26658c; --luna-bg: #f4f7f9; }
+
+.licences-container {
+  padding: 2rem;
+  background: var(--luna-bg);
+  min-height: 100vh;
+  margin-left: 300px;
+  margin-top: 100px;
+  color: #011c40;
+}
+
+.back-nav { margin-bottom: 1.25rem; }
+.back-nav a { display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; color: var(--luna-deep); font-weight: 600; }
+
+.page-header h1 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.85rem; color: var(--luna-deep); margin: 0; }
+.header-icon { color: var(--luna-primary); }
+.page-subtitle { color: #64748b; margin: 0.35rem 0 1rem; }
+
+.progress-bar-wrap {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 12px;
+  position: relative;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.progress-bar { background: var(--luna-primary); height: 100%; border-radius: 999px; transition: width 0.3s; }
+.progress-label { position: absolute; right: 8px; top: -18px; font-size: 0.8rem; color: #64748b; }
+
+.alert-luna-success { background: #f0fdf4; color: #166534; padding: 0.75rem 1rem; border-radius: 10px; margin-bottom: 1rem; }
+
+.check-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.check-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  transition: background 0.15s, border-color 0.15s;
+}
+.check-item.checked { background: #f0fdf4; border-color: #86efac; }
+.check-label { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; }
+.check-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--luna-primary); }
+.check-text { flex: 1; font-size: 0.95rem; color: #011c40; }
+.badge-obligatoire {
+  font-size: 0.72rem;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.btn-reset {
+  margin-top: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  color: var(--luna-deep);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-reset:hover { background: #f1f5f9; }

@@ -67,14 +67,21 @@ export default function PatientOrdonnancesScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  header: { padding: spacing.xxl, backgroundColor: LUNA_COLORS.surface },
+  header: {
+    padding: spacing.xxl,
+    backgroundColor: LUNA_COLORS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: LUNA_COLORS.borderSubtle,
+  },
   title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
   list: { padding: spacing.xxl, paddingBottom: 80 },
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   date: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },

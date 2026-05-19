@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,9 +13,11 @@ import org.springframework.util.StringUtils;
 import com.pfe.pfe.billing.config.BillingAppProperties;
 import com.pfe.pfe.model.AbonnementClinique;
 import com.pfe.pfe.model.Clinique;
+import com.pfe.pfe.model.Medecin;
 import com.pfe.pfe.model.OffreAbonnement;
 import com.pfe.pfe.repository.AbonnementCliniqueRepository;
 import com.pfe.pfe.repository.CliniqueRepository;
+import com.pfe.pfe.repository.MedecinRepository;
 import com.pfe.pfe.repository.OffreAbonnementRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -32,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 public class StripeSubscriptionFlowService {
 
     private final CliniqueRepository cliniqueRepository;
+    private final MedecinRepository medecinRepository;
     private final OffreAbonnementRepository offreRepository;
     private final AbonnementCliniqueRepository abonnementRepository;
     private final StripeCredentialsService stripeCredentialsService;
@@ -54,41 +58,111 @@ public class StripeSubscriptionFlowService {
             throw new IllegalStateException("Cette offre n'est pas destinée aux cliniques");
         }
 
-        if (!StringUtils.hasText(offre.getStripePriceMensuelId()) || !StringUtils.hasText(offre.getStripePriceAnnuelId())) {
-            offre = stripeOfferSyncService.syncProductAndPrices(offre.getId());
+        offre = ensureStripePrices(offre);
+        String priceId = resolvePriceId(offre, interval);
+        String customerId = resolveOrCreateCliniqueCustomer(clinique);
+        AbonnementClinique pending = buildPendingSubscription(offre, interval, customerId);
+        pending.setClinique(clinique);
+        pending = abonnementRepository.save(pending);
+
+        return createStripeSession(pending, customerId, priceId, offre, interval, successUrl, cancelUrl, Map.of(
+                "cliniqueId", cliniqueId,
+                "offreId", offreId,
+                "interval", interval != null ? interval : BillingConstants.INTERVAL_MONTHLY));
+    }
+
+    @Transactional
+    public Session createCheckoutSessionForMedecinCabinet(String medecinId, String offreId, String interval,
+            String successUrl, String cancelUrl) {
+        Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
+
+        Medecin medecin = medecinRepository.findById(medecinId)
+                .orElseThrow(() -> new IllegalArgumentException("Médecin cabinet introuvable"));
+        if (medecin.getClinique() != null) {
+            throw new IllegalStateException("Ce médecin est rattaché à une clinique ; utilisez les offres clinique.");
+        }
+        OffreAbonnement offre = offreRepository.findById(offreId)
+                .orElseThrow(() -> new IllegalArgumentException("Offre introuvable"));
+        if (!Boolean.TRUE.equals(offre.getActif())) {
+            throw new IllegalStateException("Offre inactive");
+        }
+        if (!BillingConstants.CAT_CABINET_MEDICAL.equals(offre.getCategorie())) {
+            throw new IllegalStateException("Cette offre n'est pas destinée aux cabinets médicaux");
         }
 
+        offre = ensureStripePrices(offre);
+        String priceId = resolvePriceId(offre, interval);
+        String customerId = resolveOrCreateMedecinCustomer(medecin);
+        AbonnementClinique pending = buildPendingSubscription(offre, interval, customerId);
+        pending.setMedecinCabinet(medecin);
+        pending = abonnementRepository.save(pending);
+
+        return createStripeSession(pending, customerId, priceId, offre, interval, successUrl, cancelUrl, Map.of(
+                "medecinCabinetId", medecinId,
+                "offreId", offreId,
+                "interval", interval != null ? interval : BillingConstants.INTERVAL_MONTHLY));
+    }
+
+    private OffreAbonnement ensureStripePrices(OffreAbonnement offre) {
+        if (!StringUtils.hasText(offre.getStripePriceMensuelId()) || !StringUtils.hasText(offre.getStripePriceAnnuelId())) {
+            return stripeOfferSyncService.syncProductAndPrices(offre.getId());
+        }
+        return offre;
+    }
+
+    private String resolvePriceId(OffreAbonnement offre, String interval) {
         String priceId = BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
                 ? offre.getStripePriceAnnuelId()
                 : offre.getStripePriceMensuelId();
         if (!StringUtils.hasText(priceId)) {
-            throw new IllegalStateException("Prix Stripe manquant : exécutez la synchronisation depuis le super admin.");
+            throw new IllegalStateException("Prix Stripe manquant : synchronisez l'offre depuis le super admin.");
         }
+        return priceId;
+    }
 
+    private String resolveOrCreateCliniqueCustomer(Clinique clinique) {
         String customerId = clinique.getStripeCustomerId();
-        if (!StringUtils.hasText(customerId)) {
-            try {
-                CustomerCreateParams cps = CustomerCreateParams.builder()
-                        .putMetadata("cliniqueId", clinique.getId())
-                        .setName(clinique.getNom())
-                        .build();
-                Customer customer = Customer.create(cps);
-                customerId = customer.getId();
-                clinique.setStripeCustomerId(customerId);
-                cliniqueRepository.save(clinique);
-            } catch (StripeException e) {
-                throw new IllegalStateException("Impossible de creer le client Stripe : " + e.getMessage(), e);
-            }
+        if (StringUtils.hasText(customerId)) {
+            return customerId;
         }
+        try {
+            CustomerCreateParams cps = CustomerCreateParams.builder()
+                    .putMetadata("cliniqueId", clinique.getId())
+                    .setName(clinique.getNom())
+                    .build();
+            Customer customer = Customer.create(cps);
+            clinique.setStripeCustomerId(customer.getId());
+            cliniqueRepository.save(clinique);
+            return customer.getId();
+        } catch (StripeException e) {
+            throw new IllegalStateException("Impossible de créer le client Stripe : " + e.getMessage(), e);
+        }
+    }
 
-        Integer trialDaysValue = offre.getPeriodeEssaiJours();
-        int trialDays = trialDaysValue != null && trialDaysValue > 0
-                ? trialDaysValue
-                : 0;
+    private String resolveOrCreateMedecinCustomer(Medecin medecin) {
+        String customerId = medecin.getStripeCustomerId();
+        if (StringUtils.hasText(customerId)) {
+            return customerId;
+        }
+        try {
+            String label = (StringUtils.hasText(medecin.getPrenom()) ? medecin.getPrenom() + " " : "")
+                    + (medecin.getNom() != null ? medecin.getNom() : "Cabinet médical");
+            CustomerCreateParams cps = CustomerCreateParams.builder()
+                    .putMetadata("medecinCabinetId", medecin.getId())
+                    .setName(label.trim())
+                    .build();
+            Customer customer = Customer.create(cps);
+            medecin.setStripeCustomerId(customer.getId());
+            medecinRepository.save(medecin);
+            return customer.getId();
+        } catch (StripeException e) {
+            throw new IllegalStateException("Impossible de créer le client Stripe : " + e.getMessage(), e);
+        }
+    }
+
+    private AbonnementClinique buildPendingSubscription(OffreAbonnement offre, String interval, String customerId) {
         Integer dureeMois = offre.getDureeMois();
-
         AbonnementClinique pending = new AbonnementClinique();
-        pending.setClinique(clinique);
         pending.setOffre(offre);
         pending.setDateDebut(LocalDate.now());
         pending.setDateFin(LocalDate.now().plusMonths(dureeMois != null ? dureeMois : 1L));
@@ -98,7 +172,15 @@ public class StripeSubscriptionFlowService {
         pending.setPeriodeFacturation(BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
                 ? BillingConstants.INTERVAL_YEARLY
                 : BillingConstants.INTERVAL_MONTHLY);
-        pending = abonnementRepository.save(pending);
+        return pending;
+    }
+
+    private Session createStripeSession(AbonnementClinique pending, String customerId, String priceId,
+            OffreAbonnement offre, String interval, String successUrl, String cancelUrl,
+            java.util.Map<String, String> extraMetadata) {
+        int trialDays = offre.getPeriodeEssaiJours() != null && offre.getPeriodeEssaiJours() > 0
+                ? offre.getPeriodeEssaiJours()
+                : 0;
 
         SessionCreateParams.Builder b = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
@@ -109,10 +191,9 @@ public class StripeSubscriptionFlowService {
                         .setPrice(priceId)
                         .setQuantity(1L)
                         .build())
-                .putMetadata("abonnementId", pending.getId())
-                .putMetadata("cliniqueId", cliniqueId)
-                .putMetadata("offreId", offreId)
-                .putMetadata("interval", interval);
+                .putMetadata("abonnementId", pending.getId());
+
+        extraMetadata.forEach(b::putMetadata);
 
         if (trialDays > 0) {
             b.setSubscriptionData(SessionCreateParams.SubscriptionData.builder()

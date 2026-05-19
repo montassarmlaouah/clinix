@@ -76,12 +76,33 @@ export class FacturationPatientService {
 
   constructor(private http: HttpClient) {}
 
-  prestations(cliniqueId: string): Observable<PrestationFacturation[]> {
-    return this.http.get<PrestationFacturation[]>(`${this.base}/prestations/clinique/${cliniqueId}`);
+  prestations(cliniqueId: string, inclureInactives = false): Observable<PrestationFacturation[]> {
+    let params = new HttpParams();
+    if (inclureInactives) {
+      params = params.set('inclureInactives', 'true');
+    }
+    return this.http.get<PrestationFacturation[]>(`${this.base}/prestations/clinique/${cliniqueId}`, {
+      params,
+    });
   }
 
-  parClinique(cliniqueId: string): Observable<FacturePatient[]> {
-    return this.http.get<FacturePatient[]>(`${this.base}/clinique/${cliniqueId}`);
+  initialiserCatalogue(cliniqueId: string): Observable<PrestationFacturation[]> {
+    return this.http.post<PrestationFacturation[]>(
+      `${this.base}/prestations/clinique/${cliniqueId}/initialiser`,
+      {}
+    );
+  }
+
+  modifierPrestation(id: string, body: Partial<PrestationFacturation>): Observable<PrestationFacturation> {
+    return this.http.put<PrestationFacturation>(`${this.base}/prestations/${id}`, body);
+  }
+
+  parClinique(cliniqueId: string, statut?: StatutFacturePatient): Observable<FacturePatient[]> {
+    let params = new HttpParams();
+    if (statut) {
+      params = params.set('statut', statut);
+    }
+    return this.http.get<FacturePatient[]>(`${this.base}/clinique/${cliniqueId}`, { params });
   }
 
   detail(id: string): Observable<FacturePatient> {

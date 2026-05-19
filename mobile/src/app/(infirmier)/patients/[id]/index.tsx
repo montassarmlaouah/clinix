@@ -325,8 +325,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg,
     padding: spacing.lg, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: LUNA_COLORS.border,
-  },
+    borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle,
+  }, // ✨
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   cardTitle: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
   cardMeta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: spacing.xs },

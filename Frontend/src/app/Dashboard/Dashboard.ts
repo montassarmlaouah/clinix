@@ -17,6 +17,7 @@ import { MedecinService } from '../service/medecin.service';
 import { RadiologueWorkspaceService, RadiologueWorkspaceStats } from '../service/radiologue-workspace.service';
 import { TechnicienMaintenanceService } from '../service/technicien-maintenance.service';
 import { EquipementService } from '../service/equipement.service';
+import { DemandesMedicamentService } from '../service/demandes-medicament.service';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -151,6 +152,9 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   };
   radiologueMessagesNonLus = 0;
 
+  pharmacienStats = { totalDemandes: 0, demandesEnAttente: 0, demandesTraitees: 0, demandesRefusees: 0 };
+  pharmacienDemandes: any[] = [];
+
   technicienPannesCount = 0;
   technicienEquipementStats = { total: 0, fonctionnel: 0, panneHors: 0, maintenance: 0 };
   technicienPctFonctionnel = 0;
@@ -191,7 +195,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     private medecinService: MedecinService,
     private radiologueWorkspaceService: RadiologueWorkspaceService,
     private technicienMaintenanceService: TechnicienMaintenanceService,
-    private equipementService: EquipementService
+    private equipementService: EquipementService,
+    private demandesMedicamentService: DemandesMedicamentService
   ) {}
 
   ngOnInit(): void {
@@ -281,6 +286,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       this.loadChefPersonnelData();
     } else if (this.authService.isSecretaire()) {
       this.loadSecretaireData();
+    } else if (this.authService.isPharmacien()) {
+      this.loadPharmacienData();
     } else {
       // Rôle non géré - arrêter le loading
       this.loading = false;
@@ -1838,6 +1845,22 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
           }
         }
       }
+    });
+  }
+
+  private loadPharmacienData(): void {
+    const cliniqueId = this.authService.getCliniqueId();
+    const obs$ = cliniqueId
+      ? this.demandesMedicamentService.listerParClinique(cliniqueId)
+      : this.demandesMedicamentService.listerEnAttente();
+
+    obs$.pipe(catchError(() => of([]))).subscribe((demandes: any[]) => {
+      this.pharmacienStats.totalDemandes = demandes.length;
+      this.pharmacienStats.demandesEnAttente = demandes.filter((d: any) => d.statut === 'EN_ATTENTE').length;
+      this.pharmacienStats.demandesTraitees = demandes.filter((d: any) => d.statut === 'TRAITE' || d.statut === 'VALIDE').length;
+      this.pharmacienStats.demandesRefusees = demandes.filter((d: any) => d.statut === 'REFUSE').length;
+      this.pharmacienDemandes = demandes.filter((d: any) => d.statut === 'EN_ATTENTE');
+      this.loading = false;
     });
   }
 

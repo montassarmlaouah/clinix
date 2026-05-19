@@ -25,52 +25,61 @@ export const borderRadius = {
   full: 999,
 } as const;
 
-// ── Ombres (iOS + Android) ────────────────────────────────────────────────────
+// ── Ombres (iOS + Android) — douces, multicouche HeroUI ─────────────────────
 export const shadows = {
   sm: Platform.select({
     ios: {
-      shadowColor: '#023859',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.08,
-      shadowRadius: 2,
+      shadowColor: '#26658c',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
     },
     android: { elevation: 2 },
   }),
   md: Platform.select({
     ios: {
-      shadowColor: '#023859',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.10,
-      shadowRadius: 4,
+      shadowColor: '#26658c',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
     },
     android: { elevation: 4 },
   }),
   lg: Platform.select({
     ios: {
-      shadowColor: '#023859',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
+      shadowColor: '#26658c',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.10,
+      shadowRadius: 16,
     },
     android: { elevation: 8 },
   }),
   xl: Platform.select({
     ios: {
-      shadowColor: '#023859',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 16,
+      shadowColor: '#0d2336',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.12,
+      shadowRadius: 20,
     },
     android: { elevation: 16 },
   }),
   button: Platform.select({
     ios: {
-      shadowColor: '#54ACBF',
+      shadowColor: '#2d9cdb',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.30,
-      shadowRadius: 8,
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
     },
     android: { elevation: 6 },
+  }),
+  card: Platform.select({
+    ios: {
+      shadowColor: '#26658c',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 14,
+    },
+    android: { elevation: 3 },
   }),
 } as const;
 
@@ -80,7 +89,7 @@ export const screen = {
   height,
   paddingHorizontal: 24,
   headerHeight:      60,
-  tabBarHeight:      80,
+  tabBarHeight:      72,
 } as const;
 
 // ── Tailles d'icônes ──────────────────────────────────────────────────────────

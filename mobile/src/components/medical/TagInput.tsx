@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface TagInputProps {
@@ -48,7 +48,11 @@ export function TagInput({ label, tags, onChange, placeholder = 'Ajouter...', ma
         {tags.map((tag, i) => (
           <View key={i} style={styles.tag}>
             <Text style={styles.tagText}>{tag}</Text>
-            <TouchableOpacity onPress={() => removeTag(i)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <TouchableOpacity
+              onPress={() => removeTag(i)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.75}
+            >
               <Text style={styles.tagRemove}>×</Text>
             </TouchableOpacity>
           </View>
@@ -71,6 +75,7 @@ export function TagInput({ label, tags, onChange, placeholder = 'Ajouter...', ma
           style={[styles.addBtn, !input.trim() && styles.addBtnDisabled]}
           onPress={addTag}
           disabled={!input.trim()}
+          activeOpacity={0.75}
         >
           <Text style={styles.addBtnText}>+</Text>
         </TouchableOpacity>
@@ -121,10 +126,10 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
-    borderRadius: 10,
-    backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
+    borderRadius: borderRadius.md, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     overflow: 'hidden',
   },
   input: {
@@ -133,6 +138,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: fontSize.md,
     color: LUNA_COLORS.textPrimary,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   addBtn: {
     backgroundColor: LUNA_COLORS.secondary,

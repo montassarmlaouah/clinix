@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+﻿import { Tabs } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { apiGet } from '@/src/api/client';
@@ -6,7 +6,7 @@ import { IMAGERIES } from '@/src/api/endpoints';
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icônes — Accueil · File · Examens */
+/** Barre du bas : 3 icÃ´nes â€” Accueil Â· File Â· Examens */
 export default function RadiologueLayout(): React.JSX.Element {
   const [pendingCount, setPendingCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -63,7 +63,9 @@ export default function RadiologueLayout(): React.JSX.Element {
       <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
       <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
     </Tabs>
     </RoleTabsShell>
   );
 }
+

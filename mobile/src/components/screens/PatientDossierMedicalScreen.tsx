@@ -16,8 +16,8 @@ import { CONSULTATIONS, DOSSIERS, IMAGERIES, ORDONNANCES } from '@/src/api/endpo
 import { patientService, type Patient } from '@/src/api/services/patient.service';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface PatientDossierMedicalScreenProps {
   subtitle?: string;
@@ -207,29 +207,28 @@ export function PatientDossierMedicalScreen({
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  content: { padding: spacing.md, gap: spacing.md, paddingBottom: 80 }, // ✨ espace tab bar
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   loadingText: { color: LUNA_COLORS.textSecondary, fontSize: fontSize.sm },
   section: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.md,
+    ...(shadows.sm as object),
   },
   sectionTitle: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    ...typography.sectionTitle, // ✨ titre section HeroUI
     marginBottom: spacing.sm,
   },
   paragraph: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary, lineHeight: 20 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.sm },
   tag: {
-    backgroundColor: LUNA_COLORS.errorLight,
+    backgroundColor: LUNA_COLORS.errorLight, // ✨ badge errorLight
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.full,
   },
   tagText: { fontSize: fontSize.xs, color: LUNA_COLORS.error, fontWeight: fontWeight.medium },
   emptyBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md, opacity: 0.7 },

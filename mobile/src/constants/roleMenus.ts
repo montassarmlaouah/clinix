@@ -39,7 +39,13 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
   ),
   ROLE_SECRETAIRE: menu('ROLE_SECRETAIRE', [], '/(secretaire)/profil'),
   ROLE_MEDECIN: [],
-  ROLE_INFIRMIER: menu('ROLE_INFIRMIER', [], '/(infirmier)/profil'),
+  ROLE_INFIRMIER: menu(
+    'ROLE_INFIRMIER',
+    [
+      { label: 'Scanner', route: '/(infirmier)/scanner', icon: 'scan-outline' },
+    ],
+    '/(infirmier)/profil',
+  ),
   ROLE_RADIOLOGUE: menu('ROLE_RADIOLOGUE', [], '/(radiologue)/profil'),
   ROLE_PHARMACIEN: menu(
     'ROLE_PHARMACIEN',

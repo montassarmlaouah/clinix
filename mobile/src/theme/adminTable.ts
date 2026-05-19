@@ -1,50 +1,62 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-/** Styles tableau admin (en-tête teal, lignes alternées, actions web). */
+/** Styles tableau admin — HeroUI : en-tête primary, lignes alternées, actions rondes. */
 export const adminTableStyles = StyleSheet.create({
   tableWrap: {
-    marginHorizontal: 12,
-    marginBottom: 12,
-    borderRadius: 12,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.lg, // ✨ coins arrondis 16px
     overflow: 'hidden',
     backgroundColor: LUNA_COLORS.surface,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
   tableHeader: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: LUNA_COLORS.primary,
-    borderBottomWidth: 2,
-    borderBottomColor: LUNA_COLORS.secondary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: LUNA_COLORS.primary, // ✨ en-tête primary, texte blanc
+    borderBottomWidth: 0,
   },
   thText: {
-    fontSize: 10,
+    fontSize: fontSize.xs,
     fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    color: LUNA_COLORS.textInverse,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.8,
   },
   tableRow: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     backgroundColor: LUNA_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.borderDark,
+    borderBottomColor: 'rgba(197, 220, 234, 0.5)', // ✨ séparateur subtil
     alignItems: 'center',
   },
   tableRowAlt: {
-    backgroundColor: LUNA_COLORS.surfaceLight,
+    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ lignes alternées
+  },
+  tableRowPressed: {
+    backgroundColor: LUNA_COLORS.surfaceActive, // ✨ état press/hover
   },
   actionsRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: spacing.sm,
     alignItems: 'center',
+  },
+  actionBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full, // ✨ boutons icônes ronds
+    backgroundColor: 'rgba(45, 156, 219, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chambreNum: {
     fontSize: fontSize.base,
@@ -52,19 +64,19 @@ export const adminTableStyles = StyleSheet.create({
     color: LUNA_COLORS.darkest,
   },
   chambreId: {
-    fontSize: 9,
+    fontSize: fontSize.xs,
     color: LUNA_COLORS.textSecondary,
-    fontFamily: 'monospace',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     marginTop: 2,
     backgroundColor: LUNA_COLORS.surfaceLight,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 4,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 2,
+    borderRadius: borderRadius.xs,
     alignSelf: 'flex-start',
   },
   cellText: {
     fontSize: fontSize.sm,
-    color: LUNA_COLORS.dark,
+    color: LUNA_COLORS.textPrimary,
     fontWeight: fontWeight.medium,
   },
   cellMuted: {
@@ -72,46 +84,51 @@ export const adminTableStyles = StyleSheet.create({
     color: LUNA_COLORS.textSecondary,
   },
   typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
     backgroundColor: LUNA_COLORS.surfaceLight,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
     alignSelf: 'flex-start',
   },
   typeBadgeTxt: {
-    fontSize: 10,
+    fontSize: fontSize.xs,
     color: LUNA_COLORS.textPrimary,
-    fontWeight: fontWeight.medium,
+    fontWeight: fontWeight.semibold,
   },
   capBar: {
     height: 5,
-    backgroundColor: LUNA_COLORS.borderDark,
-    borderRadius: 3,
+    backgroundColor: LUNA_COLORS.border,
+    borderRadius: borderRadius.xs,
     overflow: 'hidden',
     marginBottom: 3,
   },
   capFill: {
     height: '100%',
     backgroundColor: LUNA_COLORS.secondary,
+    borderRadius: borderRadius.xs,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
+    gap: spacing.xs,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: borderRadius.full,
     alignSelf: 'flex-start',
   },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4, // ✨ point coloré devant le statut
+  },
   statusTxt: {
-    fontSize: 9,
-    fontWeight: fontWeight.bold,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
     textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   emptyRow: {
-    padding: 32,
+    padding: spacing.xxxl,
     alignItems: 'center',
   },
   emptyText: {

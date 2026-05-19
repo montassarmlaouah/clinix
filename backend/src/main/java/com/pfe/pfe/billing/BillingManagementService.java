@@ -12,10 +12,12 @@ import org.springframework.util.StringUtils;
 import com.pfe.pfe.billing.crypto.FieldCipher;
 import com.pfe.pfe.model.AbonnementClinique;
 import com.pfe.pfe.model.Clinique;
+import com.pfe.pfe.model.Medecin;
 import com.pfe.pfe.model.OffreAbonnement;
 import com.pfe.pfe.model.PlatformStripeConfig;
 import com.pfe.pfe.repository.AbonnementCliniqueRepository;
 import com.pfe.pfe.repository.CliniqueRepository;
+import com.pfe.pfe.repository.MedecinRepository;
 import com.pfe.pfe.repository.OffreAbonnementRepository;
 import com.pfe.pfe.repository.PlatformStripeConfigRepository;
 
@@ -28,6 +30,7 @@ public class BillingManagementService {
     private final OffreAbonnementRepository offreRepository;
     private final AbonnementCliniqueRepository abonnementRepository;
     private final CliniqueRepository cliniqueRepository;
+    private final MedecinRepository medecinRepository;
     private final PlatformStripeConfigRepository platformStripeConfigRepository;
     private final FieldCipher fieldCipher;
     private final StripeOfferSyncService stripeOfferSyncService;
@@ -40,12 +43,24 @@ public class BillingManagementService {
         return offreRepository.findByActifTrueAndCategorieOrderByOrdreAffichageAsc(BillingConstants.CAT_CLINIQUE);
     }
 
+    public List<OffreAbonnement> listActiveCabinetOffers() {
+        return offreRepository.findByActifTrueAndCategorieOrderByOrdreAffichageAsc(BillingConstants.CAT_CABINET_MEDICAL);
+    }
+
     public Optional<AbonnementClinique> getCurrentSubscription(String cliniqueId) {
         return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream().findFirst();
     }
 
+    public Optional<AbonnementClinique> getCurrentSubscriptionForMedecinCabinet(String medecinId) {
+        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId).stream().findFirst();
+    }
+
     public List<AbonnementClinique> getSubscriptionHistory(String cliniqueId) {
         return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId);
+    }
+
+    public List<AbonnementClinique> getSubscriptionHistoryForMedecinCabinet(String medecinId) {
+        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId);
     }
 
     /** Abonnements clinique au statut ACTIF (toutes cliniques), pour le super administrateur. */
@@ -124,10 +139,7 @@ public class BillingManagementService {
     @Transactional
     public AbonnementClinique simulateSubscribe(String cliniqueId, String offreId, String interval) {
         Clinique c = cliniqueRepository.findById(cliniqueId).orElseThrow(() -> new IllegalArgumentException("Clinique introuvable"));
-        OffreAbonnement offre = offreRepository.findById(offreId).orElseThrow(() -> new IllegalArgumentException("Offre introuvable"));
-        if (!Boolean.TRUE.equals(offre.getActif())) {
-            throw new IllegalStateException("Offre inactive");
-        }
+        OffreAbonnement offre = loadActiveOfferForClinique(offreId);
 
         BigDecimal montant = BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
                 && offre.getPrixAnnuel() != null
@@ -151,6 +163,63 @@ public class BillingManagementService {
                 ? BillingConstants.INTERVAL_YEARLY
                 : BillingConstants.INTERVAL_MONTHLY);
         return abonnementRepository.save(a);
+    }
+
+    @Transactional
+    public AbonnementClinique simulateSubscribeCabinet(String medecinId, String offreId, String interval) {
+        Medecin medecin = medecinRepository.findById(medecinId)
+                .orElseThrow(() -> new IllegalArgumentException("Médecin cabinet introuvable"));
+        if (medecin.getClinique() != null) {
+            throw new IllegalStateException("Ce compte est rattaché à une clinique ; utilisez les offres clinique.");
+        }
+        OffreAbonnement offre = loadActiveOfferForCabinet(offreId);
+
+        BigDecimal montant = BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
+                && offre.getPrixAnnuel() != null
+                && offre.getPrixAnnuel().signum() > 0
+                ? offre.getPrixAnnuel()
+                : offre.getPrixMensuel();
+
+        Integer dureeMois = offre.getDureeMois();
+        long mois = dureeMois != null ? dureeMois.longValue() : 1L;
+        LocalDate debut = LocalDate.now();
+        LocalDate fin = debut.plusMonths(BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval) ? 12 : mois);
+
+        AbonnementClinique a = new AbonnementClinique();
+        a.setMedecinCabinet(medecin);
+        a.setOffre(offre);
+        a.setDateDebut(debut);
+        a.setDateFin(fin);
+        a.setMontantPaye(montant != null ? montant : BigDecimal.ZERO);
+        a.setStatut("ACTIF");
+        a.setPeriodeFacturation(BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
+                ? BillingConstants.INTERVAL_YEARLY
+                : BillingConstants.INTERVAL_MONTHLY);
+        return abonnementRepository.save(a);
+    }
+
+    private OffreAbonnement loadActiveOfferForClinique(String offreId) {
+        OffreAbonnement offre = offreRepository.findById(offreId)
+                .orElseThrow(() -> new IllegalArgumentException("Offre introuvable"));
+        if (!Boolean.TRUE.equals(offre.getActif())) {
+            throw new IllegalStateException("Offre inactive");
+        }
+        if (!BillingConstants.CAT_CLINIQUE.equals(offre.getCategorie())) {
+            throw new IllegalStateException("Cette offre n'est pas destinée aux cliniques");
+        }
+        return offre;
+    }
+
+    private OffreAbonnement loadActiveOfferForCabinet(String offreId) {
+        OffreAbonnement offre = offreRepository.findById(offreId)
+                .orElseThrow(() -> new IllegalArgumentException("Offre introuvable"));
+        if (!Boolean.TRUE.equals(offre.getActif())) {
+            throw new IllegalStateException("Offre inactive");
+        }
+        if (!BillingConstants.CAT_CABINET_MEDICAL.equals(offre.getCategorie())) {
+            throw new IllegalStateException("Cette offre n'est pas destinée aux cabinets médicaux");
+        }
+        return offre;
     }
 
     public PlatformStripeConfig getStripeConfigForAdmin() {

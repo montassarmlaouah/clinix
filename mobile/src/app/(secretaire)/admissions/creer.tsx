@@ -13,23 +13,11 @@ import {
   View,
 } from 'react-native';
 
-import { apiPost } from '@/src/api/client';
-import { PATIENTS } from '@/src/api/endpoints';
+import { patientService, type CreatePatientPayload } from '@/src/api/services/patient.service';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 import { useAuthStore } from '@/src/store/auth.store';
-
-interface PatientAdmissionPayload {
-  nom:          string;
-  prenom:       string;
-  dateNaissance: string;
-  telephone:    string;
-  adresse?:     string;
-  cliniqueId:   string | number | null;
-  motifAdmission?: string;
-  urgence?:     boolean;
-}
 
 export default function NouvelleAdmissionScreen(): React.JSX.Element {
   const router           = useRouter();
@@ -53,20 +41,23 @@ export default function NouvelleAdmissionScreen(): React.JSX.Element {
       Alert.alert('Format invalide', 'Date de naissance : AAAA-MM-JJ');
       return;
     }
+    if (!cliniqueId) {
+      Alert.alert('Erreur', 'Identifiant clinique manquant.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      const payload: PatientAdmissionPayload = {
+      const payload: CreatePatientPayload = {
         nom:           nom.trim(),
         prenom:        prenom.trim(),
-        dateNaissance: dateNaissance || '',
+        dateNaissance: dateNaissance.trim() || undefined,
         telephone:     telephone.trim(),
         adresse:       adresse.trim() || undefined,
         cliniqueId,
-        motifAdmission: motif.trim() || undefined,
-        urgence,
+        typeAdmission: urgence ? 'URGENCE' : (motif.trim() ? 'NORMALE' : undefined),
       };
-      await apiPost(PATIENTS.CREATE, payload);
+      await patientService.createPatient(payload);
       Alert.alert('Admission enregistrée', `${prenom} ${nom} a été admis(e) avec succès`, [
         { text: 'OK', onPress: () => router.back() },
       ]);
@@ -172,32 +163,31 @@ export default function NouvelleAdmissionScreen(): React.JSX.Element {
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   screen:  { flex: 1, backgroundColor: LUNA_COLORS.background },
-  content: { padding: spacing.md, gap: spacing.md, paddingBottom: spacing.xl },
+  // ✨ ScrollView — paddingBottom tab bar
+  content: { padding: spacing.md, gap: spacing.md, paddingBottom: 80 },
 
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   section: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius:    borderRadius.md,
+    borderRadius:    borderRadius.lg,
     padding:         spacing.md,
     gap:             spacing.sm,
-    shadowColor:     '#000',
-    shadowOpacity:   0.04,
-    shadowRadius:    4,
-    elevation:       2,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
+    ...(shadows.sm as object),
   },
-  sectionTitle: {
-    fontSize:   fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color:      LUNA_COLORS.dark,
-    marginBottom: spacing.xs,
-  },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.xs },
+  // ✨ Input HeroUI — inputBg, minHeight 52
   input: {
     borderWidth:     1,
-    borderColor:     LUNA_COLORS.tertiary + '55',
-    borderRadius:    borderRadius.sm,
-    padding:         spacing.sm,
+    borderColor:     LUNA_COLORS.borderInput,
+    borderRadius:    borderRadius.md,
+    padding:         spacing.md,
     fontSize:        fontSize.sm,
     color:           LUNA_COLORS.textPrimary,
-    backgroundColor: LUNA_COLORS.background,
+    backgroundColor: LUNA_COLORS.inputBg,
+    minHeight:       52,
   },
   inputMulti: { minHeight: 80, textAlignVertical: 'top' },
   switchRow: {

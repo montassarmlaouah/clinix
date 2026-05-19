@@ -19,7 +19,7 @@ import { CONSULTATIONS, RDV } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface RdvOption {
@@ -386,33 +386,31 @@ const styles = StyleSheet.create({
   },
   backBtn:  { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   navTitle: { flex: 1, textAlign: 'center', fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
-  scroll:   { padding: spacing.xxl, paddingBottom: 120 },
+  scroll:   { padding: spacing.xxl, paddingBottom: 80 },
   sectionTitle: {
-    fontSize:     fontSize.sm,
-    fontWeight:   fontWeight.semibold,
-    color:        LUNA_COLORS.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom:  spacing.sm,
-  },
+    ...typography.sectionTitle,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    marginTop: spacing.lg,
+  }, // ✨
   textarea: {
-    backgroundColor:   LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius:      borderRadius.sm,
     borderWidth:       1.5,
-    borderColor:       LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: spacing.md,
     paddingVertical:   spacing.md,
     fontSize:          fontSize.base,
     color:             LUNA_COLORS.textPrimary,
     marginBottom:      spacing.xl,
     ...(shadows.sm as object),
-  },
+  }, // ✨
   footer: {
     paddingHorizontal: spacing.xxl,
     paddingVertical:   spacing.lg,
     backgroundColor:   LUNA_COLORS.surface,
     borderTopWidth:    1,
-    borderTopColor:    LUNA_COLORS.border,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   footerRow: { flexDirection: 'row', gap: spacing.md },
   footerBtn: { flex: 1 },

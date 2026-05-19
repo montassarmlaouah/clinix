@@ -18,7 +18,7 @@ import { INFIRMIER_WORKSPACE } from '@/src/api/endpoints';
 import { apiPost } from '@/src/api/client';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 interface PatientResult {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.border,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨
   },
   backBtn: { padding: spacing.xs },
   title: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textPrimary },
@@ -250,18 +250,18 @@ const styles = StyleSheet.create({
   label: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textPrimary },
   input: {
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: fontSize.sm,
     color: LUNA_COLORS.textPrimary,
-    backgroundColor: LUNA_COLORS.surface,
-  },
+    backgroundColor: LUNA_COLORS.inputBg,
+  }, // ✨
   suggestion: {
     padding: spacing.sm,
     backgroundColor: LUNA_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: LUNA_COLORS.border,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)',
   },
   suggestionText: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
   selectedChip: {
@@ -320,12 +320,12 @@ const styles = StyleSheet.create({
     borderColor: LUNA_COLORS.borderDark,
     backgroundColor: LUNA_COLORS.surface,
   },
-  medecinBtnSelected: { borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.infoLight },
+  medecinBtnSelected: { borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.infoLight }, // ✨
   medecinText: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
   footer: {
     padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.border,
+    borderTopColor: 'rgba(197, 220, 234, 0.6)',
   },
   btnUrgent: { backgroundColor: LUNA_COLORS.error },
 });

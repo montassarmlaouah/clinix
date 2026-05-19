@@ -3,7 +3,12 @@
     <header class="page-header">
       <div class="header-title">
         <h1 class="luna-dark-text"><i class="bi bi-receipt"></i> Facturation patient</h1>
-        <p class="page-subtitle">Sortie d'hospitalisation, nomenclature CNAM, PDF et télétransmission</p>
+        <p class="page-subtitle" *ngIf="peutConfigurerCatalogue">
+          Admin : catalogue des prestations · Secrétaire : facturation sortie, PDF et paiement
+        </p>
+        <p class="page-subtitle" *ngIf="!peutConfigurerCatalogue && isSecretaire">
+          Génération à la sortie d'hospitalisation, émission PDF et encaissement
+        </p>
       </div>
     </header>
 
@@ -17,119 +22,196 @@
       </div>
     </section>
 
-    <section class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-value">{{ stats.total }}</span>
-        <span class="stat-label">Factures</span>
-      </div>
-      <div class="stat-card stat-brouillon">
-        <span class="stat-value">{{ stats.brouillon }}</span>
-        <span class="stat-label">Brouillons</span>
-      </div>
-      <div class="stat-card stat-emise">
-        <span class="stat-value">{{ stats.emise }}</span>
-        <span class="stat-label">Émises</span>
-      </div>
-      <div class="stat-card stat-payee">
-        <span class="stat-value">{{ stats.payee }}</span>
-        <span class="stat-label">Payées</span>
-      </div>
-      <div class="stat-card stat-tele">
-        <span class="stat-value">{{ stats.teletransmis }}</span>
-        <span class="stat-label">CNAM</span>
-      </div>
-    </section>
-
-    <section class="filters-section luna-glass">
-      <div class="filter-group">
-        <label class="luna-label">Rechercher</label>
-        <input
-          type="text"
-          class="form-control luna-input"
-          [(ngModel)]="searchTerm"
-          placeholder="N° facture, patient..."
-        />
-      </div>
-      <div class="filter-group">
-        <label class="luna-label">Statut</label>
-        <select class="form-control luna-input" [(ngModel)]="filterStatut">
-          <option value="ALL">Tous</option>
-          <option value="BROUILLON">Brouillon</option>
-          <option value="EMISE">Émise</option>
-          <option value="PAYEE">Payée</option>
-          <option value="TELETRANSMIS">Télétransmise</option>
-        </select>
-      </div>
-    </section>
-
-    <div class="toolbar">
-      <button type="button" class="btn btn-primary" (click)="openGenerate()" [disabled]="loadingList || loadingAction">
-        <i class="bi bi-plus-circle"></i> Facturer une sortie
+    <nav class="view-tabs" *ngIf="peutGererFactures">
+      <button
+        type="button"
+        class="view-tab"
+        [class.active]="activeView === 'factures'"
+        (click)="setActiveView('factures')"
+      >
+        <i class="bi bi-receipt-cutoff"></i> Factures
       </button>
-      <button type="button" class="btn btn-outline-secondary" (click)="load()" [disabled]="loadingList">
-        <i class="bi bi-arrow-clockwise"></i> Actualiser
+      <button
+        type="button"
+        class="view-tab"
+        *ngIf="peutConfigurerCatalogue"
+        [class.active]="activeView === 'catalogue'"
+        (click)="setActiveView('catalogue')"
+      >
+        <i class="bi bi-gear"></i> Catalogue prestations
       </button>
-      <button type="button" class="btn btn-outline-primary" (click)="showCatalogue = !showCatalogue">
-        <i class="bi bi-list-ul"></i> {{ showCatalogue ? 'Masquer' : 'Catalogue' }} CNAM
-      </button>
-    </div>
+    </nav>
 
-    <section class="catalogue-section luna-glass" *ngIf="showCatalogue">
-      <h3 class="catalogue-title">Tarifs CNAM (clinique)</h3>
+    <ng-container *ngIf="activeView === 'factures' && peutGererFactures">
+      <section class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-value">{{ stats.total }}</span>
+          <span class="stat-label">Factures</span>
+        </div>
+        <div class="stat-card stat-brouillon">
+          <span class="stat-value">{{ stats.brouillon }}</span>
+          <span class="stat-label">Brouillons</span>
+        </div>
+        <div class="stat-card stat-emise">
+          <span class="stat-value">{{ stats.emise }}</span>
+          <span class="stat-label">Émises</span>
+        </div>
+        <div class="stat-card stat-payee">
+          <span class="stat-value">{{ stats.payee }}</span>
+          <span class="stat-label">Payées</span>
+        </div>
+      </section>
+
+      <section class="filters-section luna-glass">
+        <div class="filter-group">
+          <label class="luna-label">Rechercher</label>
+          <input
+            type="text"
+            class="form-control luna-input"
+            [(ngModel)]="searchTerm"
+            placeholder="N° facture, patient..."
+          />
+        </div>
+        <div class="filter-group">
+          <label class="luna-label">Statut</label>
+          <select class="form-control luna-input" [(ngModel)]="filterStatut" (ngModelChange)="onFilterStatutChange()">
+            <option value="ALL">Tous</option>
+            <option value="BROUILLON">Brouillon</option>
+            <option value="EMISE">Émise</option>
+            <option value="PAYEE">Payée</option>
+            <option value="TELETRANSMIS">Télétransmise</option>
+          </select>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="openGenerate()"
+          [disabled]="loadingList || loadingAction"
+        >
+          <i class="bi bi-plus-circle"></i> Facturer une sortie
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="load()" [disabled]="loadingList">
+          <i class="bi bi-arrow-clockwise"></i> Actualiser
+        </button>
+      </div>
+
+      <div *ngIf="loadingList" class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+      </div>
+
+      <div class="luna-list-cards" *ngIf="!loadingList && filteredFactures.length">
+        <article class="luna-list-card" *ngFor="let f of filteredFactures" (click)="voirDetail(f)">
+          <div class="luna-list-thumb"><i class="bi bi-receipt-cutoff"></i></div>
+          <div class="luna-list-body">
+            <div class="luna-list-title">{{ f.numeroFacture }}</div>
+            <div class="luna-list-sub">
+              {{ f.patient.prenom }} {{ f.patient.nom }}
+              <span *ngIf="f.nombreJours"> · {{ f.nombreJours }} jour(s)</span>
+              · {{ formatDate(f.dateFacture) }}
+            </div>
+            <div class="luna-list-accent">
+              Total {{ formatMontant(f.montantTotal) }} TND
+              · Patient {{ formatMontant(f.ticketModerateur) }} TND
+            </div>
+          </div>
+          <span class="badge" [ngClass]="statutClass(f.statut)">{{ statutLabel(f.statut) }}</span>
+        </article>
+      </div>
+
+      <div class="empty-state" *ngIf="!loadingList && !filteredFactures.length">
+        <i class="bi bi-inbox"></i>
+        <p>{{ factures.length ? 'Aucune facture ne correspond aux filtres.' : 'Aucune facture — facturez une sortie d\'hospitalisation.' }}</p>
+      </div>
+    </ng-container>
+
+    <section class="catalogue-admin luna-glass" *ngIf="activeView === 'catalogue' && peutConfigurerCatalogue">
+      <div class="catalogue-header">
+        <h3><i class="bi bi-list-check"></i> Catalogue des prestations facturables</h3>
+        <p class="text-muted">
+          Hospitalisation, soins infirmiers, laboratoire, radiologie, matériel — codes CNAM et tarifs unitaires.
+        </p>
+        <button
+          type="button"
+          class="btn btn-outline-primary btn-sm"
+          *ngIf="!prestations.length"
+          (click)="initialiserCatalogueDefaut()"
+          [disabled]="savingCatalogue"
+        >
+          Initialiser le catalogue par défaut
+        </button>
+      </div>
+
       <table class="table table-sm catalogue-table" *ngIf="prestations.length">
         <thead>
           <tr>
-            <th>Code</th>
             <th>Type</th>
+            <th>Code CNAM</th>
             <th>Libellé</th>
             <th>Tarif (TND)</th>
             <th>Remb. %</th>
+            <th>Actif</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let p of prestations">
-            <td>{{ p.code }}</td>
+          <tr *ngFor="let p of prestations" [class.row-inactive]="!p.actif">
             <td>{{ typesLabels[p.type] }}</td>
+            <td>{{ p.code }}</td>
             <td>{{ p.libelle }}</td>
             <td>{{ formatMontant(p.tarifUnitaire) }}</td>
             <td>{{ p.tauxRemboursementPct }} %</td>
+            <td>
+              <span class="badge" [class.badge-success]="p.actif" [class.badge-secondary]="!p.actif">
+                {{ p.actif ? 'Oui' : 'Non' }}
+              </span>
+            </td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="demarrerEdition(p)">
+                Modifier
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
-      <p *ngIf="!prestations.length" class="text-muted">Catalogue non chargé.</p>
+      <p *ngIf="!prestations.length && !savingCatalogue" class="text-muted">
+        Aucune prestation — cliquez sur « Initialiser le catalogue par défaut ».
+      </p>
     </section>
+  </div>
+</div>
 
-    <div *ngIf="loadingList" class="text-center py-4">
-      <div class="spinner-border text-primary"></div>
-    </div>
+<div class="modal-overlay" *ngIf="editingPrestation" (click)="annulerEdition()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <h2>Modifier — {{ typesLabels[editingPrestation!.type] }}</h2>
+    <label class="form-label">Code acte CNAM</label>
+    <input type="text" class="form-control luna-input mb-2" [(ngModel)]="editCode" maxlength="32" />
 
-    <div class="luna-list-cards" *ngIf="!loadingList && filteredFactures.length">
-      <article class="luna-list-card" *ngFor="let f of filteredFactures" (click)="voirDetail(f)">
-        <div class="luna-list-thumb"><i class="bi bi-receipt-cutoff"></i></div>
-        <div class="luna-list-body">
-          <div class="luna-list-title">{{ f.numeroFacture }}</div>
-          <div class="luna-list-sub">
-            {{ f.patient.prenom }} {{ f.patient.nom }}
-            <span *ngIf="f.nombreJours"> · {{ f.nombreJours }} jour(s)</span>
-            · {{ formatDate(f.dateFacture) }}
-          </div>
-          <div class="luna-list-accent">
-            Total {{ formatMontant(f.montantTotal) }} TND
-            · Patient {{ formatMontant(f.ticketModerateur) }} TND
-          </div>
-        </div>
-        <span class="badge" [ngClass]="statutClass(f.statut)">{{ statutLabel(f.statut) }}</span>
-      </article>
-    </div>
+    <label class="form-label">Libellé</label>
+    <input type="text" class="form-control luna-input mb-2" [(ngModel)]="editLibelle" />
 
-    <div class="empty-state" *ngIf="!loadingList && !filteredFactures.length">
-      <i class="bi bi-inbox"></i>
-      <p>{{ factures.length ? 'Aucune facture ne correspond aux filtres.' : 'Aucune facture pour le moment.' }}</p>
+    <label class="form-label">Tarif unitaire (TND)</label>
+    <input type="number" class="form-control luna-input mb-2" [(ngModel)]="editTarif" min="0" step="0.001" />
+
+    <label class="form-label">Taux remboursement CNAM (%)</label>
+    <input type="number" class="form-control luna-input mb-2" [(ngModel)]="editTaux" min="0" max="100" />
+
+    <label class="form-check-label d-flex align-items-center gap-2 mb-3">
+      <input type="checkbox" [(ngModel)]="editActif" />
+      Prestation active
+    </label>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" (click)="annulerEdition()">Annuler</button>
+      <button type="button" class="btn btn-primary" (click)="enregistrerPrestation()" [disabled]="savingCatalogue">
+        {{ savingCatalogue ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Modale génération -->
 <div class="modal-overlay" *ngIf="showGenerateModal" (click)="closeGenerate()">
   <div class="modal-panel" (click)="$event.stopPropagation()">
     <h2>Facture à la sortie</h2>
@@ -145,7 +227,7 @@
     <p class="mt-3 form-label">Prestations complémentaires</p>
     <div class="prestations-checks">
       <label *ngFor="let p of prestations">
-        <ng-container *ngIf="p.type !== 'HOSPITALISATION'">
+        <ng-container *ngIf="p.type !== 'HOSPITALISATION' && p.actif">
           <input type="checkbox" [(ngModel)]="prestationsChoisies[p.type]" [name]="'prest_' + p.type" />
           <span class="prest-label">
             {{ p.libelle }} ({{ p.code }}) — {{ formatMontant(p.tarifUnitaire) }} TND
@@ -166,13 +248,12 @@
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" (click)="closeGenerate()">Annuler</button>
       <button type="button" class="btn btn-primary" (click)="genererFacture()" [disabled]="loadingAction">
-        {{ loadingAction ? 'Génération...' : 'Générer' }}
+        {{ loadingAction ? 'Génération...' : 'Générer la facture' }}
       </button>
     </div>
   </div>
 </div>
 
-<!-- Modale détail -->
 <div class="modal-overlay" *ngIf="selectedFacture" (click)="fermerDetail()">
   <div class="modal-panel modal-panel-lg" (click)="$event.stopPropagation()">
     <div *ngIf="detailLoading" class="text-center py-4">
@@ -187,24 +268,30 @@
         </span>
       </div>
 
+      <div class="workflow-hint" *ngIf="selectedFacture.statut === 'BROUILLON'">
+        <i class="bi bi-info-circle"></i>
+        Étape 1 : émettre la facture et télécharger le PDF · Étape 2 : enregistrer le paiement
+      </div>
+
       <div class="detail-meta">
         <p><strong>Patient :</strong> {{ selectedFacture.patient.prenom }} {{ selectedFacture.patient.nom }}</p>
-        <p *ngIf="selectedFacture.patient.numeroPatient">
-          <strong>N° patient :</strong> {{ selectedFacture.patient.numeroPatient }}
-        </p>
         <p><strong>Date facture :</strong> {{ formatDate(selectedFacture.dateFacture) }}</p>
         <p *ngIf="selectedFacture.dateSortie">
           <strong>Date sortie :</strong> {{ formatDate(selectedFacture.dateSortie) }}
         </p>
         <p><strong>Durée :</strong> {{ selectedFacture.nombreJours }} jour(s)</p>
-        <p *ngIf="selectedFacture.referenceTeletransmission">
-          <strong>Réf. CNAM :</strong> {{ selectedFacture.referenceTeletransmission }}
-        </p>
       </div>
 
       <table class="table table-sm">
         <thead>
-          <tr><th>Code</th><th>Acte</th><th>Qté</th><th>Montant</th></tr>
+          <tr>
+            <th>Code</th>
+            <th>Acte</th>
+            <th>Qté</th>
+            <th>Total</th>
+            <th>CNAM</th>
+            <th>Patient</th>
+          </tr>
         </thead>
         <tbody>
           <tr *ngFor="let l of selectedFacture.lignes">
@@ -212,29 +299,26 @@
             <td>{{ l.libelle }}</td>
             <td>{{ l.quantite }}</td>
             <td>{{ formatMontant(l.montantLigne) }}</td>
+            <td>{{ formatMontant(montantRemboursementLigne(l.montantLigne, l.tauxRemboursementPct)) }}</td>
+            <td>{{ formatMontant(partPatientLigne(l.montantLigne, l.tauxRemboursementPct)) }}</td>
           </tr>
         </tbody>
       </table>
-      <p *ngIf="!selectedFacture.lignes?.length" class="text-muted">Aucune ligne de facturation.</p>
 
       <ul class="totaux-list">
         <li>Total : <strong>{{ formatMontant(selectedFacture.montantTotal) }} TND</strong></li>
-        <li>Remboursable CNAM : <strong>{{ formatMontant(selectedFacture.montantRemboursable) }} TND</strong></li>
-        <li>Ticket modérateur : <strong>{{ formatMontant(selectedFacture.ticketModerateur) }} TND</strong></li>
+        <li>Part CNAM : <strong>{{ formatMontant(selectedFacture.montantRemboursable) }} TND</strong></li>
+        <li>Reste à charge patient : <strong>{{ formatMontant(selectedFacture.ticketModerateur) }} TND</strong></li>
         <li *ngIf="selectedFacture.montantPaye > 0">
-          Montant payé : <strong>{{ formatMontant(selectedFacture.montantPaye) }} TND</strong>
+          Payé : <strong>{{ formatMontant(selectedFacture.montantPaye) }} TND</strong>
         </li>
       </ul>
 
       <ng-container *ngIf="canPayer(selectedFacture)">
+        <hr />
+        <h4 class="section-mini-title">Encaissement</h4>
         <label class="form-label">Montant encaissé (TND)</label>
-        <input
-          type="number"
-          class="form-control luna-input mb-2"
-          [(ngModel)]="montantPaye"
-          min="0"
-          step="0.001"
-        />
+        <input type="number" class="form-control luna-input mb-2" [(ngModel)]="montantPaye" min="0" step="0.001" />
         <label class="form-label">Mode de paiement</label>
         <select class="form-select luna-input mb-2" [(ngModel)]="modePaiement">
           <option *ngFor="let m of modesPaiement" [value]="m.value">{{ m.label }}</option>
@@ -242,8 +326,14 @@
       </ng-container>
 
       <div class="modal-actions flex-wrap">
-        <button type="button" class="btn btn-outline-primary" (click)="telechargerPdf(selectedFacture)">
-          <i class="bi bi-file-pdf"></i> PDF
+        <button
+          type="button"
+          class="btn btn-primary"
+          *ngIf="canEmettre(selectedFacture)"
+          (click)="emettreEtTelechargerPdf(selectedFacture)"
+          [disabled]="loadingAction"
+        >
+          <i class="bi bi-file-pdf"></i> Émettre et PDF
         </button>
         <button
           type="button"
@@ -252,7 +342,15 @@
           (click)="emettre(selectedFacture)"
           [disabled]="loadingAction"
         >
-          Émettre
+          Émettre seulement
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          *ngIf="canTelechargerPdf(selectedFacture)"
+          (click)="telechargerPdf(selectedFacture)"
+        >
+          <i class="bi bi-download"></i> Télécharger PDF
         </button>
         <button
           type="button"
@@ -261,16 +359,7 @@
           (click)="validerPaiement(selectedFacture)"
           [disabled]="loadingAction"
         >
-          Valider paiement
-        </button>
-        <button
-          type="button"
-          class="btn btn-info text-white"
-          *ngIf="canTeletransmettre(selectedFacture)"
-          (click)="teletransmettre(selectedFacture)"
-          [disabled]="loadingAction"
-        >
-          Télétransmission CNAM
+          <i class="bi bi-cash-coin"></i> Valider paiement
         </button>
         <button type="button" class="btn btn-secondary" (click)="fermerDetail()">Fermer</button>
       </div>

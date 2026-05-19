@@ -1,4 +1,4 @@
-import { apiGet, apiPut } from '@/src/api/client';
+import { apiDelete, apiGet, apiPut } from '@/src/api/client';
 import { NOTIFICATIONS } from '@/src/api/endpoints';
 
 export interface NotificationItem {
@@ -12,9 +12,11 @@ export interface NotificationItem {
 }
 
 export const notificationService = {
-  listToday: () => apiGet<NotificationItem[]>(NOTIFICATIONS.AUJOURDHUI),
-  listUnread: () => apiGet<NotificationItem[]>(NOTIFICATIONS.NON_LUES),
-  unreadCount: () => apiGet<number>(NOTIFICATIONS.NON_LUES_COUNT),
-  markRead: (id: number) => apiPut<void>(NOTIFICATIONS.LIRE(id), {}),
-  markAllRead: () => apiPut<void>(NOTIFICATIONS.LIRE_TOUTES, {}),
+  listToday:    ()           => apiGet<NotificationItem[]>(NOTIFICATIONS.AUJOURDHUI),
+  listAll:      ()           => apiGet<NotificationItem[]>(NOTIFICATIONS.LIST),
+  listUnread:   ()           => apiGet<NotificationItem[]>(NOTIFICATIONS.NON_LUES),
+  unreadCount:  ()           => apiGet<number>(NOTIFICATIONS.NON_LUES_COUNT),
+  markRead:     (id: number) => apiPut<void>(NOTIFICATIONS.LIRE(id), {}),
+  markAllRead:  ()           => apiPut<void>(NOTIFICATIONS.LIRE_TOUTES, {}),
+  deleteOne:    (id: number) => apiDelete<void>(NOTIFICATIONS.DELETE(id)),
 };

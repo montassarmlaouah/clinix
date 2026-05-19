@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { spacing } from '@/src/theme/spacing';
+import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 export interface OrdonnanceLine {
@@ -58,7 +58,7 @@ export function OrdonnanceSortieBuilder({
           <View style={styles.lineHeader}>
             <Text style={styles.lineNum}>#{idx + 1}</Text>
             {!disabled && (
-              <TouchableOpacity onPress={() => removeLine(idx)}>
+              <TouchableOpacity onPress={() => removeLine(idx)} activeOpacity={0.75}>
                 <Text style={styles.removeBtn}>✕ Supprimer</Text>
               </TouchableOpacity>
             )}
@@ -89,7 +89,7 @@ export function OrdonnanceSortieBuilder({
       ))}
 
       {!disabled && (
-        <TouchableOpacity style={styles.addBtn} onPress={addLine}>
+        <TouchableOpacity style={styles.addBtn} onPress={addLine} activeOpacity={0.75}>
           <Text style={styles.addBtnText}>+ Ajouter un médicament</Text>
         </TouchableOpacity>
       )}
@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   lineCard: {
-    backgroundColor: LUNA_COLORS.surfaceLight,
-    borderRadius: 12,
+    backgroundColor: LUNA_COLORS.surface,
+    borderRadius: borderRadius.lg, // ✨
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.border,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
   },
   lineHeader: {
     flexDirection: 'row',
@@ -156,9 +156,10 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   input: {
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
-    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput, // ✨
+    borderRadius: borderRadius.md, // ✨
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     fontSize: fontSize.sm,

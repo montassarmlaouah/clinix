@@ -14,7 +14,7 @@ import { apiPost } from '@/src/api/client';
 import { CONSTANTES } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface ConstantesFormProps {
@@ -233,14 +233,22 @@ export function ConstantesForm({
       {/* Actions */}
       <View style={styles.actions}>
         {onCancel ? (
-          <Pressable onPress={onCancel} style={[styles.btn, styles.cancelBtn]}>
+          <Pressable
+            onPress={onCancel}
+            style={({ pressed }) => [styles.btn, styles.cancelBtn, pressed && { opacity: 0.75 }]}
+          >
             <Text style={styles.cancelTxt}>Annuler</Text>
           </Pressable>
         ) : null}
         <Pressable
           onPress={handleSubmit}
           disabled={submitting}
-          style={[styles.btn, styles.submitBtn, submitting && styles.btnDisabled]}
+          style={({ pressed }) => [
+            styles.btn,
+            styles.submitBtn,
+            submitting && styles.btnDisabled,
+            pressed && { opacity: 0.75 },
+          ]}
         >
           {submitting ? (
             <ActivityIndicator size="small" color={LUNA_COLORS.textInverse} />
@@ -260,13 +268,15 @@ export function ConstantesForm({
 const styles = StyleSheet.create({
   scroll:        { flex: 1 },
   scrollContent: { padding: spacing.xxl, paddingBottom: 40 },
-  sectionTitle:  { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest, marginBottom: spacing.lg },
+  sectionTitle:  { ...typography.sectionTitle, marginBottom: spacing.lg }, // ✨
 
   fieldCard: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius:    borderRadius.md,
+    borderRadius:    borderRadius.lg, // ✨
     padding:         spacing.md,
     marginBottom:    spacing.md,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle, // ✨
     ...(shadows.sm as object),
   },
   fieldHeader: {
@@ -289,10 +299,10 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection:   'row',
     alignItems:      'center',
-    backgroundColor: LUNA_COLORS.surfaceLight,
-    borderRadius:    borderRadius.sm,
-    borderWidth:     1,
-    borderColor:     LUNA_COLORS.borderDark,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
+    borderRadius:    borderRadius.md, // ✨
+    borderWidth:     1.5,
+    borderColor:     LUNA_COLORS.borderInput, // ✨
     overflow:        'hidden',
   },
   inputRowError: { borderColor: LUNA_COLORS.error },
@@ -306,7 +316,7 @@ const styles = StyleSheet.create({
   unitBadge: {
     backgroundColor: LUNA_COLORS.surfaceLight,
     borderLeftWidth: 1,
-    borderLeftColor: LUNA_COLORS.borderDark,
+    borderLeftColor: 'rgba(197, 220, 234, 0.6)', // ✨
     paddingHorizontal: spacing.md,
     height:          44,
     justifyContent:  'center',
@@ -336,7 +346,7 @@ const styles = StyleSheet.create({
     flexDirection:   'row',
     gap:             spacing.sm,
   },
-  cancelBtn:   { backgroundColor: LUNA_COLORS.surfaceLight, borderWidth: 1, borderColor: LUNA_COLORS.borderDark },
+  cancelBtn:   { backgroundColor: LUNA_COLORS.surfaceLight, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle }, // ✨
   submitBtn:   { backgroundColor: LUNA_COLORS.secondary, ...(shadows.button as object) },
   btnDisabled: { opacity: 0.6 },
   cancelTxt:   { fontSize: fontSize.base, fontWeight: fontWeight.medium, color: LUNA_COLORS.dark },

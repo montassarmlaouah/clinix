@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 interface Allergie {
   substance:  string;
@@ -103,6 +103,7 @@ export function LettreLiaisonCard({
       <TouchableOpacity
         style={styles.expandBtn}
         onPress={() => setExpanded((p) => !p)}
+        activeOpacity={0.75}
         accessibilityRole="button"
       >
         <Text style={styles.expandBtnText}>
@@ -160,13 +161,11 @@ export function LettreLiaisonCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius:    borderRadius.md,
+    borderRadius:    borderRadius.lg, // ✨
     padding:         spacing.md,
     gap:             spacing.sm,
-    shadowColor:     '#000',
-    shadowOpacity:   0.06,
-    shadowRadius:    6,
-    elevation:       3,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle, // ✨
     borderLeftWidth:  4,
     borderLeftColor: LUNA_COLORS.secondary,
   },
@@ -197,11 +196,7 @@ const styles = StyleSheet.create({
   statutText:  { fontSize: fontSize.xs, fontWeight: fontWeight.semibold },
   section:     { gap: 4 },
   sectionLabel: {
-    fontSize:   fontSize.xs,
-    fontWeight: fontWeight.semibold,
-    color:      LUNA_COLORS.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.sectionTitle, // ✨
   },
   sectionText: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary, lineHeight: 20 },
   listItem:    { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary, paddingLeft: spacing.xs },
@@ -209,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: LUNA_COLORS.tertiary + '22',
+    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
     marginTop: spacing.xs,
   },
   expandBtnText: { fontSize: fontSize.xs, color: LUNA_COLORS.secondary, fontWeight: fontWeight.medium },

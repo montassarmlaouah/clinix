@@ -46,3 +46,8 @@ export type { LunaDetailsModalProps } from './LunaDetailsModal';
 export { LunaConfirmModal } from './LunaConfirmModal';
 export type { LunaConfirmModalProps } from './LunaConfirmModal';
 export type { LunaActionButtonProps } from './LunaActionButton';
+
+// ── Dashboard Charts ──────────────────────────────────────────────────────────
+export { ChartCard }   from './ChartCard';
+export { StatRow }     from './StatRow';
+export { LegendItem }  from './LegendItem';

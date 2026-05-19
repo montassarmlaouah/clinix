@@ -20,8 +20,8 @@ import { Button, Card, Input } from '@/src/components/common';
 import { normalizeRole, ROLE_ROUTES } from '@/src/constants/roles';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight, typography } from '@/src/theme/typography';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight } from '@/src/theme/typography';
 
 // ── Payload JWT ───────────────────────────────────────────────────────────────
 interface JwtPayload {
@@ -174,6 +174,11 @@ export default function LoginScreen(): React.JSX.Element {
   // ── Rendu ───────────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.safe}>
+      {/* ── Décors de fond ── */}
+      <View style={styles.blobTopLeft} pointerEvents="none" />
+      <View style={styles.blobTopRight} pointerEvents="none" />
+      <View style={styles.blobBottomRight} pointerEvents="none" />
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.kav}
@@ -183,18 +188,35 @@ export default function LoginScreen(): React.JSX.Element {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── En-tête / Logo ── */}
+          {/* ── En-tête ── */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('@/src/images/logo2.jpeg')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
+            {/* Badge logo avec ring colorée */}
+            <View style={styles.logoRing}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('@/src/images/logo2.jpeg')}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
-            <Text style={[typography.bodySmall, styles.subtitle]}>
-              Espace professionnel
-            </Text>
+
+            {/* Titre de bienvenue */}
+            <Text style={styles.welcomeTitle}>Bienvenue sur</Text>
+            <Text style={styles.appName}>Clinix</Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.badgePill}>
+                <Ionicons name="shield-checkmark-outline" size={12} color={LUNA_COLORS.secondary} />
+                <Text style={styles.badgeText}>Espace professionnel sécurisé</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* ── Séparateur avec label ── */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerLabel}>Connexion</Text>
+            <View style={styles.dividerLine} />
           </View>
 
           {/* ── Formulaire ── */}
@@ -205,11 +227,11 @@ export default function LoginScreen(): React.JSX.Element {
               onChangeText={setTelephone}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="Tél. ou super.admin"
+              placeholder="Téléphone ou nom d'utilisateur"
               returnKeyType="next"
               leftIcon={
                 <Ionicons
-                  name="call-outline"
+                  name="person-outline"
                   size={20}
                   color={LUNA_COLORS.textSecondary}
                 />
@@ -253,17 +275,29 @@ export default function LoginScreen(): React.JSX.Element {
                 size="lg"
               />
             </View>
+
+            {/* ── Lien mot de passe oublié (dans la card) ── */}
+            <Pressable
+              onPress={() => router.push('/(auth)/forgot-password')}
+              style={({ pressed }) => [styles.forgotLink, pressed && styles.forgotLinkPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Mot de passe oublié"
+            >
+              <Ionicons name="key-outline" size={14} color={LUNA_COLORS.secondary} />
+              <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+            </Pressable>
           </Card>
 
-          {/* ── Mot de passe oublié ── */}
-          <Pressable
-            onPress={() => router.push('/(auth)/forgot-password')}
-            style={({ pressed }) => [styles.forgotLink, pressed && styles.forgotLinkPressed]}
-            accessibilityRole="button"
-            accessibilityLabel="Mot de passe oublié"
-          >
-            <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
-          </Pressable>
+          {/* ── Infos rôles ── */}
+          <View style={styles.rolesHint}>
+            <Ionicons name="information-circle-outline" size={14} color={LUNA_COLORS.textDisabled} />
+            <Text style={styles.rolesHintText}>
+              Accès réservé au personnel médical et administratif
+            </Text>
+          </View>
+
+          {/* ── Footer version ── */}
+          <Text style={styles.versionText}>v1.0.0 · 2026</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -279,49 +313,146 @@ const styles = StyleSheet.create({
   kav: {
     flex: 1,
   },
+
+  // ── Blobs décoratifs de fond ──────────────────────────────────────────────
+  blobTopLeft: {
+    position:        'absolute',
+    top:             -80,
+    left:            -80,
+    width:           220,
+    height:          220,
+    borderRadius:    110,
+    backgroundColor: 'rgba(38, 101, 140, 0.09)',
+  },
+  blobTopRight: {
+    position:        'absolute',
+    top:             -40,
+    right:           -60,
+    width:           160,
+    height:          160,
+    borderRadius:    80,
+    backgroundColor: 'rgba(45, 156, 219, 0.10)',
+  },
+  blobBottomRight: {
+    position:        'absolute',
+    bottom:          60,
+    right:           -50,
+    width:           130,
+    height:          130,
+    borderRadius:    65,
+    backgroundColor: 'rgba(78, 205, 196, 0.08)',
+  },
+
+  // ── Scroll ────────────────────────────────────────────────────────────────
   scroll: {
     flexGrow:          1,
     justifyContent:    'center',
     paddingHorizontal: spacing.xxl,
-    paddingVertical:   spacing.huge,
+    paddingTop:        spacing.huge,
+    paddingBottom:     spacing.xxxl,
   },
 
-  // En-tête
+  // ── En-tête ───────────────────────────────────────────────────────────────
   header: {
     alignItems:   'center',
-    marginBottom: spacing.xxxl,
+    marginBottom: spacing.xxl,
+  },
+  logoRing: {
+    padding:         4,
+    borderRadius:    borderRadius.xl + 8,
+    borderWidth:     2,
+    borderColor:     LUNA_COLORS.borderSubtle,
+    backgroundColor: LUNA_COLORS.surface,
+    marginBottom:    spacing.lg,
+    ...(shadows.md as object),
   },
   logoContainer: {
-    width:           120,
-    height:          120,
+    width:           96,
+    height:          96,
     borderRadius:    borderRadius.xl,
     backgroundColor: LUNA_COLORS.surfaceLight,
     alignItems:      'center',
     justifyContent:  'center',
-    marginBottom:    spacing.lg,
     overflow:        'hidden',
   },
   logo: {
-    width:  88,
-    height: 88,
+    width:  84,
+    height: 84,
   },
-  subtitle: {
-    color: LUNA_COLORS.textSecondary,
+  welcomeTitle: {
+    fontSize:   fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    color:      LUNA_COLORS.textPrimary,
+    letterSpacing: -0.5,
+  },
+  appName: {
+    fontSize:      fontSize.xl,
+    fontWeight:    fontWeight.semibold,
+    color:         LUNA_COLORS.secondary,
+    marginTop:     2,
+    marginBottom:  spacing.sm,
+    letterSpacing: 0.2,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+  },
+  badgePill: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:             4,
+    backgroundColor: LUNA_COLORS.secondaryLight,
+    borderRadius:    borderRadius.full,
+    paddingVertical:   4,
+    paddingHorizontal: spacing.md,
+    borderWidth:     1,
+    borderColor:     LUNA_COLORS.borderSubtle,
+  },
+  badgeText: {
+    fontSize:   fontSize.xs,
+    fontWeight: fontWeight.medium,
+    color:      LUNA_COLORS.secondary,
   },
 
-  // Formulaire
+  // ── Séparateur ────────────────────────────────────────────────────────────
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    marginBottom:  spacing.lg,
+    gap:           spacing.sm,
+  },
+  dividerLine: {
+    flex:            1,
+    height:          1,
+    backgroundColor: LUNA_COLORS.border,
+  },
+  dividerLabel: {
+    fontSize:   fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color:      LUNA_COLORS.textSecondary,
+    letterSpacing: 1,
+    textTransform: 'uppercase' as const,
+  },
+
+  // ── Card formulaire ───────────────────────────────────────────────────────
   formCard: {
-    padding: spacing.xxl,
+    padding:      spacing.xxl,
+    borderRadius: borderRadius.xl,
+    borderWidth:  1,
+    borderColor:  LUNA_COLORS.borderSubtle,
+    backgroundColor: LUNA_COLORS.surface,
+    ...(shadows.lg as object),
   },
   errorBox: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    gap:            spacing.xs,
-    backgroundColor: LUNA_COLORS.errorLight,
-    borderRadius:   borderRadius.sm,
-    paddingVertical: spacing.sm,
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:               spacing.xs,
+    backgroundColor:   LUNA_COLORS.errorLight,
+    borderRadius:      borderRadius.sm,
+    borderLeftWidth:   3,
+    borderLeftColor:   LUNA_COLORS.error,
+    paddingVertical:   spacing.sm,
     paddingHorizontal: spacing.md,
-    marginBottom:   spacing.md,
+    marginBottom:      spacing.md,
   },
   errorText: {
     flex:       1,
@@ -330,21 +461,49 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
   },
   submitWrap: {
-    marginTop: spacing.md,
+    marginTop:    spacing.lg,
+    marginBottom: spacing.md,
   },
 
-  // Lien bas de page
+  // ── Lien mot de passe oublié ──────────────────────────────────────────────
   forgotLink: {
-    alignItems: 'center',
-    marginTop:  spacing.xl,
-    padding:    spacing.sm,
+    flexDirection: 'row',
+    alignItems:    'center',
+    justifyContent: 'center',
+    gap:           spacing.xs,
+    paddingVertical: spacing.sm,
+    marginTop:     spacing.xs,
   },
   forgotLinkPressed: {
     opacity: 0.6,
   },
   forgotText: {
     color:      LUNA_COLORS.secondary,
-    fontSize:   fontSize.base,
+    fontSize:   fontSize.sm,
     fontWeight: fontWeight.medium,
+  },
+
+  // ── Hint rôles ───────────────────────────────────────────────────────────
+  rolesHint: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            spacing.xs,
+    marginTop:      spacing.xl,
+    paddingHorizontal: spacing.md,
+  },
+  rolesHintText: {
+    fontSize:  fontSize.xs,
+    color:     LUNA_COLORS.textDisabled,
+    textAlign: 'center',
+  },
+
+  // ── Version ───────────────────────────────────────────────────────────────
+  versionText: {
+    textAlign:  'center',
+    fontSize:   fontSize.xs,
+    color:      LUNA_COLORS.textDisabled,
+    marginTop:  spacing.md,
+    letterSpacing: 0.5,
   },
 });

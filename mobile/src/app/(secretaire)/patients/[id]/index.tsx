@@ -20,7 +20,7 @@ import { MEDECINS, CHAMBRES } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface MedecinOption {
@@ -275,7 +275,7 @@ export default function EditPatientScreen(): React.JSX.Element {
         <TouchableOpacity
           style={styles.dossierBtn}
           onPress={() => router.push(`/(secretaire)/patients/${id}/dossier` as never)}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
           <Ionicons name="folder-open-outline" size={20} color={LUNA_COLORS.secondary} />
           <Text style={styles.dossierBtnText}>Voir le dossier médical</Text>
@@ -313,7 +313,7 @@ export default function EditPatientScreen(): React.JSX.Element {
                 key={s}
                 style={[styles.sexeBtn, sexe === s && styles.sexeBtnActive]}
                 onPress={() => setSexe(s)}
-                activeOpacity={0.8}
+                activeOpacity={0.75}
               >
                 <Ionicons
                   name={s === 'HOMME' ? 'male-outline' : 'female-outline'}
@@ -557,11 +557,8 @@ const styles = StyleSheet.create({
   },
   scroll:   { padding: spacing.xxl, paddingBottom: 80 },
   formCard: { padding: spacing.xxl },
-  sectionTitle: {
-    fontSize: fontSize.sm, fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.secondary, textTransform: 'uppercase',
-    letterSpacing: 0.8, marginBottom: spacing.md,
-  },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md },
   fieldLabel: {
     fontSize: fontSize.sm, fontWeight: fontWeight.medium,
     color: LUNA_COLORS.dark, marginBottom: spacing.sm,
@@ -641,9 +638,9 @@ const styles = StyleSheet.create({
   // Modal
   modalOverlay: { flex: 1, backgroundColor: LUNA_COLORS.overlay, justifyContent: 'center', padding: 16 },
   modalCard: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, overflow: 'hidden' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)' },
   modalTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
-  modalFooter: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, borderTopWidth: 1, borderTopColor: LUNA_COLORS.borderDark ?? '#E0E0E0' },
+  modalFooter: { flexDirection: 'row', gap: spacing.md, padding: spacing.lg, borderTopWidth: 1, borderTopColor: 'rgba(197, 220, 234, 0.6)' },
   modalChambreItem: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     padding: spacing.md, borderRadius: borderRadius.md,

@@ -82,8 +82,10 @@ const styles = StyleSheet.create({
   metric: {
     width: '47%',
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   metricValue: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: LUNA_COLORS.secondary },

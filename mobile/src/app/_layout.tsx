@@ -30,9 +30,9 @@ export default function RootLayout() {
   const segments     = useSegments();
   const router       = useRouter();
   const didRedirect  = useRef(false);
+  // Mémoriser la valeur précédente de userId pour détecter la connexion
+  const prevUserIdRef = useRef<string | number | null>(null);
 
-  // ── Lire tout l'état auth en UNE SEULE FOIS pour éviter les re-renders
-  //    partiels quand setAuth() met à jour plusieurs champs (BUG 2)
   const { token, userId, role, estCabinet, isRehydrated } = useAuthStore();
 
   // ── Gérer les erreurs 402 abonnement expiré ───────────────────────────────
@@ -74,9 +74,9 @@ export default function RootLayout() {
       router.replace('/(auth)/login');
       return;
     }
-  }, [segments, token, userId, role, estCabinet, isRehydrated, router]);
+  }, [segments, userId, role, isRehydrated, router]);
 
-  // Reset le flag quand on revient sur un segment public OU quand l'utilisateur change
+  // Reset le flag quand on revient sur un segment public (ex. après déconnexion)
   useEffect(() => {
     const firstSegment = segments[0] as string | undefined ?? '';
     if (PUBLIC_SEGMENTS.has(firstSegment)) {
@@ -84,13 +84,20 @@ export default function RootLayout() {
     }
   }, [segments]);
 
-  // Reset le flag quand le userId change (reconnexion avec un autre rôle)
+  // Reset le flag UNIQUEMENT lors d'une connexion (userId null → non-null)
+  // Évite la course où clearAuth() efface le flag juste après qu'il ait été mis à true
   useEffect(() => {
-    didRedirect.current = false;
-  }, [userId, role]);
+    const prev = prevUserIdRef.current;
+    prevUserIdRef.current = userId;
+    if (prev == null && userId != null) {
+      didRedirect.current = false;
+    }
+  }, [userId]);
 
   const firstSegment = segments[0] as string | undefined ?? '';
-  const showDrawer = Boolean(token) && !PUBLIC_SEGMENTS.has(firstSegment);
+  // Drawer visible sur tous les segments protégés — ne dépend PAS de `token`
+  // pour éviter le flash quand clearAuth() passe token à null avant la navigation.
+  const showDrawer = !PUBLIC_SEGMENTS.has(firstSegment);
 
   return (
     <>

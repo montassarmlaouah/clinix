@@ -55,11 +55,12 @@ export function AldreteScoreSelector({ value, onChange, disabled = false }: Prop
             <Pressable
               key={score}
               onPress={() => !disabled && onChange(score)}
-              style={[
+              style={({ pressed }) => [
                 styles.scoreBtn,
                 isSelected && (isGreen ? styles.scoreBtnSelectedGreen : styles.scoreBtnSelected),
                 isGreen && !isSelected && styles.scoreBtnGreenIdle,
-              ]}
+                pressed && { opacity: 0.75 },
+              ]} // ✨
             >
               <Text
                 style={[
@@ -84,7 +85,9 @@ export function AldreteScoreSelector({ value, onChange, disabled = false }: Prop
 const styles = StyleSheet.create({
   container: {
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg, // ✨
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.md,
     gap: spacing.sm,
   },
@@ -121,10 +124,10 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: borderRadius.sm,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: LUNA_COLORS.background,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨
   },
   scoreBtnGreenIdle: { borderColor: LUNA_COLORS.success },
   scoreBtnSelected: {

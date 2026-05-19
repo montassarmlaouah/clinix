@@ -1,0 +1,14 @@
+<div class="hub-container">
+  <header class="hub-header">
+    <h1><i class="bi bi-person-hearts"></i> Espace infirmier</h1>
+    <p>Accès centralisé à tous les modules infirmiers.</p>
+  </header>
+
+  <div class="hub-grid">
+    <a *ngFor="let link of links" [routerLink]="link.route" class="hub-card">
+      <i class="bi" [ngClass]="link.icon"></i>
+      <strong>{{ link.title }}</strong>
+      <span>{{ link.description }}</span>
+    </a>
+  </div>
+</div>

@@ -31,7 +31,7 @@ import {
 } from '@/src/types/personnel';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 import { normalizeTelephoneDigits, toApiTelephone } from '@/src/utils/telephone';
 
 type WizardStep = 1 | 2 | 3;
@@ -81,12 +81,12 @@ const field = StyleSheet.create({
   wrap: { marginBottom: spacing.md },
   label: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.dark, marginBottom: spacing.xs },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.inputBg, // ✨ fond input HeroUI
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderInput,
     paddingHorizontal: spacing.md,
-    height: 48,
+    minHeight: 52,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
   },
@@ -583,20 +583,18 @@ const styles = StyleSheet.create({
   stepNum: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, fontWeight: fontWeight.bold },
   stepNumOn: { color: LUNA_COLORS.textInverse },
   stepHint: { flex: 1, fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginLeft: spacing.sm },
-  form: { padding: spacing.xxl, paddingBottom: 100 },
+  form: { padding: spacing.xxl, paddingBottom: 80 }, // ✨ espace tab bar
   section: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.darkest,
+    ...typography.sectionTitle, // ✨ titre section HeroUI
     marginBottom: spacing.md,
   },
   subSection: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark, marginBottom: spacing.sm },
   errBox: {
     flexDirection: 'row',
     gap: spacing.sm,
-    backgroundColor: LUNA_COLORS.errorLight,
+    backgroundColor: LUNA_COLORS.errorLight, // ✨ errorLight
     padding: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
   errTxt: { flex: 1, fontSize: fontSize.sm, color: LUNA_COLORS.error },
@@ -607,17 +605,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     padding: spacing.md,
     backgroundColor: LUNA_COLORS.surfaceLight,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
   },
   selectedMed: { gap: spacing.xs },
   selectedMedTxt: { fontSize: fontSize.sm, color: LUNA_COLORS.success },
   link: { fontSize: fontSize.sm, color: LUNA_COLORS.secondary, fontWeight: fontWeight.semibold },
   searchBtn: {
     backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     padding: spacing.md,
     alignItems: 'center',
     marginBottom: spacing.sm,
+    minHeight: 52,
   },
   searchBtnTxt: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.semibold },
   resultRow: {
@@ -632,11 +633,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: spacing.md,
     padding: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg, // ✨ carte surface
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
     marginBottom: spacing.sm,
     backgroundColor: LUNA_COLORS.surface,
+    ...(shadows.sm as object),
   },
   modeCardOn: { borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.secondaryLight },
   modeRadio: {
@@ -656,8 +658,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
   btnOutline: {
     flex: 1,
-    height: 48,
-    borderRadius: borderRadius.md,
+    minHeight: 52,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: LUNA_COLORS.secondary,
     alignItems: 'center',
@@ -666,8 +668,8 @@ const styles = StyleSheet.create({
   btnOutlineTxt: { color: LUNA_COLORS.secondary, fontWeight: fontWeight.semibold },
   btnPrimary: {
     flex: 1,
-    height: 48,
-    borderRadius: borderRadius.md,
+    minHeight: 52,
+    borderRadius: borderRadius.lg,
     backgroundColor: LUNA_COLORS.secondary,
     alignItems: 'center',
     justifyContent: 'center',

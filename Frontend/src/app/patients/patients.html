@@ -3,8 +3,8 @@
     <header class="page-header">
       <div class="header-title">
         <h1 class="luna-dark-text">Gestion des patients</h1>
-        <p class="page-subtitle" *ngIf="!auth.isMedecinCabinet()">Ajouter et suivre les patients de la clinique</p>
-        <p class="page-subtitle" *ngIf="auth.isMedecinCabinet()">Patients de votre cabinet — ajout et suivi (sans établissement hôpital rattaché)</p>
+        <p class="page-subtitle" *ngIf="!auth.isMedecinCabinetExclusif()">Ajouter et suivre les patients de la clinique</p>
+        <p class="page-subtitle" *ngIf="auth.isMedecinCabinetExclusif()">Patients de votre cabinet — ajout et suivi (sans établissement hôpital rattaché)</p>
       </div>
     </header>
 
@@ -215,7 +215,7 @@
                 </div>
               </div>
 
-              <div class="detail-section" *ngIf="medecinsClinique.length && !auth.isMedecinCabinet()">
+              <div class="detail-section" *ngIf="medecinsClinique.length && !auth.isMedecinCabinetExclusif()">
                 <h6 class="section-title">
                   <i class="fas fa-user-md"></i> Médecins suivants (optionnel)
                 </h6>

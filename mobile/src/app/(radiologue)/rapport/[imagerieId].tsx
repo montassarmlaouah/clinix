@@ -25,7 +25,7 @@ import { IMAGERIES, RAPPORTS, UPLOAD } from '@/src/api/endpoints';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
-import { fontSize, fontWeight } from '@/src/theme/typography';
+import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Imagerie {
@@ -335,12 +335,15 @@ const styles = StyleSheet.create({
   urgBadge: { backgroundColor: LUNA_COLORS.errorLight, paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.full },
   urgTxt:   { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: LUNA_COLORS.error },
 
-  form:         { padding: spacing.xxl, paddingBottom: 20 },
+  // ✨ ScrollView — paddingBottom tab bar
+  form:         { padding: spacing.xxl, paddingBottom: 80 },
   label:        { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark, marginBottom: spacing.xs },
-  textarea:     { backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderDark, borderRadius: borderRadius.md, padding: spacing.md, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, minHeight: 120, marginBottom: spacing.md },
+  // ✨ Input HeroUI — inputBg, minHeight 52 (textarea étendu)
+  textarea:     { backgroundColor: LUNA_COLORS.inputBg, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, borderRadius: borderRadius.md, padding: spacing.md, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, minHeight: 120, marginBottom: spacing.md },
   inputError:   { borderColor: LUNA_COLORS.error },
   errTxt:       { fontSize: fontSize.xs, color: LUNA_COLORS.error, marginTop: -spacing.sm, marginBottom: spacing.md },
-  sectionTitle: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest, marginBottom: spacing.md, marginTop: spacing.sm },
+  // ✨ Titre de section — typography.sectionTitle
+  sectionTitle: { ...typography.sectionTitle, marginBottom: spacing.md, marginTop: spacing.sm },
 
   uploadBtns:   { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   uploadBtn:    { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, height: 44, borderRadius: borderRadius.md, borderWidth: 1.5, backgroundColor: LUNA_COLORS.surface },
@@ -353,7 +356,7 @@ const styles = StyleSheet.create({
   removeBtn:   { position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, backgroundColor: LUNA_COLORS.error, alignItems: 'center', justifyContent: 'center' },
   previewName: { fontSize: 10, color: LUNA_COLORS.textSecondary, marginTop: 3, width: 76, textAlign: 'center' },
 
-  footer:      { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, backgroundColor: LUNA_COLORS.surface, borderTopWidth: 1, borderTopColor: LUNA_COLORS.borderDark },
+  footer:      { flexDirection: 'row', gap: spacing.md, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, backgroundColor: LUNA_COLORS.surface, borderTopWidth: 1, borderTopColor: 'rgba(197, 220, 234, 0.6)' },
   draftBtn:    { flex: 1, height: 50, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: LUNA_COLORS.secondary },
   draftTxt:    { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.secondary },
   validateBtn: { flex: 2, height: 50, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: spacing.xs, backgroundColor: LUNA_COLORS.secondary },
@@ -364,6 +367,6 @@ const styles = StyleSheet.create({
   modalSheet:   { backgroundColor: LUNA_COLORS.surface, borderTopLeftRadius: borderRadius.xl, borderTopRightRadius: borderRadius.xl, paddingHorizontal: spacing.xxl, paddingBottom: spacing.xxxl },
   modalHandle:  { width: 40, height: 4, borderRadius: 2, backgroundColor: LUNA_COLORS.borderDark, alignSelf: 'center', marginTop: spacing.md, marginBottom: spacing.lg },
   modalTitle:   { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest, marginBottom: spacing.md },
-  modalRow:     { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderDark },
+  modalRow:     { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)' },
   modalRowTxt:  { fontSize: fontSize.base, color: LUNA_COLORS.dark },
 });

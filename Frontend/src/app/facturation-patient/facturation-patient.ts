@@ -33,7 +33,16 @@ export class FacturationPatientComponent implements OnInit {
 
   searchTerm = '';
   filterStatut: StatutFacturePatient | 'ALL' = 'ALL';
+  activeView: 'factures' | 'catalogue' = 'factures';
   showCatalogue = false;
+
+  editingPrestation: PrestationFacturation | null = null;
+  editCode = '';
+  editLibelle = '';
+  editTarif = 0;
+  editTaux = 80;
+  editActif = true;
+  savingCatalogue = false;
 
   showGenerateModal = false;
   selectedHospitalisationId = '';
@@ -82,6 +91,24 @@ export class FacturationPatientComponent implements OnInit {
 
   get cliniqueId(): string | null {
     return this.auth.getCliniqueId();
+  }
+
+  get isAdminClinique(): boolean {
+    return this.auth.isAdminClinique();
+  }
+
+  get isSecretaire(): boolean {
+    return this.auth.isSecretaire();
+  }
+
+  /** Secrétaire ou admin : factures, sortie, PDF, paiement. */
+  get peutGererFactures(): boolean {
+    return this.isAdminClinique || this.isSecretaire;
+  }
+
+  /** Admin uniquement : configuration du catalogue CNAM. */
+  get peutConfigurerCatalogue(): boolean {
+    return this.isAdminClinique;
   }
 
   get filteredFactures(): FacturePatient[] {
@@ -136,11 +163,12 @@ export class FacturationPatientComponent implements OnInit {
     }
     this.loadingList = true;
     this.error = '';
-    this.facturationService.prestations(cid).subscribe({
+    this.facturationService.prestations(cid, this.isAdminClinique).subscribe({
       next: (p) => (this.prestations = p),
       error: () => (this.error = 'Impossible de charger le catalogue des prestations'),
     });
-    this.facturationService.parClinique(cid).subscribe({
+    const statutParam = this.filterStatut === 'ALL' ? undefined : this.filterStatut;
+    this.facturationService.parClinique(cid, statutParam).subscribe({
       next: (f) => {
         this.factures = f;
         this.loadingList = false;
@@ -239,21 +267,33 @@ export class FacturationPatientComponent implements OnInit {
     });
   }
 
-  emettre(f: FacturePatient): void {
+  emettre(f: FacturePatient, telechargerPdfApres = false): void {
     if (!confirm('Émettre cette facture ?')) return;
     this.loadingAction = true;
     this.facturationService.emettre(f.id).subscribe({
-      next: () => {
-        this.success = 'Facture émise.';
+      next: (updated) => {
+        this.success = telechargerPdfApres
+          ? 'Facture émise — téléchargement du PDF…'
+          : 'Facture émise.';
         this.loadingAction = false;
         this.load();
-        this.refreshDetail(f.id);
+        this.selectedFacture = updated;
+        this.montantPaye = updated.ticketModerateur;
+        if (telechargerPdfApres) {
+          this.telechargerPdf(updated);
+        } else {
+          this.refreshDetail(f.id);
+        }
       },
       error: (e) => {
         this.error = e?.error?.message || 'Erreur';
         this.loadingAction = false;
       },
     });
+  }
+
+  emettreEtTelechargerPdf(f: FacturePatient): void {
+    this.emettre(f, true);
   }
 
   validerPaiement(f: FacturePatient): void {
@@ -357,8 +397,99 @@ export class FacturationPatientComponent implements OnInit {
     return f.statut === 'PAYEE' || f.statut === 'EMISE';
   }
 
+  canTelechargerPdf(f: FacturePatient): boolean {
+    return f.statut !== 'BROUILLON';
+  }
+
   clearMessages(): void {
     this.error = '';
     this.success = '';
+  }
+
+  setActiveView(view: 'factures' | 'catalogue'): void {
+    this.activeView = view;
+    this.showCatalogue = view === 'catalogue';
+    if (view === 'catalogue') {
+      this.chargerCatalogue();
+    }
+  }
+
+  chargerCatalogue(): void {
+    const cid = this.cliniqueId;
+    if (!cid) return;
+    this.facturationService.prestations(cid, true).subscribe({
+      next: (p) => (this.prestations = p),
+      error: () => (this.error = 'Impossible de charger le catalogue'),
+    });
+  }
+
+  onFilterStatutChange(): void {
+    this.load();
+  }
+
+  demarrerEdition(p: PrestationFacturation): void {
+    if (!this.isAdminClinique) return;
+    this.editingPrestation = p;
+    this.editCode = p.code;
+    this.editLibelle = p.libelle;
+    this.editTarif = p.tarifUnitaire;
+    this.editTaux = p.tauxRemboursementPct;
+    this.editActif = p.actif;
+    this.clearMessages();
+  }
+
+  annulerEdition(): void {
+    this.editingPrestation = null;
+  }
+
+  enregistrerPrestation(): void {
+    if (!this.editingPrestation) return;
+    this.savingCatalogue = true;
+    this.facturationService
+      .modifierPrestation(this.editingPrestation.id, {
+        code: this.editCode.trim(),
+        libelle: this.editLibelle.trim(),
+        tarifUnitaire: this.editTarif,
+        tauxRemboursementPct: this.editTaux,
+        actif: this.editActif,
+      })
+      .subscribe({
+        next: () => {
+          this.success = 'Prestation mise à jour.';
+          this.savingCatalogue = false;
+          this.editingPrestation = null;
+          this.chargerCatalogue();
+        },
+        error: (e) => {
+          this.error = e?.error?.message || 'Enregistrement impossible';
+          this.savingCatalogue = false;
+        },
+      });
+  }
+
+  initialiserCatalogueDefaut(): void {
+    const cid = this.cliniqueId;
+    if (!cid || !this.isAdminClinique) return;
+    if (!confirm('Créer le catalogue CNAM par défaut pour cette clinique ?')) return;
+    this.savingCatalogue = true;
+    this.facturationService.initialiserCatalogue(cid).subscribe({
+      next: (list) => {
+        this.prestations = list;
+        this.success = 'Catalogue initialisé (5 prestations par défaut).';
+        this.savingCatalogue = false;
+      },
+      error: (e) => {
+        this.error = e?.error?.message || 'Initialisation impossible';
+        this.savingCatalogue = false;
+      },
+    });
+  }
+
+  montantRemboursementLigne(montant: number, tauxPct: number): number {
+    return (montant * tauxPct) / 100;
+  }
+
+  partPatientLigne(montant: number, tauxPct: number): number {
+    return montant - this.montantRemboursementLigne(montant, tauxPct);
   }
 }

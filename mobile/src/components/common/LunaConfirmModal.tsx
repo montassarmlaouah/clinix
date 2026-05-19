@@ -42,7 +42,7 @@ export function LunaConfirmModal({
             <Text style={s.headerTitle} numberOfLines={1}>
               {title}
             </Text>
-            <Pressable onPress={onClose} hitSlop={12}>
+            <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && { opacity: 0.75 }}>
               <Ionicons name="close" size={24} color={LUNA_COLORS.tertiary} />
             </Pressable>
           </View>
@@ -54,11 +54,11 @@ export function LunaConfirmModal({
             {error ? <Text style={s.errTxt}>{error}</Text> : null}
           </View>
           <View style={s.footer}>
-            <Pressable style={s.btnGhost} onPress={onClose}>
+            <Pressable style={({ pressed }) => [s.btnGhost, pressed && { opacity: 0.75 }]} onPress={onClose}>
               <Text style={s.btnGhostTxt}>{cancelLabel}</Text>
             </Pressable>
             <Pressable
-              style={[s.btnDanger, submitting && { opacity: 0.5 }]}
+              style={({ pressed }) => [s.btnDanger, submitting && { opacity: 0.5 }, pressed && { opacity: 0.75 }]}
               onPress={onConfirm}
               disabled={submitting}
             >

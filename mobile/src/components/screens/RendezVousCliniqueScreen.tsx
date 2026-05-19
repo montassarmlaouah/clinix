@@ -7,7 +7,7 @@ import { Badge, EmptyState, LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
 function formatTime(iso: string): string {
@@ -20,7 +20,12 @@ function formatTime(iso: string): string {
   });
 }
 
-export function RendezVousCliniqueScreen(): React.JSX.Element {
+interface Props {
+  /** jour = RDV du jour ; all = agenda clinique complet */
+  mode?: 'jour' | 'all';
+}
+
+export function RendezVousCliniqueScreen({ mode = 'jour' }: Props): React.JSX.Element {
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
   const [items, setItems] = useState<RendezVous[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +34,13 @@ export function RendezVousCliniqueScreen(): React.JSX.Element {
   const load = useCallback(async () => {
     if (!cliniqueId) return;
     try {
-      const data = await rdvService.getRdvCliniqueJour(cliniqueId);
-      setItems(data ?? []);
+      if (mode === 'all') {
+        const all = await rdvService.getRdvClinique(cliniqueId);
+        setItems(all ?? []);
+      } else {
+        const data = await rdvService.getRdvCliniqueJour(cliniqueId);
+        setItems(data ?? []);
+      }
     } catch {
       try {
         const all = await rdvService.getRdvClinique(cliniqueId);
@@ -42,7 +52,7 @@ export function RendezVousCliniqueScreen(): React.JSX.Element {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cliniqueId]);
+  }, [cliniqueId, mode]);
 
   useEffect(() => {
     void load();
@@ -50,7 +60,10 @@ export function RendezVousCliniqueScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScreenHeader title="Rendez-vous" subtitle="Planning clinique du jour" />
+      <ScreenHeader
+        title="Rendez-vous"
+        subtitle={mode === 'all' ? 'Agenda clinique' : 'Planning du jour'}
+      />
       {loading ? <LoadingOverlay /> : null}
       <FlatList
         data={items}
@@ -85,14 +98,17 @@ export function RendezVousCliniqueScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.lg, paddingBottom: 80 },
+  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   card: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: LUNA_COLORS.secondary,
+    ...(shadows.sm as object),
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   name: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest, flex: 1 },

@@ -29,13 +29,16 @@ export function LunaSuccessModal({
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={({ pressed }) => [styles.card, pressed && { opacity: 0.98 }]} // ✨
+          onPress={(e) => e.stopPropagation()}
+        >
           <View style={styles.badge}>
             <Ionicons name="checkmark" size={44} color={LUNA_COLORS.textInverse} />
             <Text style={styles.badgeLabel}>SUCCESS</Text>
           </View>
           <Text style={styles.message}>{message}</Text>
-          <Pressable style={styles.okBtn} onPress={onClose}>
+          <Pressable style={styles.okBtn} onPress={onClose} activeOpacity={0.75}>
             <Text style={styles.okTxt}>OK</Text>
           </Pressable>
         </Pressable>
@@ -56,7 +59,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 320,
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg, // ✨
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle, // ✨
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.md,
@@ -90,10 +95,10 @@ const styles = StyleSheet.create({
   },
   okBtn: {
     marginTop: spacing.sm,
-    backgroundColor: LUNA_COLORS.tertiary,
+    backgroundColor: LUNA_COLORS.secondary, // ✨
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.full, // ✨ pill
     minWidth: 120,
     alignItems: 'center',
   },

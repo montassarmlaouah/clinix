@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 
-/** Icônes barre du bas (×2, centrées) */
-export const TAB_ICON_SIZE = 48;
+/** Icônes barre du bas */
+export const TAB_ICON_SIZE = 26;
 
 /**
  * Masque un onglet sans `href` (expo-router interdit `href` + `tabBarButton` ensemble ;
@@ -16,25 +16,24 @@ export const hiddenTabScreenOptions: BottomTabNavigationOptions = {
   tabBarButton: () => null,
 };
 
-/** Barre du bas — fond clair, icône active en teal (comme maquette mobile) */
+/** Barre du bas — fond blanc, ombre top, icône active secondary + fond circulaire */
 export function lunaTabBarOptions(): BottomTabNavigationOptions {
   return {
     headerShown: false,
     tabBarShowLabel: false,
     tabBarActiveTintColor: LUNA_COLORS.secondary,
-    tabBarInactiveTintColor: '#9CA3AF',
+    tabBarInactiveTintColor: LUNA_COLORS.tabInactive,
     tabBarStyle: {
-      backgroundColor: '#F8FAFB',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(2,56,89,0.08)',
-      height: 64,
-      paddingTop: 6,
-      paddingBottom: 6,
-      elevation: 8,
-      shadowColor: '#000',
-      shadowOpacity: 0.06,
-      shadowOffset: { width: 0, height: -2 },
-      shadowRadius: 8,
+      backgroundColor: LUNA_COLORS.surface, // ✨ fond blanc pur
+      borderTopWidth: 0,
+      height: 68,
+      paddingTop: 8,
+      paddingBottom: 8,
+      elevation: 12,
+      shadowColor: '#26658c',
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: -4 },
+      shadowRadius: 12,
     },
     tabBarItemStyle: {
       paddingVertical: 4,
@@ -53,7 +52,7 @@ export function useLunaTabBarOptions(): BottomTabNavigationOptions {
     ...base,
     tabBarStyle: {
       ...(base.tabBarStyle as object),
-      height: 56 + bottomPad,
+      height: 64 + bottomPad, // ✨ hauteur 64–72px avec safe area
       paddingBottom: bottomPad,
       paddingTop: 8,
     },

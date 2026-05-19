@@ -54,15 +54,16 @@ export default function PatientTeleconsultationScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  body: { padding: spacing.xxl, gap: spacing.md },
+  body: { padding: spacing.xxl, paddingBottom: 80, gap: spacing.md },
   hint: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
   input: {
-    backgroundColor: LUNA_COLORS.surface,
+    backgroundColor: LUNA_COLORS.inputBg,
     borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderWidth: 1.5,
+    borderColor: LUNA_COLORS.borderInput,
     padding: spacing.md,
     fontSize: fontSize.base,
+    color: LUNA_COLORS.textPrimary,
   },
   btn: { backgroundColor: LUNA_COLORS.secondary, padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
   btnAlt: { backgroundColor: LUNA_COLORS.info },

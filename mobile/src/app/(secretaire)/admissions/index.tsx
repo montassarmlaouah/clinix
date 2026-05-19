@@ -147,14 +147,17 @@ export default function AdmissionsIndexScreen(): React.JSX.Element {
 }
 
 const cardStyles = StyleSheet.create({
+  // ✨ Carte HeroUI — borderSubtle + shadow sm
   card: {
     flexDirection:    'row',
     alignItems:       'center',
     backgroundColor:  LUNA_COLORS.surface,
-    borderRadius:     borderRadius.md,
+    borderRadius:     borderRadius.lg,
     padding:          spacing.md,
     marginHorizontal: spacing.xxl,
     marginBottom:     spacing.sm,
+    borderWidth:      1,
+    borderColor:      LUNA_COLORS.borderSubtle,
     ...(shadows.sm as object),
   },
   avatar: {
@@ -215,13 +218,17 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.surface,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderDark,
+    borderColor: LUNA_COLORS.borderSubtle,
   },
+  // ✨ Input HeroUI — inputBg, minHeight 52
   searchInput: {
     flex: 1,
     paddingVertical: spacing.sm,
     fontSize: fontSize.base,
     color: LUNA_COLORS.textPrimary,
+    backgroundColor: LUNA_COLORS.inputBg,
+    minHeight: 52,
   },
-  list: { paddingTop: spacing.sm, paddingBottom: 60 },
+  // ✨ Liste — paddingBottom tab bar
+  list: { paddingTop: spacing.sm, paddingBottom: 80 },
 });
