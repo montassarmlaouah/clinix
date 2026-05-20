@@ -1,504 +1,302 @@
-// @ts-nocheck — admin services
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  RefreshControl, ActivityIndicator, Modal, KeyboardAvoidingView,
-  Platform, Pressable, Dimensions,
-} from 'react-native';
+// @ts-nocheck
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
-  LunaAccessHeader,
-  LunaActionButton,
-  LunaConfirmModal,
-  LunaDetailsModal,
-  LunaFormModal,
-  LunaScreen,
-  LunaSuccessModal,
-} from '@/src/components/common';
-import { adminTableStyles as tbl } from '@/src/theme/adminTable';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod/v4';
-import { LUNA_COLORS } from '@/src/theme/colors';
-import { borderRadius, spacing } from '@/src/theme/spacing';
+  ActivityIndicator, FlatList, Modal, Pressable, RefreshControl,
+  ScrollView, StyleSheet, Text, TextInput, View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { apiDelete, apiGet, apiPost, apiPut } from '@/src/api/client';
+import { EmptyState, LunaHeroHeader, LunaStatCard, LunaSuccessModal } from '@/src/components/common';
 import { useAuthStore } from '@/src/store/auth.store';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/src/api/client';
-import { SERVICES } from '@/src/api/endpoints';
-import { lunaModalStyles as ms } from '@/src/theme/lunaModal';
-import { isServiceActif, serviceMatchesStatutFilter } from '@/src/utils/serviceStatut';
+import { LUNA_COLORS } from '@/src/theme/colors';
+import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
+import { fontSize, fontWeight } from '@/src/theme/typography';
 
-const SW = Dimensions.get('window').width;
-
-interface ServiceMedical {
-  id: number;
-  nom: string;
-  description?: string;
-  actif?: boolean;
-  statut?: 'ACTIF' | 'INACTIF';
-  nombreChambres?: number;
-  nombreLits?: number;
+interface Service {
+  id: number; nom: string; description?: string;
+  actif?: boolean; statut?: string;
+  nombreChambres?: number; nombreLits?: number;
 }
 
-const createSchema = z.object({
-  nom: z.string().min(2, 'Nom requis'),
-  description: z.string().optional(),
-  statut: z.enum(['ACTIF', 'INACTIF']),
-});
-type CreateForm = z.infer<typeof createSchema>;
-
-type ModalType = 'none' | 'create' | 'edit' | 'details' | 'delete';
-
-const shadow = Platform.select({
-  ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6 },
-  android: { elevation: 3 },
-  default: {},
-});
-
-const COL_WIDTHS: Record<string, number> = {
-  SERVICE: 180, DESCRIPTION: 200, CHAMBRES: 100, LITS: 100, STATUT: 120, ACTIONS: 132,
-};
+function isActif(s: Service): boolean {
+  return s.actif === true || s.statut === 'ACTIF';
+}
 
 export default function ServicesScreen() {
   const { cliniqueId } = useAuthStore();
-  const [services, setServices] = useState<ServiceMedical[]>([]);
+  const [list, setList]       = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState('');
-  const [filterStatut, setFilterStatut] = useState<'TOUS' | 'ACTIF' | 'INACTIF'>('TOUS');
-  const [modal, setModal] = useState<ModalType>('none');
-  const [selected, setSelected] = useState<ServiceMedical | null>(null);
+  const [query, setQuery]     = useState('');
+  const [filter, setFilter]   = useState<'TOUS' | 'ACTIF' | 'INACTIF'>('TOUS');
+  const [selected, setSelected] = useState<Service | null>(null);
+  const [modal, setModal]     = useState<'none' | 'detail' | 'add' | 'edit' | 'delete'>('none');
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState('');
   const [successVisible, setSuccessVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [fErr, setFErr]       = useState('');
 
-  const showSuccess = (msg: string) => {
-    setSuccessMessage(msg);
-    setSuccessVisible(true);
-  };
+  // form
+  const [fNom, setFNom]           = useState('');
+  const [fDesc, setFDesc]         = useState('');
+  const [fStatut, setFStatut]     = useState<'ACTIF' | 'INACTIF'>('ACTIF');
 
-  const { control, handleSubmit, reset, setValue, formState: { errors } } = useForm<CreateForm>({
-    resolver: zodResolver(createSchema),
-    defaultValues: { nom: '', description: '', statut: 'ACTIF' },
-  });
-
-  const fetchServices = useCallback(async () => {
-    if (!cliniqueId) return;
+  const load = useCallback(async (silent = false) => {
+    if (!cliniqueId) { setLoading(false); return; }
+    if (!silent) setLoading(true);
     try {
-      const data = await apiGet<ServiceMedical[]>(`/api/services/clinique/${cliniqueId}`);
-      setServices(Array.isArray(data) ? data : []);
-    } catch { setServices([]); } finally {
-      setLoading(false); setRefreshing(false);
-    }
+      const data = await apiGet(`/api/services/clinique/${cliniqueId}`).catch(() => []);
+      setList(Array.isArray(data) ? data : []);
+    } catch { setList([]); } finally { setLoading(false); setRefreshing(false); }
   }, [cliniqueId]);
 
-  useEffect(() => { fetchServices(); }, [fetchServices]);
-  const onRefresh = () => { setRefreshing(true); fetchServices(); };
+  useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-  const openCreate = () => {
-    reset({ nom: '', description: '', statut: 'ACTIF' });
-    setSelected(null);
-    setSubmitError(null);
-    setModal('create');
-  };
+  const filtered = useMemo(() => {
+    let r = list;
+    if (filter === 'ACTIF')   r = r.filter(s => isActif(s));
+    if (filter === 'INACTIF') r = r.filter(s => !isActif(s));
+    const q = query.toLowerCase();
+    if (q) r = r.filter(s => s.nom.toLowerCase().includes(q));
+    return r;
+  }, [list, filter, query]);
 
-  const openEdit = (s: ServiceMedical) => {
-    setSelected(s);
-    reset({
-      nom: s.nom,
-      description: s.description ?? '',
-      statut: isServiceActif(s) ? 'ACTIF' : 'INACTIF',
-    });
-    setSubmitError(null);
-    setModal('edit');
-  };
+  const stats = useMemo(() => ({
+    total:   list.length,
+    actifs:  list.filter(s => isActif(s)).length,
+    chambres:list.reduce((a, s) => a + (s.nombreChambres ?? 0), 0),
+    lits:    list.reduce((a, s) => a + (s.nombreLits ?? 0), 0),
+  }), [list]);
 
-  const openDetails = (s: ServiceMedical) => {
-    setSelected(s);
-    setModal('details');
-  };
+  function openAdd()  { setFNom(''); setFDesc(''); setFStatut('ACTIF'); setFErr(''); setSelected(null); setModal('add'); }
+  function openEdit(s: Service) { setFNom(s.nom); setFDesc(s.description ?? ''); setFStatut(isActif(s) ? 'ACTIF' : 'INACTIF'); setFErr(''); setSelected(s); setModal('edit'); }
+  function closeModal() { setModal('none'); setSelected(null); }
 
-  const openDelete = (s: ServiceMedical) => {
-    setSelected(s);
-    setModal('delete');
-  };
-  const closeModal = () => { setModal('none'); setSelected(null); setSubmitError(null); };
-
-  const onCreateSubmit = async (data: CreateForm) => {
+  async function handleSave() {
+    if (!fNom.trim()) { setFErr('Nom requis.'); return; }
+    setSubmitting(true); setFErr('');
     try {
-      setSubmitting(true);
-      setSubmitError(null);
-      await apiPost(SERVICES.CREATE, {
-        nom: data.nom,
-        description: data.description,
-        cliniqueId: Number(cliniqueId),
-        actif: data.statut === 'ACTIF',
-      });
-      await fetchServices();
+      const payload = { nom: fNom.trim(), description: fDesc || undefined, cliniqueId: Number(cliniqueId), actif: fStatut === 'ACTIF' };
+      if (modal === 'edit' && selected) {
+        await apiPut(`/api/services/${selected.id}`, payload);
+      } else {
+        await apiPost('/api/services', payload);
+      }
+      await load(true);
       closeModal();
-      showSuccess('Service ajouté avec succès');
-    } catch (err: unknown) {
-      setSubmitError((err as { message?: string })?.message ?? 'Erreur');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+      setSuccessMsg(modal === 'edit' ? 'Service modifié.' : 'Service créé.'); setSuccessVisible(true);
+    } catch (e: any) { setFErr(e?.message ?? 'Erreur'); } finally { setSubmitting(false); }
+  }
 
-  const onEditSubmit = async (data: CreateForm) => {
+  async function handleDelete() {
     if (!selected) return;
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      setSubmitError(null);
-      await apiPut(SERVICES.UPDATE(selected.id), {
-        nom: data.nom,
-        description: data.description,
-        cliniqueId: Number(cliniqueId),
-        actif: data.statut === 'ACTIF',
-      });
-      await fetchServices();
-      closeModal();
-      showSuccess('Service modifié avec succès');
-    } catch (err: unknown) {
-      setSubmitError((err as { message?: string })?.message ?? 'Erreur');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selected) return;
-    try {
-      setSubmitting(true);
       await apiDelete(`/api/services/${selected.id}`);
-      setServices(prev => prev.filter(s => s.id !== selected.id));
+      await load(true);
       closeModal();
-      showSuccess('Service supprimé avec succès');
-    } catch (err: unknown) {
-      setSubmitError((err as { message?: string })?.message ?? 'Erreur');
-    } finally { setSubmitting(false); }
-  };
-
-  const filtered = services.filter((s) => {
-    const q = search.toLowerCase();
-    const ms = serviceMatchesStatutFilter(s, filterStatut);
-    return (
-      ms &&
-      (s.nom.toLowerCase().includes(q) || (s.description ?? '').toLowerCase().includes(q))
-    );
-  });
-
-  // KPIs
-  const actifs = services.filter((s) => isServiceActif(s)).length;
-  const inactifs = services.filter((s) => !isServiceActif(s)).length;
-  const totalChambres = services.reduce((a, s) => a + (s.nombreChambres ?? 0), 0);
-  const totalLits = services.reduce((a, s) => a + (s.nombreLits ?? 0), 0);
-
-  const COLS = ['SERVICE', 'DESCRIPTION', 'CHAMBRES', 'LITS', 'STATUT', 'ACTIONS'];
+      setSuccessMsg('Service supprimé.'); setSuccessVisible(true);
+    } catch { setFErr('Impossible de supprimer.'); } finally { setSubmitting(false); }
+  }
 
   return (
-    <LunaScreen edges={[]}>
-      <LunaAccessHeader
-        pageTitle="Services médicaux"
-        pageSubtitle="Gestion des services de votre clinique"
-        right={
-          <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
-            <Ionicons name="add" size={22} color={LUNA_COLORS.tertiary} />
-          </TouchableOpacity>
-        }
-      />
+    <SafeAreaView style={styles.safe}>
+      <LunaHeroHeader title="Services médicaux" subtitle={`${stats.total} service(s) · ${stats.actifs} actif(s)`} showBack={false} />
 
-      {/* KPI row */}
-      <View style={styles.kpiRow}>
-        {[
-          { label: 'Actifs', value: actifs, color: LUNA_COLORS.success, icon: 'checkmark-circle-outline' },
-          { label: 'Inactifs', value: inactifs, color: LUNA_COLORS.error, icon: 'close-circle-outline' },
-          { label: 'Chambres', value: totalChambres, color: LUNA_COLORS.info ?? LUNA_COLORS.secondary, icon: 'bed-outline' },
-          { label: 'Lits', value: totalLits, color: LUNA_COLORS.purple ?? '#9C27B0', icon: 'resize-outline' },
-        ].map(k => (
-          <View key={k.label} style={[styles.kpiCard, { borderBottomColor: k.color }]}>
-            <Ionicons name={k.icon as any} size={18} color={k.color} />
-            <Text style={[styles.kpiValue, { color: k.color }]}>{k.value}</Text>
-            <Text style={styles.kpiLabel}>{k.label}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Filtres */}
-      <View style={styles.filtersRow}>
-        <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={14} color={LUNA_COLORS.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Nom du service..."
-            placeholderTextColor={LUNA_COLORS.textSecondary}
-            value={search} onChangeText={setSearch}
-          />
-        </View>
-        <View style={styles.filterBtns}>
-          {(['TOUS', 'ACTIF', 'INACTIF'] as const).map(f => (
-            <TouchableOpacity key={f} style={[styles.filterChip, filterStatut === f && styles.filterChipActive]}
-              onPress={() => setFilterStatut(f)}>
-              <Text style={[styles.filterChipText, filterStatut === f && styles.filterChipTextActive]}>{f}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Table */}
-      {loading ? (
-        <View style={styles.centered}><ActivityIndicator size="large" color={LUNA_COLORS.secondary} /></View>
-      ) : (
-        <ScrollView horizontal style={{ flex: 1 }}>
-          <View>
-            <View style={tbl.tableHeader}>
-              {COLS.map(c => (
-                <View key={c} style={{ width: COL_WIDTHS[c] }}>
-                  <Text style={tbl.thText}>{c}</Text>
+      {loading ? <ActivityIndicator size="large" color={LUNA_COLORS.secondary} style={{ marginTop: 40 }} /> : (
+        <FlatList
+          data={filtered}
+          keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(true); }} />}
+          ListHeaderComponent={
+            <>
+              <View style={styles.statsGrid}>
+                <View style={styles.statsRow}>
+                  <LunaStatCard label="Total" value={stats.total} icon="business-outline" color={LUNA_COLORS.secondary} style={styles.statCard} />
+                  <LunaStatCard label="Actifs" value={stats.actifs} icon="checkmark-circle-outline" color={LUNA_COLORS.success} style={styles.statCard} />
                 </View>
-              ))}
-            </View>
-            <ScrollView
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[LUNA_COLORS.secondary]} />}
-            >
-              {filtered.length === 0 ? (
-                <View style={tbl.emptyRow}><Text style={tbl.emptyText}>Aucun service trouvé</Text></View>
-              ) : filtered.map((item, idx) => {
-                const isActif = isServiceActif(item);
-                return (
-                  <View key={item.id} style={[tbl.tableRow, idx % 2 === 1 && tbl.tableRowAlt]}>
-                    {/* SERVICE */}
-                    <View style={{ width: COL_WIDTHS['SERVICE'], flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <View style={styles.serviceIcon}>
-                        <Ionicons name="business-outline" size={18} color={LUNA_COLORS.secondary} />
-                      </View>
-                      <Text style={styles.serviceName} numberOfLines={2}>{item.nom}</Text>
-                    </View>
-                    {/* DESCRIPTION */}
-                    <View style={{ width: COL_WIDTHS['DESCRIPTION'] }}>
-                      <Text style={styles.descText} numberOfLines={2}>{(item.description ?? '—').substring(0, 80)}</Text>
-                    </View>
-                    {/* CHAMBRES */}
-                    <View style={{ width: COL_WIDTHS['CHAMBRES'], alignItems: 'center' }}>
-                      <View style={styles.countBadge}>
-                        <Ionicons name="bed-outline" size={11} color={LUNA_COLORS.secondary} />
-                        <Text style={styles.countText}>{item.nombreChambres ?? 0}</Text>
-                      </View>
-                    </View>
-                    {/* LITS */}
-                    <View style={{ width: COL_WIDTHS['LITS'], alignItems: 'center' }}>
-                      <View style={[styles.countBadge, { backgroundColor: LUNA_COLORS.purpleLight ?? '#F3E5F5' }]}>
-                        <Ionicons name="resize-outline" size={11} color={LUNA_COLORS.purple ?? '#9C27B0'} />
-                        <Text style={[styles.countText, { color: LUNA_COLORS.purple ?? '#9C27B0' }]}>{item.nombreLits ?? 0}</Text>
-                      </View>
-                    </View>
-                    {/* STATUT */}
-                    <View style={{ width: COL_WIDTHS['STATUT'] }}>
-                      <View style={[styles.statusBadge, { backgroundColor: isActif ? LUNA_COLORS.successLight : LUNA_COLORS.errorLight }]}>
-                        <Text style={[styles.statusText, { color: isActif ? LUNA_COLORS.success : LUNA_COLORS.error }]}>
-                          {isActif ? '✅ ACTIF' : '❌ INACTIF'}
-                        </Text>
-                      </View>
-                    </View>
-                    {/* ACTIONS */}
-                    <View style={{ width: COL_WIDTHS['ACTIONS'] }}>
-                      <View style={tbl.actionsRow}>
-                        <LunaActionButton icon="eye-outline" onPress={() => openDetails(item)} />
-                        <LunaActionButton icon="create-outline" onPress={() => openEdit(item)} />
-                        <LunaActionButton icon="trash-outline" onPress={() => openDelete(item)} />
-                      </View>
-                    </View>
+                <View style={styles.statsRow}>
+                  <LunaStatCard label="Chambres" value={stats.chambres} icon="bed-outline" color={LUNA_COLORS.info ?? LUNA_COLORS.secondary} style={styles.statCard} />
+                  <LunaStatCard label="Lits" value={stats.lits} icon="resize-outline" color="#9C27B0" style={styles.statCard} />
+                </View>
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                {(['TOUS', 'ACTIF', 'INACTIF'] as const).map(f => (
+                  <Pressable key={f} style={[styles.chip, filter === f && styles.chipOn]} onPress={() => setFilter(f)}>
+                    <Text style={[styles.chipTxt, filter === f && styles.chipTxtOn]}>{f}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              <View style={styles.filters}>
+                <TextInput style={styles.search} placeholder="Nom du service…" placeholderTextColor={LUNA_COLORS.textDisabled} value={query} onChangeText={setQuery} />
+                <Pressable style={styles.addBtn} onPress={openAdd}>
+                  <Ionicons name="add-outline" size={20} color={LUNA_COLORS.textInverse} />
+                  <Text style={styles.addBtnTxt}>Ajouter</Text>
+                </Pressable>
+              </View>
+            </>
+          }
+          renderItem={({ item }) => (
+            <Pressable style={styles.card} onPress={() => { setSelected(item); setModal('detail'); }}>
+              <View style={styles.avatar}>
+                <Ionicons name="business-outline" size={22} color={LUNA_COLORS.secondary} />
+              </View>
+              <View style={styles.cardBody}>
+                <View style={styles.cardTop}>
+                  <Text style={styles.name} numberOfLines={1}>{item.nom}</Text>
+                  <View style={[styles.badge, { backgroundColor: isActif(item) ? LUNA_COLORS.successLight : LUNA_COLORS.errorLight }]}>
+                    <Text style={[styles.badgeTxt, { color: isActif(item) ? LUNA_COLORS.success : LUNA_COLORS.error }]}>
+                      {isActif(item) ? 'Actif' : 'Inactif'}
+                    </Text>
                   </View>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </ScrollView>
+                </View>
+                {item.description ? <Text style={styles.meta} numberOfLines={1}>{item.description}</Text> : null}
+                <Text style={styles.meta}>{item.nombreChambres ?? 0} chambre(s) · {item.nombreLits ?? 0} lit(s)</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={LUNA_COLORS.textDisabled} />
+            </Pressable>
+          )}
+          ListEmptyComponent={!loading ? <EmptyState icon="business-outline" title="Aucun service" subtitle="Créez un service avec le bouton ci-dessus." /> : null}
+        />
       )}
 
-      <LunaDetailsModal
-        visible={modal === 'details'}
-        title={selected?.nom ?? 'Service'}
-        icon="medical-outline"
-        onClose={closeModal}
-      >
-        <Text style={ms.detailLabel}>Description</Text>
-        <Text style={ms.detailValue}>{selected?.description ?? '—'}</Text>
-        <Text style={ms.detailLabel}>Chambres / Lits</Text>
-        <Text style={ms.detailValue}>
-          {selected?.nombreChambres ?? 0} chambres · {selected?.nombreLits ?? 0} lits
-        </Text>
-        <Text style={ms.detailLabel}>Statut</Text>
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor:
-                selected && isServiceActif(selected)
-                  ? LUNA_COLORS.successLight
-                  : LUNA_COLORS.errorLight,
-              alignSelf: 'flex-start',
-              marginTop: 4,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusText,
-              {
-                color:
-                  selected && isServiceActif(selected) ? LUNA_COLORS.success : LUNA_COLORS.error,
-              },
-            ]}
-          >
-            {selected && isServiceActif(selected) ? '✅ ACTIF' : '❌ INACTIF'}
-          </Text>
+      {/* Modal détail */}
+      <Modal visible={modal === 'detail'} animationType="slide" onRequestClose={closeModal}>
+        <View style={styles.modal}>
+          <View style={styles.modalHead}>
+            <Text style={styles.modalTitle}>{selected?.nom}</Text>
+            <Pressable onPress={closeModal} hitSlop={8}><Ionicons name="close" size={24} color={LUNA_COLORS.dark} /></Pressable>
+          </View>
+          {selected ? (
+            <ScrollView contentContainerStyle={styles.modalBody}>
+              {[
+                ['Description', selected.description ?? '—'],
+                ['Chambres', String(selected.nombreChambres ?? 0)],
+                ['Lits', String(selected.nombreLits ?? 0)],
+                ['Statut', isActif(selected) ? 'Actif' : 'Inactif'],
+              ].map(([l, v]) => (
+                <View key={l} style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>{l}</Text>
+                  <Text style={styles.detailValue}>{v}</Text>
+                </View>
+              ))}
+              <Pressable style={styles.editBtn} onPress={() => openEdit(selected)}>
+                <Ionicons name="create-outline" size={18} color={LUNA_COLORS.secondary} />
+                <Text style={styles.editBtnTxt}>Modifier</Text>
+              </Pressable>
+              <Pressable style={styles.dangerBtn} onPress={() => setModal('delete')}>
+                <Ionicons name="trash-outline" size={18} color={LUNA_COLORS.error} />
+                <Text style={styles.dangerTxt}>Supprimer</Text>
+              </Pressable>
+            </ScrollView>
+          ) : null}
         </View>
-      </LunaDetailsModal>
+      </Modal>
 
-      <LunaFormModal
-        visible={modal === 'create' || modal === 'edit'}
-        title={modal === 'edit' ? `Modifier ${selected?.nom ?? ''}` : 'Nouveau service médical'}
-        icon={modal === 'edit' ? 'create-outline' : 'add-circle-outline'}
-        submitLabel={modal === 'edit' ? 'Enregistrer' : 'Créer'}
-        onClose={closeModal}
-        onSubmit={handleSubmit(modal === 'edit' ? onEditSubmit : onCreateSubmit)}
-        submitting={submitting}
-        submitError={submitError}
-      >
-        <Text style={ms.fieldLabel}>Nom du service *</Text>
-        <Controller
-          control={control}
-          name="nom"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              style={[ms.input, errors.nom && styles.inputErr]}
-              value={value}
-              onChangeText={onChange}
-              placeholder="Ex: Cardiologie"
-              placeholderTextColor={LUNA_COLORS.textSecondary}
-            />
-          )}
-        />
-        {errors.nom ? <Text style={styles.errText}>{errors.nom.message}</Text> : null}
+      {/* Modal add/edit */}
+      <Modal visible={modal === 'add' || modal === 'edit'} animationType="slide" onRequestClose={closeModal}>
+        <View style={styles.modal}>
+          <View style={styles.modalHead}>
+            <Text style={styles.modalTitle}>{modal === 'edit' ? `Modifier ${selected?.nom ?? ''}` : 'Nouveau service'}</Text>
+            <Pressable onPress={closeModal} hitSlop={8}><Ionicons name="close" size={24} color={LUNA_COLORS.dark} /></Pressable>
+          </View>
+          <ScrollView contentContainerStyle={styles.modalBody} keyboardShouldPersistTaps="handled">
+            <Text style={styles.fLabel}>Nom *</Text>
+            <TextInput style={styles.inp} value={fNom} onChangeText={setFNom} placeholder="Ex : Cardiologie" placeholderTextColor={LUNA_COLORS.textDisabled} />
 
-        <Text style={ms.fieldLabel}>Description</Text>
-        <Controller
-          control={control}
-          name="description"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              style={[ms.input, { height: 80, textAlignVertical: 'top' }]}
-              value={value}
-              onChangeText={onChange}
-              placeholder="Description du service..."
-              placeholderTextColor={LUNA_COLORS.textSecondary}
-              multiline
-            />
-          )}
-        />
+            <Text style={styles.fLabel}>Description</Text>
+            <TextInput style={[styles.inp, { height: 80, textAlignVertical: 'top' }]} value={fDesc} onChangeText={setFDesc} multiline placeholder="Description..." placeholderTextColor={LUNA_COLORS.textDisabled} />
 
-        <Text style={ms.fieldLabel}>Statut</Text>
-        <Controller
-          control={control}
-          name="statut"
-          render={({ field: { value, onChange } }) => (
-            <View style={styles.row2}>
-              {(['ACTIF', 'INACTIF'] as const).map((st) => (
-                <TouchableOpacity
-                  key={st}
-                  style={[styles.specChip, value === st && styles.specChipActive]}
-                  onPress={() => onChange(st)}
-                >
-                  <Text style={[styles.specChipText, value === st && styles.specChipTextActive]}>
-                    {st}
-                  </Text>
-                </TouchableOpacity>
+            <Text style={styles.fLabel}>Statut</Text>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              {(['ACTIF', 'INACTIF'] as const).map(s => (
+                <Pressable key={s} style={[styles.chip, fStatut === s && styles.chipOn]} onPress={() => setFStatut(s)}>
+                  <Text style={[styles.chipTxt, fStatut === s && styles.chipTxtOn]}>{s}</Text>
+                </Pressable>
               ))}
             </View>
-          )}
-        />
-      </LunaFormModal>
 
-      <LunaConfirmModal
-        visible={modal === 'delete'}
-        title="Confirmer la suppression"
-        message={`Voulez-vous vraiment supprimer « ${selected?.nom ?? ''} » ?`}
-        confirmLabel="Supprimer"
-        onClose={closeModal}
-        onConfirm={handleDelete}
-        submitting={submitting}
-        error={submitError}
-      />
+            {fErr ? <Text style={styles.errTxt}>{fErr}</Text> : null}
+            <Pressable style={[styles.addBtn, { marginTop: 16, justifyContent: 'center' }, submitting && { opacity: 0.6 }]} onPress={handleSave} disabled={submitting}>
+              {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.addBtnTxt}>{modal === 'edit' ? 'Enregistrer' : 'Créer le service'}</Text>}
+            </Pressable>
+          </ScrollView>
+        </View>
+      </Modal>
 
-      <LunaSuccessModal
-        visible={successVisible}
-        message={successMessage}
-        onClose={() => setSuccessVisible(false)}
-      />
-    </LunaScreen>
+      {/* Modal delete */}
+      <Modal visible={modal === 'delete'} transparent animationType="fade" onRequestClose={closeModal}>
+        <Pressable style={styles.overlay} onPress={closeModal}>
+          <Pressable style={styles.deleteCard} onPress={e => e.stopPropagation()}>
+            <Ionicons name="warning-outline" size={40} color={LUNA_COLORS.warning} />
+            <Text style={styles.deleteTitle}>Supprimer</Text>
+            <Text style={styles.deleteDesc}>Supprimer « {selected?.nom} » ?</Text>
+            {fErr ? <Text style={styles.errTxt}>{fErr}</Text> : null}
+            <View style={styles.deleteActions}>
+              <Pressable style={styles.cancelBtn} onPress={closeModal}><Text style={styles.cancelTxt}>Annuler</Text></Pressable>
+              <Pressable style={[styles.dangerBtn2, submitting && { opacity: 0.6 }]} onPress={handleDelete} disabled={submitting}>
+                {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.dangerTxt2}>Supprimer</Text>}
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <LunaSuccessModal visible={successVisible} message={successMsg} onClose={() => setSuccessVisible(false)} />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  headerBar: { backgroundColor: LUNA_COLORS.dark, paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  headerTitle: { color: LUNA_COLORS.textInverse, fontSize: 18, fontWeight: '700' },
-  headerSub: { color: LUNA_COLORS.secondary, fontSize: 12, marginTop: 2 },
-  addBtn: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
-  addBtnText: { color: LUNA_COLORS.textInverse, fontWeight: '600', fontSize: 12 },
-  kpiRow: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: LUNA_COLORS.surface },
-  kpiCard: { flex: 1, alignItems: 'center', borderBottomWidth: 3, paddingBottom: 8, gap: 2 },
-  kpiValue: { fontSize: 20, fontWeight: '800' },
-  kpiLabel: { fontSize: 9, color: LUNA_COLORS.textSecondary, textAlign: 'center' },
-  // ✨ Filtres — séparateur subtil
-  filtersRow: { flexDirection: 'row', padding: 12, gap: 8, backgroundColor: LUNA_COLORS.surface, borderBottomWidth: 1, borderBottomColor: 'rgba(197, 220, 234, 0.6)' },
-  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.md, paddingHorizontal: 10, gap: 6, borderWidth: 1, borderColor: LUNA_COLORS.borderInput },
-  // ✨ Input HeroUI — inputBg, minHeight 52
-  searchInput: { flex: 1, fontSize: 13, color: LUNA_COLORS.textPrimary, minHeight: 52 },
-  filterBtns: { flexDirection: 'row', gap: 6 },
-  filterChip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: borderRadius.full, backgroundColor: LUNA_COLORS.background, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
-  filterChipActive: { backgroundColor: LUNA_COLORS.secondary },
-  filterChipText: { fontSize: 11, color: LUNA_COLORS.textSecondary },
-  filterChipTextActive: { color: LUNA_COLORS.textInverse, fontWeight: '600' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  serviceIcon: { width: 40, height: 40, borderRadius: borderRadius.md, backgroundColor: LUNA_COLORS.surfaceLight, justifyContent: 'center', alignItems: 'center' },
-  serviceName: { fontSize: 13, fontWeight: '600', color: LUNA_COLORS.darkest, flex: 1 },
-  descText: { fontSize: 11, color: LUNA_COLORS.textSecondary },
-  countBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: LUNA_COLORS.surfaceLight, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 },
-  countText: { fontSize: 11, color: LUNA_COLORS.secondary, fontWeight: '600' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, alignSelf: 'flex-start' },
-  statusText: { fontSize: 10, fontWeight: '700' },
-  actBtn: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
-  overlay: { flex: 1, backgroundColor: LUNA_COLORS.overlay, justifyContent: 'center', padding: 16 },
-  // ✨ Modale — borderSubtle + coins lg
-  modalBox: { backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, overflow: 'hidden', borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, backgroundColor: LUNA_COLORS.primary },
-  modalTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: LUNA_COLORS.textInverse },
-  modalBody: { padding: 16 },
-  modalFooter: { padding: 16 },
-  modalFooterRow: { flexDirection: 'row', gap: 12, padding: 16, borderTopWidth: 1, borderTopColor: 'rgba(197, 220, 234, 0.6)' },
-  detailLabel: { fontSize: 11, fontWeight: '600', color: LUNA_COLORS.textSecondary, marginTop: 12 },
-  detailValue: { fontSize: 14, color: LUNA_COLORS.textPrimary, marginTop: 4 },
-  detailRow: { flexDirection: 'row', gap: 16 },
-  detailHalf: { flex: 1 },
-  deleteDesc: { fontSize: 14, color: LUNA_COLORS.textPrimary, textAlign: 'center' },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: LUNA_COLORS.textPrimary, marginBottom: 4, marginTop: 8 },
-  // ✨ Input HeroUI — inputBg, minHeight 52
-  input: { backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 14, color: LUNA_COLORS.textPrimary, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, marginBottom: 4, minHeight: 52 },
-  inputErr: { borderColor: LUNA_COLORS.error },
-  errText: { fontSize: 11, color: LUNA_COLORS.error, marginBottom: 6 },
-  row2: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  specChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: borderRadius.full, backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle },
-  specChipActive: { backgroundColor: LUNA_COLORS.secondary },
-  specChipText: { fontSize: 13, color: LUNA_COLORS.textPrimary },
-  specChipTextActive: { color: LUNA_COLORS.textInverse, fontWeight: '600' },
-  errBox: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: LUNA_COLORS.errorLight, borderRadius: 8, padding: 10, marginTop: 8 },
-  errBoxText: { flex: 1, fontSize: 12, color: LUNA_COLORS.error },
-  cancelBtn: { flex: 1, minHeight: 48, paddingVertical: spacing.md, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: LUNA_COLORS.surface, borderWidth: 1.5, borderColor: LUNA_COLORS.secondary },
-  cancelBtnText: { fontSize: 14, color: LUNA_COLORS.secondary, fontWeight: '600' },
-  submitBtn: { flex: 1, minHeight: 48, paddingVertical: spacing.md, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: LUNA_COLORS.secondary },
-  submitBtnText: { fontSize: 14, color: LUNA_COLORS.textInverse, fontWeight: '700' },
-  dangerBtn: { flex: 1, minHeight: 48, paddingVertical: spacing.md, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: LUNA_COLORS.error },
-  closeBtn: { flex: 1, minHeight: 48, paddingVertical: spacing.md, borderRadius: borderRadius.full, alignItems: 'center', justifyContent: 'center', backgroundColor: LUNA_COLORS.primary },
-  closeBtnText: { fontSize: 14, color: LUNA_COLORS.textInverse, fontWeight: '600' },
+  safe:     { flex: 1, backgroundColor: LUNA_COLORS.background },
+  statsGrid:{ paddingHorizontal: spacing.lg, gap: spacing.sm, marginVertical: spacing.md },
+  statsRow: { flexDirection: 'row', gap: spacing.sm },
+  statCard: { flex: 1, minWidth: 0 },
+  chips:    { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm, alignItems: 'center' },
+  chip:     { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, backgroundColor: LUNA_COLORS.surface, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, marginRight: spacing.sm },
+  chipOn:   { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
+  chipTxt:  { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  chipTxtOn:{ color: LUNA_COLORS.textInverse, fontWeight: fontWeight.semibold },
+  filters:  { paddingHorizontal: spacing.lg, paddingBottom: spacing.md, gap: spacing.sm },
+  search:   { backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.lg, minHeight: 52, paddingHorizontal: spacing.md, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary },
+  addBtn:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, backgroundColor: LUNA_COLORS.secondary, borderRadius: borderRadius.lg, paddingVertical: spacing.md, minHeight: 52 },
+  addBtnTxt:{ color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold, fontSize: fontSize.base },
+  list:     { paddingHorizontal: spacing.lg, paddingBottom: 80 },
+  card:     { flexDirection: 'row', alignItems: 'center', backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md, ...(shadows.sm as object) },
+  avatar:   { width: 44, height: 44, borderRadius: 22, backgroundColor: LUNA_COLORS.secondaryLight, alignItems: 'center', justifyContent: 'center' },
+  cardBody: { flex: 1 },
+  cardTop:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  name:     { flex: 1, fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
+  meta:     { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
+  badge:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full },
+  badgeTxt: { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+  modal:    { flex: 1, backgroundColor: LUNA_COLORS.background, paddingTop: spacing.xxxl },
+  modalHead:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xxl, paddingBottom: spacing.md },
+  modalTitle:{ fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
+  modalBody:{ padding: spacing.xxl, paddingBottom: 80 },
+  detailRow:{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: LUNA_COLORS.borderSubtle },
+  detailLabel:{ fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  detailValue:{ fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.darkest, textAlign: 'right', flex: 1, marginLeft: 8 },
+  editBtn:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.secondaryLight },
+  editBtnTxt:{ fontSize: fontSize.base, color: LUNA_COLORS.secondary, fontWeight: fontWeight.semibold },
+  dangerBtn:{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md, padding: spacing.lg, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: LUNA_COLORS.error, backgroundColor: LUNA_COLORS.errorLight },
+  dangerTxt:{ fontSize: fontSize.base, color: LUNA_COLORS.error, fontWeight: fontWeight.semibold },
+  fLabel:   { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textSecondary, marginBottom: 4, marginTop: spacing.md },
+  inp:      { backgroundColor: LUNA_COLORS.inputBg, borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, borderWidth: 1, borderColor: LUNA_COLORS.borderInput, minHeight: 52 },
+  errTxt:   { fontSize: fontSize.sm, color: LUNA_COLORS.error, marginTop: 4 },
+  overlay:  { flex: 1, backgroundColor: 'rgba(1,28,64,0.55)', justifyContent: 'center', padding: spacing.xl },
+  deleteCard:{ backgroundColor: LUNA_COLORS.surface, borderRadius: borderRadius.xl, padding: spacing.xxl, alignItems: 'center', gap: spacing.md },
+  deleteTitle:{ fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
+  deleteDesc:{ fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, textAlign: 'center' },
+  deleteActions:{ flexDirection: 'row', gap: spacing.md, width: '100%' },
+  cancelBtn:{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle, backgroundColor: LUNA_COLORS.surface },
+  cancelTxt:{ fontSize: fontSize.base, color: LUNA_COLORS.darkest, fontWeight: fontWeight.medium },
+  dangerBtn2:{ flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center', backgroundColor: LUNA_COLORS.error },
+  dangerTxt2:{ fontSize: fontSize.base, color: '#fff', fontWeight: fontWeight.bold },
 });

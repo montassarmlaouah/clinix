@@ -4,6 +4,7 @@ import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -496,63 +497,68 @@ export function AdminChambresScreen(): React.JSX.Element {
           <ActivityIndicator size="large" color={LUNA_COLORS.secondary} />
         </View>
       ) : (
-        <ScrollView
-          style={{ flex: 1 }}
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.flatList}
+          ListHeaderComponent={listHeader}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
-              onRefresh={() => {
-                setRefreshing(true);
-                void fetchAll();
-              }}
+              onRefresh={() => { setRefreshing(true); void fetchAll(); }}
               colors={[LUNA_COLORS.secondary]}
             />
           }
-        >
-          {listHeader}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={tbl.tableWrap}>
-              <View style={tbl.tableHeader}>
-                {COLS.map((c, i) => (
-                  <View
-                    key={c}
-                    style={{
-                      width: [COL.CHAMBRE, COL.SERVICE, COL.TYPE, COL.CAPACITE, COL.LITS, COL.STATUT, COL.ACTIONS][i],
-                    }}
-                  >
-                    <Text style={tbl.thText}>{c}</Text>
-                  </View>
-                ))}
-              </View>
-              {filtered.length === 0 ? (
-                <View style={tbl.emptyRow}>
-                  <Ionicons name="bed-outline" size={40} color={LUNA_COLORS.textDisabled} />
-                  <Text style={tbl.emptyText}>Aucune chambre trouvée</Text>
+          renderItem={({ item }) => {
+            const sc = statutConfigFromChambre(item);
+            return (
+              <Pressable
+                style={styles.chambreCard}
+                onPress={() => { setSelected(item); setModal('details'); }}
+              >
+                <View style={[styles.chambreIconBox, { backgroundColor: sc.bg }]}>
+                  <Ionicons name="bed-outline" size={22} color={sc.color} />
                 </View>
-              ) : (
-                filtered.map((item, idx) => (
-                  <ChambreTableRow
-                    key={item.id}
-                    item={item}
-                    alt={idx % 2 === 1}
-                    onView={() => {
-                      setSelected(item);
-                      setModal('details');
-                    }}
-                    onEdit={() => openEdit(item)}
-                    onDelete={() => {
-                      if (isChambreDisponible(item)) {
-                        setSelected(item);
-                        setModal('delete');
-                      }
-                    }}
-                  />
-                ))
-              )}
+                <View style={styles.chambreCardBody}>
+                  <View style={styles.chambreCardTop}>
+                    <Text style={styles.chambreNumero}>Chambre {item.numero}</Text>
+                    <View style={[styles.chambreStatut, { backgroundColor: sc.bg }]}>
+                      <Text style={[styles.chambreStatutTxt, { color: sc.color }]}>{sc.label}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.chambreMeta}>
+                    {TYPE_LABELS[item.type] ?? item.type}
+                    {item.service?.nom ? ` · ${item.service.nom}` : ''}
+                  </Text>
+                  <Text style={styles.chambreMeta}>
+                    Capacité : {item.capacite} · Lits : {item.nombreLits ?? '—'}
+                  </Text>
+                  {item.patient ? (
+                    <Text style={[styles.chambreMeta, { color: LUNA_COLORS.error }]}>
+                      Patient : {item.patient.prenom} {item.patient.nom}
+                    </Text>
+                  ) : null}
+                </View>
+                <View style={styles.chambreActions}>
+                  <Pressable hitSlop={8} onPress={() => openEdit(item)}>
+                    <Ionicons name="create-outline" size={20} color={LUNA_COLORS.secondary} />
+                  </Pressable>
+                  {isChambreDisponible(item) ? (
+                    <Pressable hitSlop={8} onPress={() => { setSelected(item); setModal('delete'); }}>
+                      <Ionicons name="trash-outline" size={20} color={LUNA_COLORS.error} />
+                    </Pressable>
+                  ) : null}
+                </View>
+              </Pressable>
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.chambreEmpty}>
+              <Ionicons name="bed-outline" size={48} color={LUNA_COLORS.textDisabled} />
+              <Text style={styles.chambreEmptyTxt}>Aucune chambre trouvée</Text>
             </View>
-          </ScrollView>
-          <View style={{ height: 100 }} />
-        </ScrollView>
+          }
+        />
       )}
 
       <LunaSuccessModal
@@ -1475,4 +1481,36 @@ const styles = StyleSheet.create({
   detailLabel: { fontSize: s(fontSize.sm), color: LUNA_COLORS.textSecondary },
   detailValue: { fontSize: s(fontSize.base), fontWeight: fontWeight.semibold, color: LUNA_COLORS.textPrimary },
   deleteMsg: { fontSize: s(fontSize.base), color: LUNA_COLORS.textPrimary, textAlign: 'center' },
+
+  // ── Cards FlatList ────────────────────────────────────────────────────────
+  flatList: { paddingHorizontal: spacing.lg, paddingBottom: 100 },
+  chambreCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LUNA_COLORS.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    gap: spacing.md,
+    ...(shadows.sm as object),
+  },
+  chambreIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  chambreCardBody: { flex: 1 },
+  chambreCardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  chambreNumero: { fontSize: fontSize.base, fontWeight: fontWeight.bold, color: LUNA_COLORS.darkest },
+  chambreStatut: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: borderRadius.full },
+  chambreStatutTxt: { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+  chambreMeta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
+  chambreActions: { gap: spacing.sm, alignItems: 'center' },
+  chambreEmpty: { alignItems: 'center', padding: spacing.xxxl, gap: spacing.md },
+  chambreEmptyTxt: { fontSize: fontSize.base, color: LUNA_COLORS.textSecondary },
 });
