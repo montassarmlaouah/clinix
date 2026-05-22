@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { PatientService } from '../service/patient-service';
 import { MedecinService } from '../service/medecin.service';
 import { AuthService } from '../service/auth-service';
@@ -33,6 +34,8 @@ export class PatientComponent implements OnInit {
   // Filtres
   searchTerm: string = '';
   selectedTypeAdmission: string = 'all';
+  /** clinique | cabinet — via ?scope= ou défaut selon le profil médecin */
+  scopeMode: 'clinique' | 'cabinet' = 'clinique';
 
   medecinsClinique: Medecin[] = [];
   selectedMedecinIds: string[] = [];
@@ -59,7 +62,8 @@ export class PatientComponent implements OnInit {
   constructor(
     private patientService: PatientService,
     private medecinService: MedecinService,
-    public auth: AuthService
+    public auth: AuthService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
@@ -71,13 +75,30 @@ export class PatientComponent implements OnInit {
           this.loadPatients();
         },
         error: () => {
-          // En cas d'erreur, on charge quand même la liste complète de la clinique
           this.loadPatients();
         }
       });
-    } else {
-      this.loadPatients();
+      return;
     }
+
+    this.route.queryParamMap.subscribe((params) => {
+      this.scopeMode = this.resolveScope(params.get('scope'));
+      this.loadPatients();
+    });
+  }
+
+  get isScopeCabinet(): boolean {
+    return this.scopeMode === 'cabinet';
+  }
+
+  private resolveScope(param: string | null): 'clinique' | 'cabinet' {
+    if (param === 'cabinet' || param === 'clinique') {
+      return param;
+    }
+    if (this.auth.isMedecinCabinetExclusif()) {
+      return 'cabinet';
+    }
+    return 'clinique';
   }
 
   loadPatients(): void {
@@ -124,7 +145,12 @@ export class PatientComponent implements OnInit {
       this.isLoading = false;
     };
 
-    if (this.auth.isMedecinCabinetExclusif() && this.auth.getUserId()) {
+    if (this.auth.isMedecin() && this.isScopeCabinet && this.auth.getUserId()) {
+      if (!this.auth.getAccesCabinet()) {
+        this.error = 'Accès cabinet non activé pour votre compte.';
+        this.isLoading = false;
+        return;
+      }
       this.medecinService.listerPatientsCabinet(this.auth.getUserId() as string).subscribe({
         next: handleSuccess,
         error: handleError
@@ -175,7 +201,7 @@ export class PatientComponent implements OnInit {
   }
 
   openModal(): void {
-    const isCab = this.auth.isMedecinCabinetExclusif();
+    const isCab = this.auth.isMedecin() && this.isScopeCabinet;
     this.selectedMedecinIds = [];
     this.medecinReferentId = '';
     this.newPatient = {
@@ -317,7 +343,7 @@ export class PatientComponent implements OnInit {
       this.medecinReferentId || this.selectedMedecinIds[0] || undefined;
 
     const userId = this.auth.getUserId();
-    if (this.auth.isMedecinCabinetExclusif() && userId) {
+    if (this.auth.isMedecin() && this.isScopeCabinet && userId) {
       const dto: PatientDTO = {
         ...this.newPatient,
         typeAdmission: this.newPatient.typeAdmission || 'CABINET'

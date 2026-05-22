@@ -33,6 +33,7 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 import { normalizeTelephoneDigits, toApiTelephone } from '@/src/utils/telephone';
+import { saveAndOpenPdfFromBase64 } from '@/src/utils/pdfDownload';
 
 type WizardStep = 1 | 2 | 3;
 
@@ -230,8 +231,16 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
 
   async function handleSubmit() {
     clearError();
-    if (modeEnvoi === 'PDF_CODE' && !email.trim()) {
-      setError('L\'e-mail est obligatoire pour le mode e-mail + PDF.');
+    if ((modeEnvoi === 'PDF_CODE' || modeEnvoi === 'EMAIL') && !email.trim()) {
+      setError(
+        modeEnvoi === 'EMAIL'
+          ? 'L\'e-mail est obligatoire pour l\'envoi par e-mail.'
+          : 'L\'e-mail est obligatoire pour le mode PDF (e-mail).',
+      );
+      return;
+    }
+    if ((modeEnvoi === 'PDF_CODE' || modeEnvoi === 'EMAIL') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError('L\'e-mail n\'est pas valide.');
       return;
     }
     if (!cliniqueId) {
@@ -267,8 +276,32 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
 
       const res = await personnelService.creer(payload);
       const msg = res.message ?? 'Personnel créé avec succès.';
+      const pdfName = res.pdfFileName ?? 'clinux-identifiants-clinix.pdf';
+
       if (res.pdfBase64) {
-        Alert.alert('Personnel créé', `${msg}\n\nUn PDF d'invitation a été généré (consultable depuis le web).`, [
+        const telecharger = async (): Promise<void> => {
+          try {
+            await saveAndOpenPdfFromBase64(res.pdfBase64!, pdfName);
+          } catch (err: unknown) {
+            const errMsg =
+              err && typeof err === 'object' && 'message' in err
+                ? String((err as { message: string }).message)
+                : 'Téléchargement impossible';
+            Alert.alert('PDF', errMsg);
+          }
+        };
+
+        if (modeEnvoi === 'PDF_ONLY' || modeEnvoi === 'PDF_CODE') {
+          await telecharger();
+        }
+
+        Alert.alert('Personnel créé', msg, [
+          {
+            text: 'Télécharger le PDF',
+            onPress: () => {
+              void telecharger();
+            },
+          },
           { text: 'OK', onPress: () => router.back() },
         ]);
       } else {
@@ -305,7 +338,7 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
           </View>
         ))}
         <Text style={styles.stepHint}>
-          {step === 1 ? 'CIN' : step === 2 ? 'Identité' : 'Envoi des identifiants'}
+          {step === 1 ? 'CIN' : step === 2 ? 'Téléphone · Nom · Prénom' : 'Envoi des identifiants'}
         </Text>
       </View>
 
@@ -342,7 +375,7 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
 
           {step === 2 ? (
             <>
-              <Text style={styles.section}>Identité et affectation</Text>
+              <Text style={styles.section}>Identité</Text>
 
               <View style={field.wrap}>
                 <Text style={field.label}>Rôle *</Text>
@@ -419,20 +452,15 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
                 </View>
               ) : null}
 
-              <Field
-                label="E-mail"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="optionnel"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
             </>
           ) : null}
 
           {step === 3 ? (
             <>
-              <Text style={styles.section}>Mode d&apos;envoi des identifiants</Text>
+              <Text style={styles.section}>Envoi des identifiants</Text>
+              <Text style={styles.stepDesc}>
+                TunisieSMS (SMS), e-mail, ou PDF joint (identifiants dans le PDF ; e-mail obligatoire).
+              </Text>
               {MODES_ENVOI.map((m) => (
                 <Pressable
                   key={m.value}
@@ -450,9 +478,25 @@ export function AdminAjouterPersonnelScreen(): React.JSX.Element {
                   </View>
                 </Pressable>
               ))}
+              {(modeEnvoi === 'PDF_CODE' || modeEnvoi === 'EMAIL') ? (
+                <Field
+                  label="E-mail du collaborateur"
+                  required
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="nom@exemple.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              ) : null}
               {modeEnvoi === 'PDF_CODE' ? (
                 <Text style={styles.modeNote}>
-                  L&apos;e-mail saisi à l&apos;étape précédente sera utilisé pour l&apos;envoi du PDF.
+                  Le PDF contient le téléphone et le mot de passe provisoire. L&apos;e-mail ci-dessus est obligatoire.
+                </Text>
+              ) : null}
+              {modeEnvoi === 'EMAIL' ? (
+                <Text style={styles.modeNote}>
+                  Les identifiants seront envoyés par e-mail au collaborateur.
                 </Text>
               ) : null}
             </>
@@ -587,6 +631,12 @@ const styles = StyleSheet.create({
   section: {
     ...typography.sectionTitle, // ✨ titre section HeroUI
     marginBottom: spacing.md,
+  },
+  stepDesc: {
+    fontSize: fontSize.sm,
+    color: LUNA_COLORS.textSecondary,
+    marginBottom: spacing.md,
+    lineHeight: 20,
   },
   subSection: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark, marginBottom: spacing.sm },
   errBox: {

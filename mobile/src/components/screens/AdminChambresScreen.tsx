@@ -52,7 +52,7 @@ const COL: Record<string, number> = {
 const COLS = ['CHAMBRE', 'SERVICE', 'TYPE', 'CAPACITÉ', 'LITS', 'STATUT', 'ACTIONS'] as const;
 
 type IonIcon = ComponentProps<typeof Ionicons>['name'];
-type TypeChambre = 'SIMPLE' | 'DOUBLE' | 'SUITE' | 'VIP' | 'SOINS_INTENSIFS' | 'REANIMATION' | 'URGENCE';
+type TypeChambre = 'SIMPLE' | 'DOUBLE' | 'SUITE' | 'REANIMATION' | 'URGENCE';
 interface ServiceMedical {
   id: number;
   nom: string;
@@ -94,8 +94,6 @@ const TYPE_LABELS: Record<string, string> = {
   SIMPLE: 'Simple',
   DOUBLE: 'Double',
   SUITE: 'Suite',
-  VIP: 'VIP',
-  SOINS_INTENSIFS: 'Soins intensifs',
   REANIMATION: 'Réanimation',
   URGENCE: 'Urgence',
 };
@@ -104,15 +102,13 @@ const FORM_TYPES: TypeChambre[] = [
   'SIMPLE',
   'DOUBLE',
   'SUITE',
-  'VIP',
-  'SOINS_INTENSIFS',
   'REANIMATION',
   'URGENCE',
 ];
 
 const createSchema = z.object({
   numero: z.string().min(1, 'Numéro requis'),
-  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'VIP', 'SOINS_INTENSIFS', 'REANIMATION', 'URGENCE']),
+  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'REANIMATION', 'URGENCE']),
   capacite: z.string().min(1, 'Capacité requise'),
   nombreLits: z.string().optional(),
   serviceId: z.string().optional(),
@@ -122,7 +118,7 @@ const bulkSchema = z.object({
   prefixe: z.string().optional(),
   debut: z.string().min(1, 'Requis'),
   fin: z.string().min(1, 'Requis'),
-  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'VIP', 'SOINS_INTENSIFS', 'REANIMATION', 'URGENCE']),
+  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'REANIMATION', 'URGENCE']),
   serviceId: z.string().optional(),
 });
 

@@ -66,6 +66,13 @@ export const MEDECINS = {
   PATIENTS_ADD: (medecinId: number | string)  => `${API}/medecins/${medecinId}/patients`,
   PATIENTS_LIST:(medecinId: number | string)  => `${API}/medecins/${medecinId}/patients`,
   CABINETS:     `${API}/medecins/cabinets`,
+  CABINETS_VERIFIER_CIN: (cin: string, telephone?: string) => {
+    let url = `${API}/medecins/cabinets/verifier-cin?cin=${encodeURIComponent(cin.trim())}`;
+    if (telephone?.trim()) {
+      url += `&telephone=${encodeURIComponent(telephone.trim())}`;
+    }
+    return url;
+  },
   CABINET_BY_ID:(id: number | string)         => `${API}/medecins/cabinets/${id}`,
 } as const;
 
@@ -395,10 +402,12 @@ export const CONGES_MEDECIN = {
 
 // ── Demandes opération ────────────────────────────────────────────────────────
 export const DEMANDES_OPERATION = {
-  CREATE:   `${API}/demandes-operation`,
-  LIST:     `${API}/demandes-operation`,
-  BY_ID:    (id: string | number) => `${API}/demandes-operation/${id}`,
-  STATUT:   (id: string | number) => `${API}/demandes-operation/${id}/statut`,
+  CREATE:        `${API}/demandes-operation`,
+  LIST:          `${API}/demandes-operation`,
+  BY_ID:         (id: string | number) => `${API}/demandes-operation/${id}`,
+  STATUT:        (id: string | number) => `${API}/demandes-operation/${id}/statut`,
+  PLAN:          (id: string | number) => `${API}/demandes-operation/${id}/plan`,
+  COMPTE_RENDU:  (id: string | number) => `${API}/demandes-operation/${id}/compte-rendu`,
 } as const;
 
 // ── Demandes médicament ───────────────────────────────────────────────────────
@@ -458,6 +467,7 @@ export const MAINTENANCES = {
 export const BILLING = {
   OFFRES:               `${API}/billing/offres`,
   OFFRES_ACTIVES:       `${API}/billing/offres/actives`,
+  OFFRES_ACTIVES_CABINET: `${API}/billing/offres/actives-cabinet`,
   CREATE_OFFRE:         `${API}/billing/offres`,
   UPDATE_OFFRE:         (id: string | number) => `${API}/billing/offres/${id}`,
   DELETE_OFFRE:         (id: string | number) => `${API}/billing/offres/${id}`,
@@ -513,6 +523,30 @@ export const FACTURATION_PATIENT = {
   VALIDER_PAIEMENT: (id: string | number) => `${API}/facturation-patient/${id}/valider-paiement`,
   TELETRANSMETTRE: (id: string | number) => `${API}/facturation-patient/${id}/teletransmettre`,
   PDF: (id: string | number) => `${API}/facturation-patient/${id}/pdf`,
+} as const;
+
+// ── SSPI (surveillance post-interventionnelle) ───────────────────────────────
+export const SSPI = {
+  POST_MESURE:  `${API}/sspi/mesures`,
+  GET_MESURES:  (operationId: string) => `${API}/sspi/mesures/${operationId}`,
+  POST_ALDRETE: `${API}/sspi/aldrete`,
+  GET_ALDRETE:  (operationId: string) => `${API}/sspi/aldrete/${operationId}`,
+} as const;
+
+// ── Check-list HAS ────────────────────────────────────────────────────────────
+export const CHECK_LIST = {
+  CREATE:       `${API}/check-lists`,
+  BY_OPERATION: (operationId: string) => `${API}/check-lists/${operationId}`,
+  UPDATE_ITEM:  (checkListId: string, itemId: string) =>
+    `${API}/check-lists/${checkListId}/items/${itemId}`,
+  VALIDER:      (checkListId: string) => `${API}/check-lists/${checkListId}/valider`,
+} as const;
+
+// ── Transmissions infirmières ─────────────────────────────────────────────────
+export const TRANSMISSIONS = {
+  CREATE:       `${API}/transmissions`,
+  BY_PATIENT:   (patientId: string) => `${API}/transmissions/patient/${patientId}`,
+  BY_INFIRMIER: (infirmierId: string) => `${API}/transmissions/infirmier/${infirmierId}`,
 } as const;
 
 // ── Re-exports groupés ────────────────────────────────────────────────────────

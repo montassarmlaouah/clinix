@@ -181,14 +181,88 @@
         <span *ngIf="!isSidebarCollapsed">Ordonnances</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/patients" routerLinkActive="active" class="nav-link">
+      <a
+        *ngIf="auth.isMedecin() && auth.hasMedecinClinique() && !auth.getAccesCabinet()"
+        routerLink="/patients"
+        routerLinkActive="active"
+        class="nav-link"
+      >
         <i class="bi bi-person-lines-fill"></i>
         <span *ngIf="!isSidebarCollapsed">Patients</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/rendez-vous" routerLinkActive="active" class="nav-link">
+      <a
+        *ngIf="auth.isMedecinCabinetExclusif()"
+        routerLink="/patients"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-person-lines-fill"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients cabinet</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.medecinCliniqueEtCabinet()"
+        routerLink="/patients"
+        [queryParams]="{ scope: 'clinique' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-person-lines-fill"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients clinique</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.medecinCliniqueEtCabinet()"
+        routerLink="/patients"
+        [queryParams]="{ scope: 'cabinet' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-person-badge"></i>
+        <span *ngIf="!isSidebarCollapsed">Patients cabinet</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.isMedecin() && auth.hasMedecinClinique() && !auth.getAccesCabinet()"
+        routerLink="/rendez-vous"
+        routerLinkActive="active"
+        class="nav-link"
+      >
         <i class="bi bi-calendar-check"></i>
         <span *ngIf="!isSidebarCollapsed">Rendez-vous</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.isMedecinCabinetExclusif()"
+        routerLink="/rendez-vous"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-calendar-check"></i>
+        <span *ngIf="!isSidebarCollapsed">Rendez-vous cabinet</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.medecinCliniqueEtCabinet()"
+        routerLink="/rendez-vous"
+        [queryParams]="{ scope: 'clinique' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-calendar-check"></i>
+        <span *ngIf="!isSidebarCollapsed">RDV clinique</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.medecinCliniqueEtCabinet()"
+        routerLink="/rendez-vous"
+        [queryParams]="{ scope: 'cabinet' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-calendar2-plus"></i>
+        <span *ngIf="!isSidebarCollapsed">RDV cabinet</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       <a routerLink="/conges-medecin" routerLinkActive="active" class="nav-link">
@@ -206,9 +280,25 @@
         <span *ngIf="!isSidebarCollapsed">Demandes Médicaments</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a *ngIf="auth.isMedecin()" routerLink="/mon-abonnement" routerLinkActive="active" class="nav-link">
+      <a
+        *ngIf="auth.isMedecin() && !auth.isMedecinCabinetExclusif()"
+        routerLink="/mon-abonnement"
+        routerLinkActive="active"
+        class="nav-link"
+      >
         <i class="bi bi-credit-card-2-front"></i>
         <span *ngIf="!isSidebarCollapsed">Mon abonnement</span>
+        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
+      </a>
+      <a
+        *ngIf="auth.isMedecinCabinetExclusif()"
+        routerLink="/mon-abonnement"
+        [queryParams]="{ scope: 'cabinet' }"
+        routerLinkActive="active"
+        class="nav-link"
+      >
+        <i class="bi bi-credit-card-2-front"></i>
+        <span *ngIf="!isSidebarCollapsed">Mon abonnement cabinet</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
       <a

@@ -27,11 +27,17 @@ public class CustomUserDetails implements UserDetails {
     private final String telephone;
     private final String cliniqueId;
     private final String role;
+    /** Médecin : accès activité cabinet (libéral ou rattaché clinique avec accesCabinet). */
+    private final boolean accesCabinet;
 
     /**
      * Constructeur pour les utilisateurs de type User (personnel, patient, admin clinique)
      */
     public CustomUserDetails(User user, String role, String cliniqueId) {
+        this(user, role, cliniqueId, false);
+    }
+
+    public CustomUserDetails(User user, String role, String cliniqueId, boolean accesCabinet) {
         this.username = user.getTelephone();
         this.password = user.getMotDePasse();
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
@@ -41,6 +47,7 @@ public class CustomUserDetails implements UserDetails {
         this.telephone = user.getTelephone();
         this.cliniqueId = cliniqueId;
         this.role = role;
+        this.accesCabinet = accesCabinet;
     }
 
     /**
@@ -56,6 +63,7 @@ public class CustomUserDetails implements UserDetails {
         this.telephone = null;
         this.cliniqueId = null;
         this.role = role;
+        this.accesCabinet = false;
     }
 
     @Override

@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 
 import { apiGet } from '@/src/api/client';
 import { BILLING } from '@/src/api/endpoints';
@@ -21,6 +22,8 @@ import { AbonnementPaiementScreen } from '@/src/components/screens/AbonnementPai
 import { AbonnementTarifsScreen } from '@/src/components/screens/AbonnementTarifsScreen';
 import { SegmentTabs } from '@/src/components/common';
 import { useAuthStore } from '@/src/store/auth.store';
+import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
+import { resolveBillingScope } from '@/src/utils/billingScope';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
@@ -48,30 +51,40 @@ function formatDate(iso?: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-function StatusTab(): React.JSX.Element {
-  const userId = useAuthStore((s) => s.userId);
-
-  const [status,     setStatus]     = useState<AbonnementStatus | null>(null);
-  const [offres,     setOffres]     = useState<Offre[]>([]);
-  const [loading,    setLoading]    = useState(true);
+function StatusTab({
+  onChangeTab,
+  explicitScope,
+}: {
+  onChangeTab: (s: SubscriptionStep) => void;
+  explicitScope?: 'clinique' | 'cabinet';
+}): React.JSX.Element {
+  const { status, loading, error, refetch } = useSubscriptionStatus(5 * 60 * 1000, explicitScope);
+  const estCabinet = useAuthStore((s) => s.estCabinet);
+  const accesCabinet = useAuthStore((s) => s.accesCabinet);
+  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const billingScope = resolveBillingScope(estCabinet, cliniqueId, explicitScope, accesCabinet);
+  const isCabinetBilling = billingScope === 'cabinet';
+  const [offres, setOffres] = useState<Offre[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  const loadOffres = useCallback(async () => {
     try {
-      const [statusData, offresData] = await Promise.all([
-        apiGet<AbonnementStatus>(BILLING.ABONNEMENT_COURANT).catch(() => null),
-        apiGet<Offre[]>(BILLING.OFFRES_ACTIVES).catch(() => []),
-      ]);
-      setStatus(statusData);
-      setOffres(Array.isArray(offresData) ? offresData : []);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [userId]);
+      const url = isCabinetBilling ? BILLING.OFFRES_ACTIVES_CABINET : BILLING.OFFRES_ACTIVES;
+      const data = await apiGet<Offre[]>(url).catch(() => []);
+      setOffres(Array.isArray(data) ? data : []);
+    } catch { /* ignore */ }
+  }, [isCabinetBilling]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadOffres(); }, [loadOffres]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    Promise.all([refetch(), loadOffres()]).finally(() => setRefreshing(false));
+  }, [refetch, loadOffres]);
+
+  const isActive = status?.accesAutorise === true || status?.statut === 'ACTIF';
+  const isExpired = status?.statut === 'EXPIRE' || status?.statut === 'IMPAYE';
+  const isGrace = isExpired && status?.dateFin ? new Date(status.dateFin) > new Date() : false;
 
   if (loading) {
     return (
@@ -87,7 +100,7 @@ function StatusTab(): React.JSX.Element {
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          onRefresh={() => { setRefreshing(true); load(true); }}
+          onRefresh={onRefresh}
           tintColor={LUNA_COLORS.secondary}
           colors={[LUNA_COLORS.secondary]}
         />
@@ -100,15 +113,17 @@ function StatusTab(): React.JSX.Element {
 
       {status ? (
         <View style={subStyles.statusCard}>
-          <View style={[subStyles.badge, status.actif ? subStyles.badgeActive : subStyles.badgeInactive]}>
-            <Text style={subStyles.badgeText}>{status.actif ? 'Actif' : 'Inactif'}</Text>
+          <View style={[subStyles.badge, isActive ? subStyles.badgeActive : isExpired ? subStyles.badgeWarning : subStyles.badgeInactive]}>
+            <Text style={subStyles.badgeText}>
+              {isActive ? '✅ Actif' : isExpired ? '⚠️ Expiré' : 'Inactif'}
+            </Text>
           </View>
           {status.offreNom ? <Text style={subStyles.offreName}>{status.offreNom}</Text> : null}
-          {status.dateDebut ? (
+          {(status.datePremierPaiement || status.dateDebut) ? (
             <View style={subStyles.row}>
               <Ionicons name="calendar-outline" size={16} color={LUNA_COLORS.textSecondary} />
-              <Text style={subStyles.rowLabel}>Début</Text>
-              <Text style={subStyles.rowValue}>{formatDate(status.dateDebut)}</Text>
+              <Text style={subStyles.rowLabel}>Premier paiement</Text>
+              <Text style={subStyles.rowValue}>{formatDate(status.datePremierPaiement ?? status.dateDebut)}</Text>
             </View>
           ) : null}
           {status.dateFin ? (
@@ -118,18 +133,21 @@ function StatusTab(): React.JSX.Element {
               <Text style={subStyles.rowValue}>{formatDate(status.dateFin)}</Text>
             </View>
           ) : null}
-          {status.joursRestants !== undefined && status.joursRestants !== null ? (
-            <View style={subStyles.daysRow}>
-              <Text style={subStyles.daysNum}>{status.joursRestants}</Text>
-              <Text style={subStyles.daysLabel}>jours restants</Text>
-            </View>
-          ) : null}
+          {isExpired && (
+            <Text style={subStyles.graceText}>
+              Période de grâce active. Les nouvelles créations sont bloquées, la consultation reste accessible.
+            </Text>
+          )}
         </View>
       ) : (
         <View style={subStyles.empty}>
           <Ionicons name="information-circle-outline" size={48} color={LUNA_COLORS.textSecondary} />
           <Text style={subStyles.emptyTitle}>Aucun abonnement actif</Text>
-          <Text style={subStyles.emptySub}>Souscrivez à une offre ci-dessous pour activer votre cabinet.</Text>
+          <Text style={subStyles.emptySub}>Souscrivez à une offre pour débloquer toutes les fonctionnalités.</Text>
+          <Pressable style={subStyles.souscrireBtn} onPress={() => onChangeTab('paiement')}>
+            <Ionicons name="card-outline" size={16} color={LUNA_COLORS.textInverse} />
+            <Text style={subStyles.souscireBtnTxt}>Aller au paiement</Text>
+          </Pressable>
         </View>
       )}
 
@@ -142,10 +160,14 @@ function StatusTab(): React.JSX.Element {
             <Text style={subStyles.offreNom}>{offre.nom}</Text>
             <Text style={subStyles.offrePrix}>{offre.prix} TND / {offre.dureeEnMois} mois</Text>
             {offre.description ? <Text style={subStyles.offreDesc}>{offre.description}</Text> : null}
-            <Pressable style={subStyles.souscrireBtn}>
-              <Ionicons name="checkmark-circle-outline" size={16} color={LUNA_COLORS.textInverse} />
-              <Text style={subStyles.souscireBtnTxt}>Souscrire</Text>
-            </Pressable>
+            {!isActive ? (
+              <Pressable style={subStyles.souscrireBtn} onPress={() => onChangeTab('tarifs')}>
+                <Ionicons name="checkmark-circle-outline" size={16} color={LUNA_COLORS.textInverse} />
+                <Text style={subStyles.souscireBtnTxt}>Souscrire</Text>
+              </Pressable>
+            ) : (
+              <Text style={subStyles.paidHint}>Forfait actif — aucun nouveau paiement requis.</Text>
+            )}
           </View>
         ))
       )}
@@ -166,11 +188,13 @@ const subStyles = StyleSheet.create({
   badge:        { alignSelf: 'flex-start', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   badgeActive:  { backgroundColor: LUNA_COLORS.successLight },
   badgeInactive:{ backgroundColor: LUNA_COLORS.errorLight },
+  badgeWarning: { backgroundColor: LUNA_COLORS.warningLight },
   badgeText:    { fontSize: fontSize.sm, fontWeight: fontWeight.bold },
   offreName:    { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
   row:          { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   rowLabel:     { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, width: 50 },
   rowValue:     { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: LUNA_COLORS.dark, flex: 1 },
+  graceText:    { fontSize: fontSize.sm, color: LUNA_COLORS.warning, marginTop: spacing.sm, fontWeight: fontWeight.medium },
   daysRow:      { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md },
   daysNum:      { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: LUNA_COLORS.secondary },
   daysLabel:    { fontSize: fontSize.base, color: LUNA_COLORS.textSecondary },
@@ -187,6 +211,7 @@ const subStyles = StyleSheet.create({
   offreNom:     { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.dark },
   offrePrix:    { fontSize: fontSize.sm, color: LUNA_COLORS.secondary, fontWeight: fontWeight.medium },
   offreDesc:    { fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary },
+  paidHint:     { fontSize: fontSize.sm, color: LUNA_COLORS.success, fontWeight: fontWeight.semibold, marginTop: spacing.sm },
   souscrireBtn: {
     flexDirection: 'row', minHeight: 48,
     alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
@@ -205,11 +230,16 @@ export interface SubscriptionScreenProps {
 
 export function SubscriptionScreen({ initialStep = 'status' }: SubscriptionScreenProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<SubscriptionStep>(initialStep);
+  const { scope: scopeParam } = useLocalSearchParams<{ scope?: string }>();
+  const explicitScope =
+    scopeParam === 'cabinet' || scopeParam === 'clinique' ? scopeParam : undefined;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: LUNA_COLORS.background }}>
       <View style={screenStyles.header}>
-        <Text style={screenStyles.title}>Abonnement</Text>
+        <Text style={screenStyles.title}>
+          {explicitScope === 'cabinet' ? 'Abonnement cabinet' : 'Abonnement'}
+        </Text>
         <Text style={screenStyles.sub}>Offres · Tarifs · Paiement</Text>
       </View>
       <SegmentTabs<SubscriptionStep>
@@ -222,7 +252,7 @@ export function SubscriptionScreen({ initialStep = 'status' }: SubscriptionScree
         onChange={setActiveTab}
         onDark={false}
       />
-      {activeTab === 'status'   ? <StatusTab />              : null}
+      {activeTab === 'status'   ? <StatusTab onChangeTab={setActiveTab} explicitScope={explicitScope} /> : null}
       {activeTab === 'tarifs'   ? <AbonnementTarifsScreen /> : null}
       {activeTab === 'paiement' ? <AbonnementPaiementScreen /> : null}
     </SafeAreaView>

@@ -22,6 +22,8 @@ export class AbonnementTarifsComponent implements OnInit {
   intervalSelection: 'MONTHLY' | 'YEARLY' = 'MONTHLY';
   /** cabinet = forfaits médecin ; clinique = forfaits établissement */
   billingScope: 'clinique' | 'cabinet' = 'clinique';
+  abonnementPaye = false;
+  loadingAbonnement = false;
 
   constructor(
     private abonnementService: AbonnementService,
@@ -34,14 +36,12 @@ export class AbonnementTarifsComponent implements OnInit {
     const qScope = (this.route.snapshot.queryParamMap.get('scope') || '').toLowerCase();
     if (qScope === 'cabinet') {
       this.billingScope = 'cabinet';
-    } else if (this.auth.isMedecinCabinetExclusif() || this.auth.peutGererAbonnementCabinet()) {
-      this.billingScope = qScope === 'clinique' && this.auth.hasMedecinClinique() ? 'clinique' : 'cabinet';
+    } else if (qScope === 'clinique') {
+      this.billingScope = 'clinique';
+    } else if (this.auth.isMedecinCabinetExclusif()) {
+      this.billingScope = 'cabinet';
     } else {
       this.billingScope = 'clinique';
-    }
-
-    if (this.auth.isMedecinCabinetExclusif()) {
-      this.billingScope = 'cabinet';
     }
 
     const load$ =
@@ -61,10 +61,30 @@ export class AbonnementTarifsComponent implements OnInit {
       next: (list) => {
         this.offres = (list || []).filter((o) => o.actif !== false);
         this.loading = false;
+        this.verifierAbonnementExistant();
       },
       error: () => {
         this.error = 'Impossible de charger les forfaits.';
         this.loading = false;
+      },
+    });
+  }
+
+  private verifierAbonnementExistant(): void {
+    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    this.loadingAbonnement = true;
+    this.abonnementService.getCurrentSubscription(scope).subscribe({
+      next: (cur) => {
+        this.abonnementPaye = cur?.accesAutorise === true;
+        this.loadingAbonnement = false;
+        if (this.abonnementPaye) {
+          this.simSuccess =
+            'Vous avez déjà un abonnement actif et payé. Aucun nouveau paiement n\'est nécessaire.';
+        }
+      },
+      error: () => {
+        this.abonnementPaye = false;
+        this.loadingAbonnement = false;
       },
     });
   }
@@ -82,6 +102,10 @@ export class AbonnementTarifsComponent implements OnInit {
   }
 
   choisirForfait(o: OffreAbonnement): void {
+    if (this.abonnementPaye) {
+      this.error = 'Abonnement déjà payé pour la période en cours.';
+      return;
+    }
     this.router.navigate(['/abonnement-paiement'], {
       queryParams: {
         offreId: o.id,
@@ -108,6 +132,10 @@ export class AbonnementTarifsComponent implements OnInit {
 
   simulerSansStripe(o: OffreAbonnement, ev: Event): void {
     ev.stopPropagation();
+    if (this.abonnementPaye) {
+      this.error = 'Abonnement déjà payé pour la période en cours.';
+      return;
+    }
     this.error = '';
     this.simSuccess = '';
     this.simulatingId = o.id;

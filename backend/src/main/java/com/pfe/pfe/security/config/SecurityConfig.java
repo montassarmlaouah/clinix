@@ -17,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import com.pfe.pfe.billing.SubscriptionAccessFilter;
 import com.pfe.pfe.security.PublicWebUiGetMatcher;
 import com.pfe.pfe.security.services.AppUserDetailsService;
 import com.pfe.pfe.security.tokenisation.JwtFilter;
@@ -29,11 +30,14 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
+    private final SubscriptionAccessFilter subscriptionAccessFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
     @Autowired
-    public SecurityConfig(JwtFilter jwtFilter, CorsConfigurationSource corsConfigurationSource) {
+    public SecurityConfig(JwtFilter jwtFilter, SubscriptionAccessFilter subscriptionAccessFilter,
+            CorsConfigurationSource corsConfigurationSource) {
         this.jwtFilter = jwtFilter;
+        this.subscriptionAccessFilter = subscriptionAccessFilter;
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -186,6 +190,7 @@ public class SecurityConfig {
         );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(subscriptionAccessFilter, JwtFilter.class);
         return http.build();
     }
 }

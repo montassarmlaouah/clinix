@@ -56,12 +56,9 @@ export function MedecinNotesHubScreen(): React.JSX.Element {
     setError('');
     setSuccess('');
     try {
-      const dossier = await apiGet<{ id: string }>(DOSSIERS.BY_PATIENT(selectedId));
+      const dossier = await apiGet<{ id: string; notesConfidentielles?: string }>(DOSSIERS.BY_PATIENT(selectedId));
       setDossierId(dossier.id);
-      const n = await apiGet<{ notesConfidentielles?: string }>(
-        DOSSIERS.NOTES_CONF(dossier.id),
-      );
-      setNotes(n.notesConfidentielles ?? '');
+      setNotes(dossier.notesConfidentielles ?? '');
     } catch {
       setDossierId(null);
       setError('Dossier introuvable ou accès refusé.');

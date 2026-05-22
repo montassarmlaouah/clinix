@@ -668,8 +668,8 @@ function SubCard({ sub, initials, showDate }: any) {
       <View style={{ flex: 1 }}>
         <Text style={styles.subNom}>{sub.cliniqueNom}</Text>
         <Text style={styles.subOffre}>{sub.offreNom}</Text>
-        {showDate && sub.dateDebut && (
-          <Text style={styles.subDate}>{sub.dateDebut} → {sub.dateFin}</Text>
+        {showDate && (sub.datePremierPaiement || sub.dateDebut) && (
+          <Text style={styles.subDate}>{sub.datePremierPaiement ?? sub.dateDebut} → {sub.dateFin}</Text>
         )}
       </View>
       <View style={styles.subMontantWrap}>

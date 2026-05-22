@@ -1,5 +1,6 @@
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -13,8 +14,13 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-export function DemandesMedicamentListScreen(): React.JSX.Element {
-  const cliniqueId = useAuthStore((s) => s.cliniqueId);
+interface Props {
+  createRoute?: string;
+}
+
+export function DemandesMedicamentListScreen({ createRoute }: Props): React.JSX.Element {
+  const router = useRouter();
+  const userId = useAuthStore((s) => s.userId);
   const [liste, setListe] = useState<DemandeMedicamentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,15 +28,14 @@ export function DemandesMedicamentListScreen(): React.JSX.Element {
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const data = await demandesMedicamentService.list(
-        cliniqueId ? `cliniqueId=${cliniqueId}` : undefined,
-      );
+      const query = userId ? `demandeurId=${userId}` : undefined;
+      const data = await demandesMedicamentService.list(query);
       setListe(data ?? []);
     } catch { setListe([]); } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [cliniqueId]);
+  }, [userId]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -39,6 +44,11 @@ export function DemandesMedicamentListScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.safe}>
       <ScreenHeader title="Demandes médicament" subtitle={`${liste.length} demande(s)`} />
+      {createRoute ? (
+        <Pressable style={styles.createBtn} onPress={() => router.push(createRoute as never)}>
+          <Text style={styles.createBtnText}>+ Nouvelle demande</Text>
+        </Pressable>
+      ) : null}
       <FlatList
         data={liste}
         keyExtractor={(item) => String(item.id)}
@@ -69,9 +79,18 @@ export function DemandesMedicamentListScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.xxl, paddingBottom: 80 }, // ✨ espace tab bar
+  createBtn: {
+    margin: spacing.lg,
+    backgroundColor: LUNA_COLORS.secondary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    ...(shadows.sm as object),
+  },
+  createBtnText: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.bold },
+  list: { padding: spacing.xxl, paddingBottom: 80 },
   card: {
-    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
+    backgroundColor: LUNA_COLORS.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: LUNA_COLORS.borderSubtle,

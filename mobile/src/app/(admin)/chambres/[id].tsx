@@ -18,7 +18,7 @@ import { spacing, borderRadius, shadows } from '@/src/theme/spacing';
 import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type TypeChambre = 'SIMPLE' | 'DOUBLE' | 'SUITE' | 'VIP' | 'SOINS_INTENSIFS' | 'REANIMATION' | 'URGENCE';
+type TypeChambre = 'SIMPLE' | 'DOUBLE' | 'SUITE' | 'REANIMATION' | 'URGENCE';
 type StatutChambre = 'DISPONIBLE' | 'OCCUPEE' | 'EN_MAINTENANCE';
 
 interface ServiceMedical { id: number; nom: string; }
@@ -37,7 +37,7 @@ interface Chambre {
 
 const editSchema = z.object({
   numero: z.string().min(1, 'Numéro requis'),
-  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'VIP', 'SOINS_INTENSIFS', 'REANIMATION', 'URGENCE']),
+  type: z.enum(['SIMPLE', 'DOUBLE', 'SUITE', 'REANIMATION', 'URGENCE']),
   capacite: z.string().min(1, 'Capacité requise'),
   nombreLits: z.string().optional(),
   serviceId: z.string().optional(),
@@ -101,7 +101,7 @@ export default function ChambreDetailScreen(): React.JSX.Element {
         type: data.type,
         capacite: parseInt(data.capacite) || 1,
         nombreLits: data.nombreLits ? parseInt(data.nombreLits) : undefined,
-        serviceId: data.serviceId ? Number(data.serviceId) : undefined,
+        serviceId: data.serviceId || undefined,
         cliniqueId: String(cliniqueId),
       });
       await fetchData();
@@ -260,7 +260,7 @@ export default function ChambreDetailScreen(): React.JSX.Element {
               <Text style={styles.fLabel}>Type *</Text>
               <Controller control={control} name="type" render={({ field: { value, onChange } }) => (
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-                  {(['SIMPLE', 'DOUBLE', 'SUITE', 'VIP', 'SOINS_INTENSIFS', 'REANIMATION', 'URGENCE'] as TypeChambre[]).map(t => (
+                  {(['SIMPLE', 'DOUBLE', 'SUITE', 'REANIMATION', 'URGENCE'] as TypeChambre[]).map(t => (
                     <TouchableOpacity key={t} style={[styles.typeChip, value === t && styles.typeChipActive]} onPress={() => onChange(t)}>
                       <Text style={[styles.typeChipText, value === t && styles.typeChipTextActive]}>{t}</Text>
                     </TouchableOpacity>

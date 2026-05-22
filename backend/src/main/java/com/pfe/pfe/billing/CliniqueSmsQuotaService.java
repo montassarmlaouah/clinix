@@ -12,7 +12,6 @@ import org.springframework.util.StringUtils;
 import com.pfe.pfe.model.AbonnementClinique;
 import com.pfe.pfe.model.HistoriqueSms;
 import com.pfe.pfe.model.OffreAbonnement;
-import com.pfe.pfe.repository.AbonnementCliniqueRepository;
 import com.pfe.pfe.repository.HistoriqueSmsRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,11 +24,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CliniqueSmsQuotaService {
 
-    private static final String STATUT_ACTIF = "ACTIF";
-    private static final String SMS_SENT = "SENT";
-
-    private final AbonnementCliniqueRepository abonnementRepository;
     private final HistoriqueSmsRepository historiqueSmsRepository;
+    private final SubscriptionAccessService subscriptionAccessService;
 
     public record SmsQuotaStatus(
             boolean autorise,
@@ -51,7 +47,7 @@ public class CliniqueSmsQuotaService {
             return new SmsQuotaStatus(true, "Pas de quota (envoi global).", -1, 0, -1, null, null, null);
         }
 
-        Optional<AbonnementClinique> aboOpt = findAbonnementActif(cliniqueId);
+        Optional<AbonnementClinique> aboOpt = subscriptionAccessService.findActiveCliniqueSubscription(cliniqueId);
         if (aboOpt.isEmpty()) {
             return new SmsQuotaStatus(
                     false,
@@ -101,11 +97,4 @@ public class CliniqueSmsQuotaService {
         historiqueSmsRepository.save(h);
     }
 
-    private Optional<AbonnementClinique> findAbonnementActif(String cliniqueId) {
-        LocalDate today = LocalDate.now();
-        return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream()
-                .filter(a -> STATUT_ACTIF.equalsIgnoreCase(a.getStatut()))
-                .filter(a -> a.getDateFin() != null && !a.getDateFin().isBefore(today))
-                .findFirst();
-    }
 }

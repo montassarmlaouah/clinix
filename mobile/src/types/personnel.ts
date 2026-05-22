@@ -83,7 +83,8 @@ export const SPECIALITES_MEDICALES = [
 ];
 
 export const MODES_ENVOI: { value: ModeEnvoiCredentials; label: string; hint: string }[] = [
-  { value: 'TUNISIE_SMS', label: 'SMS Tunisie', hint: 'Mot de passe envoyé par SMS' },
-  { value: 'PDF_CODE', label: 'E-mail + PDF', hint: 'PDF avec code d\'activation par e-mail' },
-  { value: 'PDF_ONLY', label: 'PDF seul', hint: 'Télécharger le PDF d\'invitation' },
+  { value: 'TUNISIE_SMS', label: 'TunisieSMS', hint: 'Mot de passe provisoire envoyé par SMS' },
+  { value: 'EMAIL', label: 'E-mail', hint: 'Identifiants dans le message de bienvenue' },
+  { value: 'PDF_CODE', label: 'PDF (e-mail)', hint: 'PDF joint — identifiants dans le fichier ; e-mail obligatoire' },
+  { value: 'PDF_ONLY', label: 'PDF seul', hint: 'Télécharger le PDF après création (sans envoi)' },
 ];

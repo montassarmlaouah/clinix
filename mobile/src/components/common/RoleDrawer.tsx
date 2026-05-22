@@ -32,12 +32,13 @@ export function RoleDrawer(): React.JSX.Element {
   const prenom = useAuthStore((s) => s.prenom);
   const nom = useAuthStore((s) => s.nom);
   const estCabinet = useAuthStore((s) => s.estCabinet);
+  const accesCabinet = useAuthStore((s) => s.accesCabinet);
   const cliniqueNom = useCliniqueNom();
 
   const userName = [prenom, nom].filter(Boolean).join(' ').trim() || 'Utilisateur';
   const roleLabel = role ? (roleLabels[role] ?? role.replace('ROLE_', '')) : '';
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
-  const items = getRoleMenu(role, { estCabinet, cliniqueId }).filter(
+  const items = getRoleMenu(role, { estCabinet, accesCabinet, cliniqueId }).filter(
     (i) => !i.route.endsWith('/menu') && !i.label.toLowerCase().includes('profil'),
   );
 

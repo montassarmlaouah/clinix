@@ -77,7 +77,7 @@ export class Employes implements OnInit {
   resultatsRechercheMedecin: Array<Record<string, unknown>> = [];
   rechercheMedecinLoading = false;
 
-  /** Assistant modal : 1 = CIN, 2 = identité (nom, téléphone…), 3 = mode d’envoi (SMS / e-mail+PDF / PDF seul) */
+  /** Assistant modal : 1 = CIN, 2 = identité (nom, prénom, téléphone), 3 = envoi identifiants */
   modalStep: 1 | 2 | 3 = 1;
 
   /** PDF renvoyé par l’API après création (mode E-mail + PDF) — aperçu / téléchargement */
@@ -491,6 +491,11 @@ export class Employes implements OnInit {
     this.telechargerPdfBase64(this.pdfInvitationBase64, this.pdfInvitationFileName);
   }
 
+  fermerBandeauPdf(): void {
+    this.pdfInvitationBase64 = null;
+    this.success = '';
+  }
+
   wizardSuivant(): void {
     this.error = '';
     const rattachementMedecin =
@@ -578,7 +583,8 @@ export class Employes implements OnInit {
     }
     this.rechercheMedecinLoading = true;
     this.error = '';
-    this.personnelService.rechercherMedecinsRattachement(q).subscribe({
+    const cin = this.nouveauPersonnel.numeroPieceIdentite?.trim();
+    this.personnelService.rechercherMedecinsRattachement(q, cin || undefined).subscribe({
       next: (rows) => {
         this.resultatsRechercheMedecin = rows || [];
         this.rechercheMedecinLoading = false;
@@ -671,9 +677,18 @@ export class Employes implements OnInit {
       return;
     }
 
-    if (mode === 'PDF_CODE' && !this.nouveauPersonnel.email?.trim()) {
-      this.error = 'L\'e-mail est obligatoire pour le mode e-mail + PDF.';
+    if ((mode === 'PDF_CODE' || mode === 'EMAIL') && !this.nouveauPersonnel.email?.trim()) {
+      this.error = mode === 'EMAIL'
+        ? 'L\'e-mail est obligatoire pour l\'envoi par e-mail.'
+        : 'L\'e-mail est obligatoire pour le mode e-mail + PDF.';
       return;
+    }
+    if (mode === 'EMAIL' || mode === 'PDF_CODE') {
+      const mail = this.nouveauPersonnel.email?.trim() ?? '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) {
+        this.error = 'L\'e-mail du collaborateur n\'est pas valide.';
+        return;
+      }
     }
     if (mode === 'PDF_CODE') {
       const copie = this.nouveauPersonnel.emailCopieInvitation?.trim();
@@ -740,12 +755,17 @@ export class Employes implements OnInit {
       delete payload.profilInvitationMinimal;
     }
 
+    const modeEnvoi = this.nouveauPersonnel.modeEnvoiCredentials;
+
     this.personnelService.creerPersonnel(payload).subscribe({
       next: (response) => {
         this.success = response.message || 'Personnel créé avec succès !';
         if (response.pdfBase64) {
           this.pdfInvitationBase64 = response.pdfBase64;
           this.pdfInvitationFileName = response.pdfFileName || 'clinux-identifiants-clinix.pdf';
+          if (modeEnvoi === 'PDF_ONLY' || modeEnvoi === 'PDF_CODE') {
+            setTimeout(() => this.telechargerPdfInvitation(), 400);
+          }
         } else {
           this.pdfInvitationBase64 = null;
         }
@@ -762,10 +782,10 @@ export class Employes implements OnInit {
           case 'TECHNICIEN_MAINTENANCE': this.chargerTechniciensMaintenance(); break;
         }
 
-        setTimeout(() => {
-          this.fermerModal();
-          this.success = '';
-        }, response.pdfBase64 ? 3500 : 2000);
+        this.fermerModal();
+        if (!response.pdfBase64) {
+          setTimeout(() => (this.success = ''), 4000);
+        }
       },
       error: (err) => {
         this.error = err.error?.message || 'Erreur lors de la création';

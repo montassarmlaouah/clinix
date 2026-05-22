@@ -24,7 +24,7 @@ import { apiGet, apiPatch, apiPost } from '@/src/api/client';
 import { MEDECINS, PATIENTS, RDV } from '@/src/api/endpoints';
 import { Badge, EmptyState, SegmentTabs } from '@/src/components/common';
 import type { BadgeColor } from '@/src/components/common';
-import { hasMedecinClinique } from '@/src/utils/medecinContext';
+import { hasMedecinClinique, isMedecinCabinet } from '@/src/utils/medecinContext';
 import { useAuthStore } from '@/src/store/auth.store';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
@@ -323,9 +323,13 @@ const sheetStyles = StyleSheet.create({
 });
 
 // ── Tab 2 : Gestion des rendez-vous ──────────────────────────────────────────
-function RendezVousTab(): React.JSX.Element {
+function RendezVousTab({ scope }: { scope?: 'clinique' | 'cabinet' }): React.JSX.Element {
   const userId     = useAuthStore((s) => s.userId);
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
+  const estCabinet = useAuthStore((s) => s.estCabinet);
+
+  const isCabinetScope = scope === 'cabinet'
+    || (scope !== 'clinique' && isMedecinCabinet(estCabinet, cliniqueId) && !hasMedecinClinique(cliniqueId));
 
   const [items,          setItems]        = useState<RdvItem[]>([]);
   const [loading,        setLoading]      = useState(true);
@@ -346,9 +350,11 @@ function RendezVousTab(): React.JSX.Element {
     if (!silent) setLoading(true);
     setError(null);
     try {
-      const url = hasMedecinClinique(cliniqueId)
-        ? RDV.BY_MEDECIN_CLINIQUE(userId, cliniqueId!)
-        : RDV.BY_MEDECIN(userId);
+      const url = isCabinetScope
+        ? RDV.BY_MEDECIN_CABINET(userId)
+        : hasMedecinClinique(cliniqueId)
+          ? RDV.BY_MEDECIN_CLINIQUE(userId, cliniqueId!)
+          : RDV.BY_MEDECIN(userId);
       const data = await apiGet<RdvItem[]>(url);
       setItems((data ?? []).sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime()));
     } catch (e: any) {
@@ -357,7 +363,7 @@ function RendezVousTab(): React.JSX.Element {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [userId, cliniqueId]);
+  }, [userId, cliniqueId, isCabinetScope]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -367,9 +373,11 @@ function RendezVousTab(): React.JSX.Element {
     let cancelled = false;
     const fetch = async () => {
       try {
-        const source = hasMedecinClinique(cliniqueId)
-          ? await apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId!))
-          : await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(userId!));
+        const source = isCabinetScope
+          ? await apiGet<Patient[]>(`${MEDECINS.PATIENTS_LIST(userId!)}?scope=cabinet`)
+          : hasMedecinClinique(cliniqueId)
+            ? await apiGet<Patient[]>(PATIENTS.BY_CLINIQUE(cliniqueId!))
+            : await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(userId!));
         if (!cancelled) {
           const kw = patientSearch.toLowerCase();
           setPatientsSugg(
@@ -382,7 +390,7 @@ function RendezVousTab(): React.JSX.Element {
     };
     void fetch();
     return () => { cancelled = true; };
-  }, [patientSearch, cliniqueId, userId]);
+  }, [patientSearch, cliniqueId, userId, isCabinetScope]);
 
   async function handleConfirmer(id: string | number) {
     try { await apiPatch(RDV.CONFIRMER_MEDECIN(id), {}); void load(true); } catch { /* ignore */ }
@@ -621,15 +629,18 @@ const rdvStyles = StyleSheet.create({
 export interface AgendaScreenProps {
   /** Onglet ouvert par défaut */
   initialTab?: 'planning' | 'rdv';
+  /** Scope clinique ou cabinet pour les RDV */
+  scope?: 'clinique' | 'cabinet';
 }
 
-export function AgendaScreen({ initialTab = 'planning' }: AgendaScreenProps): React.JSX.Element {
+export function AgendaScreen({ initialTab = 'planning', scope }: AgendaScreenProps): React.JSX.Element {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const title = scope === 'cabinet' ? 'Rendez-vous cabinet' : scope === 'clinique' ? 'Rendez-vous clinique' : 'Agenda';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: LUNA_COLORS.background }}>
       <View style={agendaStyles.header}>
-        <Text style={agendaStyles.title}>Agenda</Text>
+        <Text style={agendaStyles.title}>{title}</Text>
         <Text style={agendaStyles.sub}>Planning & rendez-vous</Text>
       </View>
       <SegmentTabs<'planning' | 'rdv'>
@@ -641,7 +652,7 @@ export function AgendaScreen({ initialTab = 'planning' }: AgendaScreenProps): Re
         onChange={setActiveTab}
         onDark={false}
       />
-      {activeTab === 'planning' ? <PlanningTab /> : <RendezVousTab />}
+      {activeTab === 'planning' ? <PlanningTab /> : <RendezVousTab scope={scope} />}
     </SafeAreaView>
   );
 }

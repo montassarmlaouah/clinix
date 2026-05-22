@@ -52,6 +52,7 @@ interface LoginResponse {
     cliniqueId?: number | null;
     cliniqueNom?: string | null;
     estCabinet?: boolean;
+    accesCabinet?: boolean;
   };
 }
 
@@ -108,7 +109,14 @@ export default function LoginScreen(): React.JSX.Element {
         data.user?.cliniqueId ?? decodedJwt?.cliniqueId ?? null;
       const cliniqueNom =
         data.user?.cliniqueNom ?? decodedJwt?.cliniqueNom ?? null;
-      const estCabinet = !!(data.user?.estCabinet);
+      const accesCabinet =
+        !!(data.user?.accesCabinet) ||
+        !!(decodedJwt?.accesCabinet);
+      const estCabinet =
+        !!(data.user?.estCabinet) ||
+        accesCabinet ||
+        (String(role ?? '').includes('MEDECIN') &&
+          (cliniqueId == null || cliniqueId === '' || cliniqueId === 'null'));
 
       // ── Sauvegarde dans le store Zustand (persiste automatiquement) ───────
       setAuth({
@@ -120,6 +128,7 @@ export default function LoginScreen(): React.JSX.Element {
         nom,
         prenom,
         estCabinet,
+        accesCabinet,
       });
 
       // ── Mapping rôle → route ────────────────────────────────────

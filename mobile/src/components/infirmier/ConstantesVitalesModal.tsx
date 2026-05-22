@@ -13,18 +13,25 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/src/components/common';
+import {
+  CONSTANTE_FIELDS,
+  getConstanteStatut,
+} from '@/src/hooks/useConstantesValidation';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
+/** Noms de champs alignés avec l'API backend */
 export interface ConstantesVitales {
-  tensionSystolique?: number;
+  tensionSystolique?:  number;
   tensionDiastolique?: number;
-  pouls?: number;
-  temperature?: number;
-  spo2?: number;
-  douleurEVA?: number;
-  observations?: string;
+  /** Ex-"pouls" — aligné sur le backend */
+  frequenceCardiaque?: number;
+  temperature?:        number;
+  /** Ex-"spo2" — aligné sur le backend */
+  saturationOxygene?:  number;
+  douleurEVA?:         number;
+  observations?:       string;
 }
 
 interface Props {
@@ -34,21 +41,14 @@ interface Props {
   loading?: boolean;
 }
 
-// Plages normales pour le coloriage des champs
-const RANGES: Record<string, { min: number; max: number }> = {
-  tensionSystolique: { min: 90, max: 140 },
-  tensionDiastolique: { min: 60, max: 90 },
-  pouls: { min: 60, max: 100 },
-  temperature: { min: 36.0, max: 37.5 },
-  spo2: { min: 95, max: 100 },
-};
-
 function getFieldColor(key: string, value: string | undefined): string {
-  if (!value || !RANGES[key]) return LUNA_COLORS.borderDark;
-  const num = parseFloat(value);
-  if (isNaN(num)) return LUNA_COLORS.borderDark;
-  const { min, max } = RANGES[key];
-  return num < min || num > max ? LUNA_COLORS.error : LUNA_COLORS.success;
+  const field = CONSTANTE_FIELDS.find((f) => f.key === key);
+  if (!field || !value) return LUNA_COLORS.borderDark;
+  const statut = getConstanteStatut(value, field);
+  if (statut === 'normal')    return LUNA_COLORS.success;
+  if (statut === 'attention') return LUNA_COLORS.warning;
+  if (statut === 'alerte')    return LUNA_COLORS.error;
+  return LUNA_COLORS.borderDark;
 }
 
 export function ConstantesVitalesModal({ visible, onClose, onSubmit, loading }: Props) {
@@ -58,25 +58,27 @@ export function ConstantesVitalesModal({ visible, onClose, onSubmit, loading }: 
     setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = () => {
+    const parse = (k: string, decimal?: boolean) =>
+      form[k] ? (decimal ? parseFloat(form[k]) : parseInt(form[k])) : undefined;
     const data: ConstantesVitales = {
-      tensionSystolique: form.tensionSystolique ? parseInt(form.tensionSystolique) : undefined,
-      tensionDiastolique: form.tensionDiastolique ? parseInt(form.tensionDiastolique) : undefined,
-      pouls: form.pouls ? parseInt(form.pouls) : undefined,
-      temperature: form.temperature ? parseFloat(form.temperature) : undefined,
-      spo2: form.spo2 ? parseInt(form.spo2) : undefined,
-      douleurEVA: form.douleurEVA ? parseInt(form.douleurEVA) : undefined,
-      observations: form.observations?.trim() || undefined,
+      tensionSystolique:  parse('tensionSystolique'),
+      tensionDiastolique: parse('tensionDiastolique'),
+      frequenceCardiaque: parse('frequenceCardiaque'),
+      temperature:        parse('temperature', true),
+      saturationOxygene:  parse('saturationOxygene'),
+      douleurEVA:         parse('douleurEVA'),
+      observations:       form.observations?.trim() || undefined,
     };
     onSubmit(data);
     setForm({});
   };
 
-  const fields: Array<{ key: keyof typeof RANGES; label: string; unit: string; decimal?: boolean }> = [
-    { key: 'tensionSystolique', label: 'TA systolique', unit: 'mmHg' },
-    { key: 'tensionDiastolique', label: 'TA diastolique', unit: 'mmHg' },
-    { key: 'pouls', label: 'Fréquence cardiaque', unit: 'bpm' },
-    { key: 'temperature', label: 'Température', unit: '°C', decimal: true },
-    { key: 'spo2', label: 'SpO₂', unit: '%' },
+  const fields: Array<{ key: string; label: string; unit: string; decimal?: boolean }> = [
+    { key: 'tensionSystolique',  label: 'TA systolique',       unit: 'mmHg' },
+    { key: 'tensionDiastolique', label: 'TA diastolique',      unit: 'mmHg' },
+    { key: 'frequenceCardiaque', label: 'Fréquence cardiaque', unit: 'bpm'  },
+    { key: 'temperature',        label: 'Température',         unit: '°C',  decimal: true },
+    { key: 'saturationOxygene',  label: 'SpO₂',                unit: '%'   },
   ];
 
   return (

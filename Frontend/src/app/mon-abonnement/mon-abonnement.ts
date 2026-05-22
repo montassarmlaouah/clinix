@@ -77,6 +77,10 @@ export class MonAbonnementComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const qScope = this.route.snapshot.queryParamMap.get('scope');
+    if (qScope === 'cabinet' || qScope === 'clinique') {
+      this.vueScope = qScope;
+    }
     const checkout = this.route.snapshot.queryParamMap.get('checkout');
     this.checkoutSuccesStripe = checkout === 'success';
     if (checkout === 'success') {
@@ -131,10 +135,12 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   private initVueScope(): void {
+    const qScope = this.route.snapshot.queryParamMap.get('scope');
+    if (qScope === 'cabinet' || qScope === 'clinique') {
+      return;
+    }
     if (this.authService.isMedecinCabinetExclusif()) {
       this.vueScope = 'cabinet';
-    } else if (this.authService.hasMedecinClinique() && this.authService.isMedecin()) {
-      this.vueScope = 'clinique';
     } else {
       this.vueScope = 'clinique';
     }
@@ -194,9 +200,9 @@ export class MonAbonnementComponent implements OnInit {
     );
   }
 
-  /** Médecin avec clinique + cabinet : onglets clinique / cabinet. */
+  /** Médecin avec clinique + accès cabinet : onglets clinique / cabinet. */
   get medecinDoubleContexte(): boolean {
-    return this.authService.isMedecin() && this.authService.hasMedecinClinique();
+    return this.authService.medecinCliniqueEtCabinet();
   }
 
   get isVueCabinet(): boolean {
@@ -221,10 +227,18 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   get peutSouscrireAbonnement(): boolean {
+    if (this.abonnementDejaPaye) {
+      return false;
+    }
     if (this.authService.isAdminClinique()) {
       return this.vueScope === 'clinique';
     }
     return this.authService.peutGererAbonnementCabinet() && this.vueScope === 'cabinet';
+  }
+
+  /** Abonnement courant actif et payé — pas de nouveau paiement. */
+  get abonnementDejaPaye(): boolean {
+    return this.abonnementCourant?.accesAutorise === true;
   }
 
   get offresActivesCount(): number {

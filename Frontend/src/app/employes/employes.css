@@ -71,6 +71,16 @@
     border: 1px solid #fecaca;
 }
 
+.alert-luna-info {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+}
+
+.pdf-invitation-banner {
+    margin-top: 0.5rem;
+}
+
 /* Tabs Section */
 .tabs-section {
     background: white;

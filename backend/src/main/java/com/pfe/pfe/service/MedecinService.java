@@ -53,8 +53,9 @@ public class MedecinService {
     }
 
     /**
-     * Super admin : cabinet médecin (sans clinique), compte actif, mot de passe généré, SMS si configuré.
-     * Le client reçoit l'état explicite de l'envoi SMS (raison si échec ou non configuré).
+     * Super admin : cabinet médecin.
+     * - CIN déjà dans le système (clinique ou cabinet) → même login, pas de SMS, accès cabinet activé.
+     * - CIN inconnu → nouveau compte cabinet + SMS avec identifiants.
      */
     public CabinetMedecinCreationResponse creerCabinetMedecinSuperAdmin(CreerCabinetMedecinDTO dto) {
         if (!StringUtils.hasText(dto.getNom()) || !StringUtils.hasText(dto.getPrenom())) {
@@ -64,6 +65,95 @@ public class MedecinService {
             throw new RuntimeException("La spécialité est obligatoire");
         }
 
+        String cin = normalizeCin(dto.getNumeroPieceIdentite());
+        if (!StringUtils.hasText(cin)) {
+            throw new RuntimeException("Le numéro CIN est obligatoire");
+        }
+
+        List<Medecin> parCin = medecinRepository.findAllByNumeroPieceIdentite(cin);
+        if (!parCin.isEmpty()) {
+            if (parCin.size() > 1) {
+                throw new RuntimeException("Plusieurs comptes correspondent à ce CIN ; contactez l'administrateur.");
+            }
+            return rattacherCabinetSurMedecinExistant(parCin.get(0), dto, cin);
+        }
+
+        return creerNouveauCabinetAvecSms(dto, cin);
+    }
+
+    /**
+     * Vérifie si un CIN existe déjà (médecin clinique ou cabinet) avant création.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> verifierCinPourCabinet(String numeroPieceIdentite, String telephone) {
+        String cin = normalizeCin(numeroPieceIdentite);
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        if (!StringUtils.hasText(cin)) {
+            out.put("trouve", false);
+            out.put("message", "CIN non renseigné");
+            return out;
+        }
+        List<Medecin> parCin = medecinRepository.findAllByNumeroPieceIdentite(cin);
+        if (parCin.isEmpty()) {
+            out.put("trouve", false);
+            out.put("nouveauCompte", true);
+            out.put("message", "CIN inconnu : un nouveau compte cabinet sera créé et les identifiants seront envoyés par SMS.");
+            return out;
+        }
+        if (parCin.size() > 1) {
+            out.put("trouve", true);
+            out.put("ambigu", true);
+            out.put("message", "Plusieurs comptes correspondent à ce CIN.");
+            return out;
+        }
+        Medecin m = parCin.get(0);
+        boolean clinique = m.getClinique() != null;
+        out.put("trouve", true);
+        out.put("medecinId", m.getId());
+        out.put("nom", m.getNom());
+        out.put("prenom", m.getPrenom());
+        out.put("telephone", m.getTelephone());
+        out.put("rattacheClinique", clinique);
+        out.put("cliniqueNom", clinique && m.getClinique() != null ? m.getClinique().getNom() : null);
+        out.put("nouveauCompte", false);
+        out.put("envoiSms", false);
+        if (clinique) {
+            out.put("message",
+                    "Ce CIN correspond à un médecin de la clinique « "
+                            + (m.getClinique() != null ? m.getClinique().getNom() : "")
+                            + " ». L'accès cabinet utilisera le même identifiant de connexion (téléphone et mot de passe clinique). Aucun SMS ne sera envoyé.");
+        } else {
+            out.put("message",
+                    "Ce CIN correspond déjà à un médecin cabinet. Les identifiants de connexion restent inchangés (aucun SMS).");
+        }
+        return out;
+    }
+
+    private CabinetMedecinCreationResponse rattacherCabinetSurMedecinExistant(Medecin medecin, CreerCabinetMedecinDTO dto, String cin) {
+        boolean medecinClinique = medecin.getClinique() != null;
+
+        if (!medecinClinique) {
+            String telephoneSaisi = tunisieSmsService.normalizeInternationalTunisia(dto.getTelephone());
+            if (StringUtils.hasText(telephoneSaisi) && !telephoneSaisi.equals(medecin.getTelephone())) {
+                if (userRepository.existsByTelephoneAndIdNot(telephoneSaisi, medecin.getId())) {
+                    throw new RuntimeException("Ce numéro de téléphone est déjà utilisé par un autre compte");
+                }
+                medecin.setTelephone(telephoneSaisi);
+            }
+        }
+
+        appliquerInfosCabinet(medecin, dto, cin);
+        medecin.setAccesCabinet(true);
+        medecin.setActif(true);
+        medecin = medecinRepository.save(medecin);
+
+        String detail = medecinClinique
+                ? "Accès cabinet activé : même connexion que la clinique « " + medecin.getClinique().getNom() + " » (SMS non envoyé)."
+                : "Cabinet mis à jour : identifiant et mot de passe inchangés (SMS non envoyé).";
+        return new CabinetMedecinCreationResponse(medecin, false, detail, true, false);
+    }
+
+    private CabinetMedecinCreationResponse creerNouveauCabinetAvecSms(CreerCabinetMedecinDTO dto, String cin) {
         String telephone = tunisieSmsService.normalizeInternationalTunisia(dto.getTelephone());
         if (!StringUtils.hasText(telephone) || telephone.length() < 11) {
             throw new RuntimeException("Numéro de téléphone mobile invalide (8 chiffres tunisiens attendus)");
@@ -72,16 +162,11 @@ public class MedecinService {
             throw new RuntimeException("Un utilisateur avec ce numéro de téléphone existe déjà");
         }
 
-        String telephoneFixeNorm = normaliserTelephoneFixeOptionnel(dto.getTelephoneFixe());
-
         Medecin medecin = new Medecin();
-        medecin.setNom(dto.getNom().trim());
-        medecin.setPrenom(dto.getPrenom().trim());
+        appliquerInfosCabinet(medecin, dto, cin);
         medecin.setTelephone(telephone);
-        medecin.setSpecialite(dto.getSpecialite().trim());
-        medecin.setTelephoneFixe(telephoneFixeNorm);
-        medecin.setLocalisation(StringUtils.hasText(dto.getLocalisation()) ? dto.getLocalisation().trim() : null);
         medecin.setClinique(null);
+        medecin.setAccesCabinet(true);
         medecin.setNumeroOrdre(genererNumeroOrdreUnique("MED", medecinRepository.count(), medecinRepository::existsByNumeroOrdre));
         medecin.setDateCreation(LocalDateTime.now());
 
@@ -116,14 +201,23 @@ public class MedecinService {
         return new CabinetMedecinCreationResponse(medecin, sms.envoye(), sms.detail(), false, true);
     }
 
+    private void appliquerInfosCabinet(Medecin medecin, CreerCabinetMedecinDTO dto, String cin) {
+        medecin.setNom(dto.getNom().trim());
+        medecin.setPrenom(dto.getPrenom().trim());
+        medecin.setSpecialite(dto.getSpecialite().trim());
+        medecin.setTelephoneFixe(normaliserTelephoneFixeOptionnel(dto.getTelephoneFixe()));
+        medecin.setLocalisation(StringUtils.hasText(dto.getLocalisation()) ? dto.getLocalisation().trim() : null);
+        medecin.setNumeroPieceIdentite(cin);
+    }
+
     public List<Medecin> listerCabinetsMedecins() {
-        return medecinRepository.findByCliniqueIsNullOrderByDateCreationDesc();
+        return medecinRepository.findCabinetsOrderByDateCreationDesc();
     }
 
     public Medecin mettreAJourCabinetMedecin(String id, CreerCabinetMedecinDTO dto) {
         Medecin medecin = obtenirMedecinParId(id);
-        if (medecin.getClinique() != null) {
-            throw new RuntimeException("Ce médecin est rattaché à une clinique, modification impossible depuis cette interface");
+        if (medecin.getClinique() != null && !Boolean.TRUE.equals(medecin.getAccesCabinet())) {
+            throw new RuntimeException("Ce médecin est rattaché à une clinique sans accès cabinet");
         }
         if (!StringUtils.hasText(dto.getNom()) || !StringUtils.hasText(dto.getPrenom())) {
             throw new RuntimeException("Le nom et le prénom sont obligatoires");
@@ -160,6 +254,13 @@ public class MedecinService {
 
     public void supprimerCabinetMedecin(String id) {
         Medecin medecin = obtenirMedecinParId(id);
+        if (medecin.getClinique() != null && Boolean.TRUE.equals(medecin.getAccesCabinet())) {
+            medecin.setAccesCabinet(false);
+            medecin.setLocalisation(null);
+            medecin.setTelephoneFixe(null);
+            medecinRepository.save(medecin);
+            return;
+        }
         if (medecin.getClinique() != null) {
             throw new RuntimeException("Ce médecin n'est pas un cabinet indépendant");
         }

@@ -37,6 +37,11 @@ export class CabinetMedecinComponent implements OnInit {
   searchTerm = '';
   selectedStatus = 'all';
 
+  cinVerificationMessage = '';
+  cinTrouveDansSysteme = false;
+  cinRattacheClinique = false;
+  cinVerifying = false;
+
   newCabinet: CreerCabinetMedecinDTO = {
     nom: '',
     prenom: '',
@@ -161,6 +166,9 @@ export class CabinetMedecinComponent implements OnInit {
 
   openCreateModal(): void {
     this.isCreatingNew = true;
+    this.cinVerificationMessage = '';
+    this.cinTrouveDansSysteme = false;
+    this.cinRattacheClinique = false;
     this.newCabinet = {
       nom: '',
       prenom: '',
@@ -171,6 +179,37 @@ export class CabinetMedecinComponent implements OnInit {
       numeroPieceIdentite: '',
     };
     this.showModal('createCabinetModal');
+  }
+
+  onCinBlur(): void {
+    const cin = (this.newCabinet.numeroPieceIdentite || '').trim();
+    if (cin.length < 3) {
+      this.cinVerificationMessage = '';
+      this.cinTrouveDansSysteme = false;
+      this.cinRattacheClinique = false;
+      return;
+    }
+    this.cinVerifying = true;
+    this.medecinService.verifierCinCabinet(cin, this.newCabinet.telephone).subscribe({
+      next: (res) => {
+        this.cinVerifying = false;
+        this.cinVerificationMessage = String(res['message'] ?? '');
+        this.cinTrouveDansSysteme = !!res['trouve'];
+        this.cinRattacheClinique = !!res['rattacheClinique'];
+        if (res['trouve'] && res['nom']) {
+          this.newCabinet.nom = String(res['nom'] ?? this.newCabinet.nom);
+          this.newCabinet.prenom = String(res['prenom'] ?? this.newCabinet.prenom);
+        }
+        if (this.cinRattacheClinique && res['telephone']) {
+          const tel = String(res['telephone']).replace(/\D/g, '').slice(-8);
+          this.newCabinet.telephone = tel;
+        }
+      },
+      error: () => {
+        this.cinVerifying = false;
+        this.cinVerificationMessage = '';
+      },
+    });
   }
 
   canSubmitCreate(): boolean {
@@ -238,9 +277,16 @@ export class CabinetMedecinComponent implements OnInit {
       next: (res) => {
         this.loadMedecins();
         this.hideCreateModal();
-        const msg = res.compteExistantRattache
-          ? 'Cabinet mis à jour : ce CIN correspond déjà à un médecin cabinet — identifiant et mot de passe inchangés.'
-          : 'Cabinet médecin créé avec succès. Un SMS avec le mot de passe peut être envoyé si TunisieSMS est configuré.';
+        let msg: string;
+        if (res.compteExistantRattache) {
+          msg = res.smsDetail
+            || 'Compte existant : même identifiant de connexion (aucun SMS envoyé).';
+        } else if (res.smsEnvoye) {
+          msg = 'Nouveau cabinet créé. Les identifiants ont été envoyés par SMS (TunisieSMS).';
+        } else {
+          msg = res.smsDetail
+            || 'Nouveau cabinet créé. Configurez TunisieSMS pour l\'envoi automatique des identifiants.';
+        }
         this.showSuccessModal(msg);
       },
       error: (err: any) => this.handleError(err, 'Erreur lors de la création')

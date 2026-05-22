@@ -17,6 +17,10 @@ public interface MedecinRepository extends JpaRepository<Medecin, String> {
     List<Medecin> findByCliniqueId(String cliniqueId);
     /** Cabinets médecins : comptes sans clinique liée */
     List<Medecin> findByCliniqueIsNullOrderByDateCreationDesc();
+
+    /** Cabinets : indépendants ou médecins de clinique avec accès cabinet activé */
+    @Query("SELECT m FROM Medecin m WHERE m.clinique IS NULL OR COALESCE(m.accesCabinet, false) = true ORDER BY m.dateCreation DESC")
+    List<Medecin> findCabinetsOrderByDateCreationDesc();
     Optional<Medecin> findByTelephone(String telephone);
 
     List<Medecin> findAllByNumeroPieceIdentite(String numeroPieceIdentite);

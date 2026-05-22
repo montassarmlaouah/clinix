@@ -41,6 +41,9 @@
                         <p class="clinique-adresse" *ngIf="m.specialite">
                             <i class="bi bi-heart-pulse"></i> {{ m.specialite }}
                         </p>
+                        <p class="clinique-adresse" *ngIf="m.clinique?.nom as cliniqueNom">
+                            <i class="bi bi-hospital"></i> Clinique : {{ cliniqueNom }} (même login)
+                        </p>
                         <p class="clinique-adresse" *ngIf="m.localisation">
                             <i class="bi bi-geo-alt"></i> {{ m.localisation }}
                         </p>
@@ -115,9 +118,21 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-card-text"></i></span>
                                     <input type="text" class="form-control" [(ngModel)]="newCabinet.numeroPieceIdentite" name="cinCabinet"
-                                        required minlength="3" autocomplete="off" placeholder="Numéro de carte d'identité">
+                                        required minlength="3" autocomplete="off" placeholder="Numéro de carte d'identité"
+                                        (blur)="onCinBlur()">
                                 </div>
-                                <small class="text-muted">Si un médecin cabinet existe déjà avec ce CIN et le même mobile, ses identifiants restent inchangés (mise à jour des infos cabinet).</small>
+                                <small class="text-muted d-block mt-1">
+                                    Si le CIN existe déjà (médecin de clinique ou cabinet), le même login est conservé et aucun SMS n'est envoyé.
+                                    Sinon, un compte cabinet est créé et les identifiants sont envoyés par SMS.
+                                </small>
+                                <div *ngIf="cinVerifying" class="text-primary small mt-2">
+                                    <i class="bi bi-hourglass-split"></i> Vérification du CIN…
+                                </div>
+                                <div *ngIf="cinVerificationMessage" class="alert py-2 mt-2 mb-0"
+                                     [class.alert-info]="cinTrouveDansSysteme"
+                                     [class.alert-success]="!cinTrouveDansSysteme">
+                                    {{ cinVerificationMessage }}
+                                </div>
                             </div>
                         </div>
                         <div class="section-header mb-3">
@@ -151,7 +166,9 @@
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="bi bi-phone"></i></span>
                                     <input type="text" class="form-control" inputmode="numeric" maxlength="8"
-                                        [(ngModel)]="newCabinet.telephone" name="telephone" required placeholder="8 chiffres">
+                                        [(ngModel)]="newCabinet.telephone" name="telephone" required placeholder="8 chiffres"
+                                        [readonly]="cinRattacheClinique"
+                                        [attr.title]="cinRattacheClinique ? 'Téléphone de connexion clinique (inchangé)' : null">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -250,6 +267,9 @@
                     <p><strong>Spécialité :</strong> {{ selectedMedecin?.specialite || '—' }}</p>
                     <p><strong>Mobile :</strong> {{ selectedMedecin?.telephone || '—' }}</p>
                     <p><strong>Fixe :</strong> {{ selectedMedecin?.telephoneFixe || 'Non renseigné' }}</p>
+                    <p *ngIf="selectedMedecin?.clinique?.nom as cliniqueNomDet">
+                      <strong>Clinique :</strong> {{ cliniqueNomDet }} (même identifiant de connexion)
+                    </p>
                     <p><strong>Localisation :</strong> {{ selectedMedecin?.localisation || 'Non renseignée' }}</p>
                     <p><strong>N° d'ordre :</strong> {{ selectedMedecin?.numeroOrdre || '—' }}</p>
                     <p><strong>Création :</strong> {{ selectedMedecin?.dateCreation | date:'dd/MM/yyyy' }}</p>

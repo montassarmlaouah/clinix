@@ -47,6 +47,13 @@ public class JwtUtil {
             if (customUser.getCliniqueId() != null) {
                 builder.claim("cliniqueId", customUser.getCliniqueId());
             }
+            if ("MEDECIN".equalsIgnoreCase(customUser.getRole())) {
+                builder.claim("accesCabinet", customUser.isAccesCabinet());
+                boolean estCabinet = customUser.isAccesCabinet()
+                        || customUser.getCliniqueId() == null
+                        || customUser.getCliniqueId().isBlank();
+                builder.claim("estCabinet", estCabinet);
+            }
         }
 
         return builder

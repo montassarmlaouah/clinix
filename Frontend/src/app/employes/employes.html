@@ -20,6 +20,25 @@
       <div class="alert alert-luna-success" *ngIf="success">
         <i class="fas fa-check-circle"></i> {{ success }}
       </div>
+      <div class="alert alert-luna-info pdf-invitation-banner" *ngIf="pdfInvitationBase64">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <i class="fas fa-file-pdf me-2"></i>
+            <strong>PDF d'identifiants</strong> — {{ pdfInvitationFileName }}
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-primary" (click)="telechargerPdfInvitation()">
+              <i class="fas fa-download"></i> Télécharger
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="voirPdfInvitation()">
+              <i class="fas fa-external-link-alt"></i> Ouvrir
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="fermerBandeauPdf()">
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
       <div class="alert alert-luna-danger" *ngIf="error">
         <i class="fas fa-exclamation-circle"></i> {{ error }}
       </div>
@@ -221,88 +240,48 @@
                   Étape {{ modalStep }} sur 3
                 </div>
                 <div class="btn-group btn-group-sm" role="group">
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 1" [class.btn-outline-secondary]="modalStep !== 1" disabled>1. Identité</button>
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 2" [class.btn-outline-secondary]="modalStep !== 2" disabled>2. E-mails</button>
-                  <button type="button" class="btn" [class.btn-primary]="modalStep === 3" [class.btn-outline-secondary]="modalStep !== 3" disabled>3. Profil</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 1" [class.btn-outline-secondary]="modalStep !== 1" disabled>1. CIN</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 2" [class.btn-outline-secondary]="modalStep !== 2" disabled>2. Identité</button>
+                  <button type="button" class="btn" [class.btn-primary]="modalStep === 3" [class.btn-outline-secondary]="modalStep !== 3" disabled>3. Envoi</button>
                 </div>
               </div>
 
-             
-
-              <!-- Étape 1 : mode + CIN -->
+              <!-- Étape 1 : CIN -->
               <div class="detail-section" *ngIf="modalStep === 1">
                 <h6 class="section-title">
-                  <i class="fas fa-paper-plane"></i> Envoi des identifiants
+                  <i class="fas fa-id-card"></i> Carte d'identité
                 </h6>
-                <p class="text-muted small mb-2">
-                  TunisieSMS (SMS), e-mail, ou PDF joint (identifiants dans le PDF ; e-mail obligatoire).
-                </p>
-                <div class="d-flex flex-wrap gap-2 mb-3">
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'TUNISIE_SMS'"
-                          (click)="setModeEnvoi('TUNISIE_SMS')">
-                    <i class="fas fa-sms"></i> TunisieSMSmedecin
-                  </button>
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'EMAIL'"
-                          (click)="setModeEnvoi('EMAIL')">
-                    <i class="fas fa-envelope"></i> E-mail
-                  </button>
-                  <button type="button" class="btn btn-sm"
-                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'"
-                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_CODE'"
-                          (click)="setModeEnvoi('PDF_CODE')">
-                    <i class="fas fa-file-pdf"></i> PDF (e-mail)
-                  </button>
-                </div>
-                <div class="row" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL' || nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                <div class="row">
                   <div class="col-md-12 mb-2">
-                    <label>Carte d'identité (CIN) <span class="text-danger">*</span></label>
+                    <label>Numéro CIN <span class="text-danger">*</span></label>
                     <input type="text" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.numeroPieceIdentite" name="cinStep1"
-                           placeholder="Numéro CIN">
+                           placeholder="Ex : 12345678">
                   </div>
                 </div>
               </div>
 
-              <!-- Étape 2 : e-mails -->
-              <div class="detail-section" *ngIf="modalStep === 2">
-                <h6 class="section-title">
-                  <i class="fas fa-at"></i> Destinataires
-                </h6>
-                <div class="row" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL' || nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
-                  <div class="col-md-12 mb-2">
-                    <label>E-mail du collaborateur <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.email" name="emailStep2"
-                           placeholder="nom@exemple.com">
+              <!-- Étape 2 : téléphone, nom, prénom (+ rôle / médecin) -->
+              <ng-container *ngIf="modalStep === 2">
+                <div class="detail-section" *ngIf="nouveauPersonnel.role === 'MEDECIN'">
+                  <h6 class="section-title">
+                    <i class="fas fa-link"></i> Rattacher un médecin existant (optionnel)
+                  </h6>
+                  <div class="row g-2 align-items-end mb-2">
+                    <div class="col-md-7">
+                      <label class="small text-muted">Recherche (nom, prénom ou téléphone)</label>
+                      <input type="text" class="form-control luna-input" [(ngModel)]="rechercheMedecinQuery" name="rechercheMedecin"
+                             placeholder="Au moins 2 caractères">
+                    </div>
+                    <div class="col-md-3">
+                      <button type="button" class="btn btn-outline-primary w-100" (click)="lancerRechercheMedecin()" [disabled]="rechercheMedecinLoading">
+                        <i class="fas fa-search" *ngIf="!rechercheMedecinLoading"></i>
+                        <i class="fas fa-spinner fa-spin" *ngIf="rechercheMedecinLoading"></i> Rechercher
+                      </button>
+                    </div>
+                    <div class="col-md-2" *ngIf="nouveauPersonnel.medecinExistantId">
+                      <button type="button" class="btn btn-outline-secondary w-100" (click)="effacerSelectionMedecin()">Effacer</button>
+                    </div>
                   </div>
-                  <div class="col-md-12 mb-2">
-                    <label>E-mail en copie cachée (optionnel)</label>
-                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.emailCopieInvitation" name="emailBcc"
-                           placeholder="Autre boîte (BCC), ex. autre clinique">
-                    <small class="text-muted">Reçoit une copie invisible du message de bienvenue.</small>
-                  </div>
-                </div>
-                <div class="alert alert-secondary py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
-                  Mode SMS : passez à l'étape suivante pour saisir le téléphone du collaborateur.
-                </div>
-              </div>
-
-              <ng-container *ngIf="modalStep === 3">
-
-               
-                  
-                  <div class="col-md-3">
-                    <button type="button" class="btn btn-outline-primary w-100" (click)="lancerRechercheMedecin()" [disabled]="rechercheMedecinLoading">
-                      <i class="fas fa-search" *ngIf="!rechercheMedecinLoading"></i>
-                      <i class="fas fa-spinner fa-spin" *ngIf="rechercheMedecinLoading"></i> Rechercher
-                    </button>
-                  </div>
-                  <div class="col-md-2" *ngIf="nouveauPersonnel.medecinExistantId">
-                    <button type="button" class="btn btn-outline-secondary w-100" (click)="effacerSelectionMedecin()">Effacer</button>
-                  </div>
-              
                 <div class="table-responsive" *ngIf="resultatsRechercheMedecin.length">
                   <table class="table table-sm table-bordered bg-white">
                     <thead><tr><th>Nom</th><th>Téléphone</th><th>Spécialité</th><th>Clinique actuelle</th><th></th></tr></thead>
@@ -319,6 +298,7 @@
                 </div>
                 <div class="alert alert-success py-2" *ngIf="nouveauPersonnel.medecinExistantId">
                   <i class="fas fa-link"></i> Rattachement : compte médecin existant sélectionné.
+                </div>
                 </div>
 
               <div class="detail-section">
@@ -419,25 +399,68 @@
                 </div>
               </div>
 
-              <div class="detail-section">
+              </ng-container>
+
+              <!-- Étape 3 : envoi des identifiants -->
+              <div class="detail-section" *ngIf="modalStep === 3">
                 <h6 class="section-title">
-                  <i class="fas fa-lock"></i> Sécurité du compte
+                  <i class="fas fa-paper-plane"></i> Envoi des identifiants
                 </h6>
-                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
-                  <i class="fas fa-exclamation-triangle"></i>
-                  Mot de passe provisoire envoyé par <strong>TunisieSMS</strong>.
+                <p class="text-muted small mb-2">
+                  TunisieSMS (SMS), e-mail, ou PDF joint (identifiants dans le PDF ; e-mail obligatoire pour PDF et e-mail).
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'TUNISIE_SMS'"
+                          (click)="setModeEnvoi('TUNISIE_SMS')">
+                    <i class="fas fa-sms"></i> TunisieSMS
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'EMAIL'"
+                          (click)="setModeEnvoi('EMAIL')">
+                    <i class="fas fa-envelope"></i> E-mail
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_CODE'"
+                          (click)="setModeEnvoi('PDF_CODE')">
+                    <i class="fas fa-file-pdf"></i> PDF (e-mail)
+                  </button>
+                  <button type="button" class="btn btn-sm"
+                          [class.btn-primary]="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'"
+                          [class.btn-outline-primary]="nouveauPersonnel.modeEnvoiCredentials !== 'PDF_ONLY'"
+                          (click)="setModeEnvoi('PDF_ONLY')">
+                    <i class="fas fa-download"></i> PDF seul
+                  </button>
                 </div>
-                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'">
-                  <i class="fas fa-envelope"></i>
-                  Identifiants envoyés par <strong>e-mail</strong> (message de bienvenue mis en forme).
+                <div class="row" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL' || nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  <div class="col-md-12 mb-2">
+                    <label>E-mail du collaborateur <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.email" name="emailStep3"
+                           placeholder="nom@exemple.com">
+                  </div>
+                  <div class="col-md-12 mb-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                    <label>E-mail en copie cachée (optionnel)</label>
+                    <input type="email" class="form-control luna-input" [(ngModel)]="nouveauPersonnel.emailCopieInvitation" name="emailBcc"
+                           placeholder="Autre boîte (BCC), ex. autre clinique">
+                    <small class="text-muted">Reçoit une copie invisible du message de bienvenue.</small>
+                  </div>
                 </div>
-                <div class="alert alert-warning" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
-                  <i class="fas fa-file-pdf"></i>
-                  E-mail avec PDF : <strong>téléphone + mot de passe</strong> dans le fichier uniquement. Les codes de vérification s’appliquent au changement / oubli de mot de passe dans l’app.
+                <div class="alert alert-warning py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'TUNISIE_SMS'">
+                  <i class="fas fa-sms"></i> Mot de passe provisoire envoyé par <strong>TunisieSMS</strong> au {{ nouveauPersonnel.telephone || 'téléphone saisi' }}.
+                </div>
+                <div class="alert alert-warning py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'EMAIL'">
+                  <i class="fas fa-envelope"></i> Identifiants envoyés par <strong>e-mail</strong> (message de bienvenue).
+                </div>
+                <div class="alert alert-warning py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_CODE'">
+                  <i class="fas fa-file-pdf"></i> PDF joint par e-mail : téléphone et mot de passe dans le fichier.
+                </div>
+                <div class="alert alert-warning py-2" *ngIf="nouveauPersonnel.modeEnvoiCredentials === 'PDF_ONLY'">
+                  <i class="fas fa-download"></i> Le PDF d'invitation sera téléchargeable après la création (aucun envoi automatique).
                 </div>
               </div>
-
-              </ng-container>
             </div>
 
             <div class="modal-footer">

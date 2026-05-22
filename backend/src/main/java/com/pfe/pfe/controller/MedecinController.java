@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 import com.pfe.pfe.dto.CabinetMedecinCreationResponse;
 import com.pfe.pfe.dto.CreerCabinetMedecinDTO;
@@ -40,6 +43,14 @@ public class MedecinController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<List<Medecin>> listerCabinetsMedecins() {
         return ResponseEntity.ok(medecinService.listerCabinetsMedecins());
+    }
+
+    @GetMapping("/cabinets/verifier-cin")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> verifierCinCabinet(
+            @RequestParam String cin,
+            @RequestParam(required = false) String telephone) {
+        return ResponseEntity.ok(medecinService.verifierCinPourCabinet(cin, telephone));
     }
 
     @PostMapping("/cabinets")

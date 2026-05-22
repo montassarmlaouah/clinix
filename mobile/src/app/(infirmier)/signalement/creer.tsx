@@ -86,18 +86,24 @@ export default function CreerSignalementScreen() {
   }, [patientQuery, searchPatients]);
 
   const handleSend = async () => {
+    // Validation : patient, description et médecin tous obligatoires
     if (!userId || !selectedPatient || !description.trim()) {
       Alert.alert('Champs requis', 'Sélectionnez un patient et saisissez une description.');
       return;
     }
+    if (!medecinId) {
+      Alert.alert('Médecin requis', 'Veuillez sélectionner un médecin destinataire avant d\'envoyer le signalement.');
+      return;
+    }
     setSending(true);
     try {
+      // Construction du message structuré attendu par InfirmierWorkspaceService
+      // Format : "[TYPE] [PRIORITE] description libre"
+      const message = `[${type}] [${priorite}] ${description.trim()}`;
       await apiPost(INFIRMIER_WORKSPACE.SIGNALEMENT_MEDECIN(userId), {
+        medecinId,                  // clé correcte attendue par le backend
+        message,                    // champ composé attendu par le backend
         patientId: selectedPatient.id,
-        type,
-        description: description.trim(),
-        priorite,
-        medecinDestinataireId: medecinId,
       });
       router.back();
     } catch (e: any) {
@@ -201,7 +207,13 @@ export default function CreerSignalementScreen() {
             {/* Médecin */}
             {medecins.length > 0 && (
               <>
-                <Text style={styles.label}>Médecin destinataire (optionnel)</Text>
+                {/* Champ obligatoire : sans médecin le backend renvoie 400 */}
+                <Text style={styles.label}>Médecin destinataire *</Text>
+                {!medecinId && (
+                  <Text style={styles.medecinHint}>
+                    ⚠️ Sélectionnez un médecin pour pouvoir envoyer le signalement.
+                  </Text>
+                )}
                 {medecins.map((m) => (
                   <Pressable
                     key={m.id}
@@ -215,6 +227,12 @@ export default function CreerSignalementScreen() {
                 ))}
               </>
             )}
+            {/* Avertissement si aucun médecin disponible */}
+            {medecins.length === 0 && (
+              <Text style={styles.medecinHint}>
+                Aucun médecin disponible pour cette clinique. Impossible d\'envoyer le signalement.
+              </Text>
+            )}
           </View>
         }
         contentContainerStyle={styles.listContent}
@@ -225,6 +243,8 @@ export default function CreerSignalementScreen() {
           title="Envoyer le signalement"
           onPress={handleSend}
           loading={sending}
+          // Désactivé tant qu'aucun médecin n'est sélectionné
+          disabled={!medecinId || medecins.length === 0}
           style={priorite === 'URGENTE' ? styles.btnUrgent : undefined}
         />
       </View>
@@ -322,6 +342,7 @@ const styles = StyleSheet.create({
   },
   medecinBtnSelected: { borderColor: LUNA_COLORS.secondary, backgroundColor: LUNA_COLORS.infoLight }, // ✨
   medecinText: { fontSize: fontSize.sm, color: LUNA_COLORS.textPrimary },
+  medecinHint: { fontSize: fontSize.xs, color: LUNA_COLORS.warning, fontStyle: 'italic' },
   footer: {
     padding: spacing.md,
     borderTopWidth: 1,

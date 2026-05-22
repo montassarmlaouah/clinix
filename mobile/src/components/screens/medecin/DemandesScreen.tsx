@@ -38,7 +38,7 @@ export function DemandesScreen({ initialTab = 'medicament' }: DemandesScreenProp
         onDark={false}
       />
       {activeTab === 'medicament' ? (
-        <DemandesMedicamentListScreen />
+        <DemandesMedicamentListScreen createRoute="/(medecin)/medicament-nouveau" />
       ) : (
         <DemandesOperationListScreen
           title="Demandes d'opération"

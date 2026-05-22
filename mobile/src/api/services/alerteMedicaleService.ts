@@ -70,20 +70,43 @@ export const alerteMedicaleService = {
   signalerMedecin: (infirmierId: string, data: SignalementMedecinRequest) =>
     apiPost<void>(INFIRMIER_WORKSPACE.SIGNALEMENT_MEDECIN(infirmierId), data),
 
-  // ── Stubs pour compatibilité ascendante (routes inexistantes en backend) ──
-  /** @deprecated Route non existante — utiliser getAlertesPatient ou getAllAlertesSurveillance */
-  getByMedecin: (_medecinId: string, _orgId?: string | number) =>
-    Promise.resolve([] as AlerteMedicaleResponse[]),
+  // ── Stubs supprimés — les routes n'existent pas côté backend ────────────────
 
-  /** @deprecated Route non existante — utiliser signalerMedecin */
-  create: (_req: AlerteMedicaleRequest) =>
-    Promise.reject(new Error('Endpoint /alertes/medicales inexistant — utiliser INFIRMIER_WORKSPACE.SIGNALEMENT_MEDECIN')),
+  /**
+   * @deprecated Route /alertes/medicales/medecin/:id inexistante.
+   * Utiliser `getAllAlertesSurveillance()` ou `getAlertesPatient(patientId)`.
+   */
+  getByMedecin: (_medecinId: string, _orgId?: string | number): Promise<AlerteMedicaleResponse[]> => {
+    return Promise.reject(
+      new Error('[alerteMedicaleService.getByMedecin] Route inexistante. Utiliser getAlertesPatient() ou getAllAlertesSurveillance().'),
+    );
+  },
 
-  /** @deprecated Route non existante */
-  marquerLue: (_id: string) =>
-    Promise.reject(new Error('Endpoint /alertes/medicales/:id/lue inexistant')),
+  /**
+   * @deprecated Route /alertes/medicales inexistante.
+   * Utiliser `signalerMedecin()` via INFIRMIER_WORKSPACE.SIGNALEMENT_MEDECIN.
+   */
+  create: (_req: AlerteMedicaleRequest): Promise<void> => {
+    return Promise.reject(
+      new Error('[alerteMedicaleService.create] Route /alertes/medicales inexistante. Utiliser signalerMedecin().'),
+    );
+  },
 
-  /** @deprecated Route non existante */
-  getAlertesInfirmier: (_medecinId: string, _orgId?: string | number) =>
-    Promise.resolve([] as AlerteInfirmierResponse[]),
+  /**
+   * @deprecated Route /alertes/medicales/:id/lue inexistante.
+   */
+  marquerLue: (_id: string): Promise<void> => {
+    return Promise.reject(
+      new Error('[alerteMedicaleService.marquerLue] Route inexistante.'),
+    );
+  },
+
+  /**
+   * @deprecated Utiliser `getAllAlertesSurveillance()` ou `getAlertesPatient()`.
+   */
+  getAlertesInfirmier: (_medecinId: string, _orgId?: string | number): Promise<AlerteInfirmierResponse[]> => {
+    return Promise.reject(
+      new Error('[alerteMedicaleService.getAlertesInfirmier] Route inexistante. Utiliser getAlertesPatient() ou getAllAlertesSurveillance().'),
+    );
+  },
 };

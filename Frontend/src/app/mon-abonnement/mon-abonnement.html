@@ -89,7 +89,7 @@
                   <th>Montant payé</th>
                   <th>Période</th>
                   <th>Statut</th>
-                  <th>Date début</th>
+                  <th>Premier paiement</th>
                   <th>Date fin</th>
                   <th>Stripe</th>
                 </tr>
@@ -112,7 +112,7 @@
                       {{ libelleStatutAbonnement(a.statut) }}
                     </span>
                   </td>
-                  <td class="date-cell">{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+                  <td class="date-cell">{{ (a.datePremierPaiement || a.dateDebut) | date : 'dd/MM/yyyy' }}</td>
                   <td class="date-cell">{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
                   <td>
                     <div class="cell-sub mono" [title]="a.stripeSubscriptionId || ''">
@@ -163,7 +163,7 @@
                   <th>Montant payé</th>
                   <th>Période</th>
                   <th>Statut</th>
-                  <th>Date début</th>
+                  <th>Premier paiement</th>
                   <th>Date fin</th>
                   <th>Stripe</th>
                 </tr>
@@ -186,7 +186,7 @@
                       {{ libelleStatutAbonnement(a.statut) }}
                     </span>
                   </td>
-                  <td class="date-cell">{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+                  <td class="date-cell">{{ (a.datePremierPaiement || a.dateDebut) | date : 'dd/MM/yyyy' }}</td>
                   <td class="date-cell">{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
                   <td>
                     <div class="cell-sub mono" [title]="a.stripeSubscriptionId || ''">
@@ -451,6 +451,25 @@
         </p>
       </div>
 
+      <div class="scope-tabs" *ngIf="medecinDoubleContexte">
+        <button
+          type="button"
+          class="scope-tab"
+          [class.active]="!isVueCabinet"
+          (click)="basculerVueScope('clinique')"
+        >
+          <i class="fas fa-hospital"></i> Clinique
+        </button>
+        <button
+          type="button"
+          class="scope-tab"
+          [class.active]="isVueCabinet"
+          (click)="basculerVueScope('cabinet')"
+        >
+          <i class="fas fa-user-md"></i> Cabinet
+        </button>
+      </div>
+
       <div class="stripe-success-banner" *ngIf="checkoutSuccesStripe">
         <div class="stripe-success-icon"><i class="fab fa-stripe-s"></i></div>
         <div>
@@ -463,6 +482,17 @@
             </span>
           </p>
           <p *ngIf="!abonnementCourant">Les données sont en cours de mise à jour (webhook). Utilisez « Rafraîchir ».</p>
+        </div>
+      </div>
+
+      <div class="cta-strip cta-strip--paid" *ngIf="abonnementDejaPaye">
+        <div class="cta-strip-text">
+          <h3><i class="fas fa-circle-check"></i> Abonnement payé</h3>
+          <p>
+            Votre forfait est actif jusqu'au
+            <strong>{{ abonnementCourant?.dateFin | date : 'dd/MM/yyyy' }}</strong>.
+            Aucun nouveau paiement n'est requis pour cette période.
+          </p>
         </div>
       </div>
 
@@ -541,8 +571,8 @@
               <div class="luna-input readonly">{{ abonnementCourant.montantPaye | number : '1.2-2' }} DT</div>
             </div>
             <div class="form-group">
-              <label class="form-label">Début</label>
-              <div class="luna-input readonly">{{ abonnementCourant.dateDebut | date : 'dd/MM/yyyy' }}</div>
+              <label class="form-label">Premier paiement</label>
+              <div class="luna-input readonly">{{ (abonnementCourant.datePremierPaiement || abonnementCourant.dateDebut) | date : 'dd/MM/yyyy' }}</div>
             </div>
             <div class="form-group">
               <label class="form-label">Fin</label>
@@ -572,7 +602,7 @@
               <th>Offre</th>
               <th>Statut</th>
               <th>Période facturation</th>
-              <th>Date début</th>
+              <th>Premier paiement</th>
               <th>Date fin</th>
               <th>Montant payé</th>
             </tr>
@@ -582,7 +612,7 @@
               <td>{{ a.offreNom || '—' }}</td>
               <td>{{ libelleStatutAbonnement(a.statut) }}</td>
               <td>{{ a.periodeFacturation === 'YEARLY' ? 'Annuelle' : 'Mensuelle' }}</td>
-              <td>{{ a.dateDebut | date : 'dd/MM/yyyy' }}</td>
+              <td>{{ (a.datePremierPaiement || a.dateDebut) | date : 'dd/MM/yyyy' }}</td>
               <td>{{ a.dateFin | date : 'dd/MM/yyyy' }}</td>
               <td>{{ a.montantPaye | number : '1.2-2' }} DT</td>
             </tr>

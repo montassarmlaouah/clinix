@@ -41,10 +41,12 @@ public class StripeSubscriptionFlowService {
     private final StripeCredentialsService stripeCredentialsService;
     private final StripeOfferSyncService stripeOfferSyncService;
     private final BillingAppProperties billingAppProperties;
+    private final SubscriptionAccessService subscriptionAccessService;
 
     @Transactional
     public Session createCheckoutSession(String cliniqueId, String offreId, String interval, String successUrl,
             String cancelUrl) {
+        subscriptionAccessService.assertCanSubscribeClinique(cliniqueId);
         Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
 
         Clinique clinique = cliniqueRepository.findById(cliniqueId)
@@ -74,13 +76,11 @@ public class StripeSubscriptionFlowService {
     @Transactional
     public Session createCheckoutSessionForMedecinCabinet(String medecinId, String offreId, String interval,
             String successUrl, String cancelUrl) {
+        subscriptionAccessService.assertCanSubscribeCabinet(medecinId);
         Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
 
         Medecin medecin = medecinRepository.findById(medecinId)
-                .orElseThrow(() -> new IllegalArgumentException("Médecin cabinet introuvable"));
-        if (medecin.getClinique() != null) {
-            throw new IllegalStateException("Ce médecin est rattaché à une clinique ; utilisez les offres clinique.");
-        }
+                .orElseThrow(() -> new IllegalArgumentException("Médecin introuvable"));
         OffreAbonnement offre = offreRepository.findById(offreId)
                 .orElseThrow(() -> new IllegalArgumentException("Offre introuvable"));
         if (!Boolean.TRUE.equals(offre.getActif())) {
@@ -164,8 +164,10 @@ public class StripeSubscriptionFlowService {
         Integer dureeMois = offre.getDureeMois();
         AbonnementClinique pending = new AbonnementClinique();
         pending.setOffre(offre);
+        long mois = dureeMois != null ? dureeMois.longValue() : 1L;
         pending.setDateDebut(LocalDate.now());
-        pending.setDateFin(LocalDate.now().plusMonths(dureeMois != null ? dureeMois : 1L));
+        pending.setDateFin(LocalDate.now().plusMonths(mois));
+        pending.setDatePremierPaiement(null);
         pending.setMontantPaye(BigDecimal.ZERO);
         pending.setStatut("EN_ATTENTE_PAIEMENT");
         pending.setStripeCustomerId(customerId);
@@ -233,12 +235,7 @@ public class StripeSubscriptionFlowService {
             Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
             try {
                 Subscription sub = Subscription.retrieve(subId);
-                if (sub.getCurrentPeriodEnd() != null) {
-                    LocalDate fin = Instant.ofEpochSecond(sub.getCurrentPeriodEnd())
-                            .atZone(ZoneOffset.UTC)
-                            .toLocalDate();
-                    a.setDateFin(fin);
-                }
+                appliquerDatesPremierPaiement(a, sub);
                 if (!sub.getItems().getData().isEmpty()
                         && sub.getItems().getData().get(0).getPrice() != null
                         && sub.getItems().getData().get(0).getPrice().getUnitAmount() != null) {
@@ -252,6 +249,8 @@ public class StripeSubscriptionFlowService {
             } catch (StripeException ignored) {
                 // La souscription existe déjà ; fin de période peut être mise à jour par webhook ultérieur
             }
+        } else {
+            appliquerDatesPremierPaiement(a, null);
         }
         abonnementRepository.save(a);
     }
@@ -269,6 +268,11 @@ public class StripeSubscriptionFlowService {
         }
 
         a.setStatut("ACTIF");
+        if (a.getDatePremierPaiement() == null) {
+            LocalDate datePaiement = extraireDatePaiementFacture(invoice);
+            a.setDatePremierPaiement(datePaiement);
+            a.setDateDebut(datePaiement);
+        }
         if (invoice.getAmountPaid() != null) {
             BigDecimal amount = BigDecimal.valueOf(invoice.getAmountPaid());
             int frac = CurrencyFractionDigits.forStripe(invoice.getCurrency());
@@ -277,7 +281,56 @@ public class StripeSubscriptionFlowService {
             }
             a.setMontantPaye(amount);
         }
+        Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
+        try {
+            Subscription sub = Subscription.retrieve(subId);
+            if (sub.getCurrentPeriodEnd() != null) {
+                a.setDateFin(Instant.ofEpochSecond(sub.getCurrentPeriodEnd())
+                        .atZone(ZoneOffset.UTC)
+                        .toLocalDate());
+            }
+        } catch (StripeException ignored) {
+            /* période Stripe optionnelle */
+        }
         abonnementRepository.save(a);
+    }
+
+    private void appliquerDatesPremierPaiement(AbonnementClinique a, Subscription sub) {
+        if (a.getDatePremierPaiement() != null) {
+            if (sub != null && sub.getCurrentPeriodEnd() != null) {
+                a.setDateFin(Instant.ofEpochSecond(sub.getCurrentPeriodEnd())
+                        .atZone(ZoneOffset.UTC)
+                        .toLocalDate());
+            }
+            return;
+        }
+        LocalDate datePaiement = LocalDate.now();
+        if (sub != null && sub.getCurrentPeriodStart() != null) {
+            datePaiement = Instant.ofEpochSecond(sub.getCurrentPeriodStart())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate();
+        }
+        a.setDatePremierPaiement(datePaiement);
+        a.setDateDebut(datePaiement);
+        if (sub != null && sub.getCurrentPeriodEnd() != null) {
+            a.setDateFin(Instant.ofEpochSecond(sub.getCurrentPeriodEnd())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate());
+        }
+    }
+
+    private LocalDate extraireDatePaiementFacture(Invoice invoice) {
+        if (invoice.getStatusTransitions() != null && invoice.getStatusTransitions().getPaidAt() != null) {
+            return Instant.ofEpochSecond(invoice.getStatusTransitions().getPaidAt())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate();
+        }
+        if (invoice.getCreated() != null) {
+            return Instant.ofEpochSecond(invoice.getCreated())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDate();
+        }
+        return LocalDate.now();
     }
 
     @Transactional

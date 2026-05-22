@@ -20,6 +20,7 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   loading = true;
   preparing = false;
   error = '';
+  abonnementPaye = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -31,12 +32,14 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   ngOnInit(): void {
     const q = this.route.snapshot.queryParamMap;
     const qScope = (q.get('scope') || '').toLowerCase();
-    if (qScope === 'cabinet' || this.auth.isMedecinCabinetExclusif()) {
+    if (qScope === 'cabinet') {
       this.billingScope = 'cabinet';
-    } else if (this.auth.getCliniqueId()) {
+    } else if (qScope === 'clinique') {
       this.billingScope = 'clinique';
-    } else if (this.auth.peutGererAbonnementCabinet()) {
+    } else if (this.auth.isMedecinCabinetExclusif()) {
       this.billingScope = 'cabinet';
+    } else {
+      this.billingScope = 'clinique';
     }
 
     if (!this.auth.getCliniqueId() && this.billingScope === 'clinique' && !this.auth.peutGererAbonnementCabinet()) {
@@ -55,6 +58,23 @@ export class AbonnementPaiementStripeComponent implements OnInit {
       return;
     }
     this.chargerOffre(id);
+    this.verifierAbonnementPaye();
+  }
+
+  private verifierAbonnementPaye(): void {
+    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    this.abonnementService.getCurrentSubscription(scope).subscribe({
+      next: (cur) => {
+        if (cur?.accesAutorise === true) {
+          this.abonnementPaye = true;
+          this.error =
+            'Abonnement déjà actif et payé. Aucun nouveau paiement n\'est nécessaire pour cette période.';
+        }
+      },
+      error: () => {
+        this.abonnementPaye = false;
+      },
+    });
   }
 
   private chargerOffre(id: string): void {
@@ -122,7 +142,10 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   }
 
   continuerVersStripe(): void {
-    if (!this.offre) {
+    if (!this.offre || this.abonnementPaye) {
+      if (this.abonnementPaye) {
+        this.error = 'Abonnement déjà payé pour la période en cours.';
+      }
       return;
     }
     this.error = '';

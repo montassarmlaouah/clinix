@@ -30,4 +30,8 @@ public class Medecin extends User {
 
     @Column(name = "stripe_customer_id", length = 128)
     private String stripeCustomerId;
+
+    /** Accès activité cabinet (médecin de clinique ou cabinet indépendant). */
+    @Column(name = "acces_cabinet")
+    private Boolean accesCabinet = false;
 }

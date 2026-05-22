@@ -34,6 +34,7 @@ public class BillingManagementService {
     private final PlatformStripeConfigRepository platformStripeConfigRepository;
     private final FieldCipher fieldCipher;
     private final StripeOfferSyncService stripeOfferSyncService;
+    private final SubscriptionAccessService subscriptionAccessService;
 
     public List<OffreAbonnement> listAllOffers() {
         return offreRepository.findAllByOrderByOrdreAffichageAsc();
@@ -48,19 +49,25 @@ public class BillingManagementService {
     }
 
     public Optional<AbonnementClinique> getCurrentSubscription(String cliniqueId) {
-        return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream().findFirst();
+        return subscriptionAccessService.findActiveCliniqueSubscription(cliniqueId)
+                .or(() -> subscriptionAccessService.findLatestCliniqueSubscription(cliniqueId));
     }
 
     public Optional<AbonnementClinique> getCurrentSubscriptionForMedecinCabinet(String medecinId) {
-        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId).stream().findFirst();
+        return subscriptionAccessService.findActiveCabinetSubscription(medecinId)
+                .or(() -> subscriptionAccessService.findLatestCabinetSubscription(medecinId));
     }
 
     public List<AbonnementClinique> getSubscriptionHistory(String cliniqueId) {
-        return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId);
+        return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream()
+                .filter(a -> a.getMedecinCabinet() == null)
+                .toList();
     }
 
     public List<AbonnementClinique> getSubscriptionHistoryForMedecinCabinet(String medecinId) {
-        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId);
+        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId).stream()
+                .filter(a -> a.getClinique() == null)
+                .toList();
     }
 
     /** Abonnements clinique au statut ACTIF (toutes cliniques), pour le super administrateur. */
@@ -138,6 +145,7 @@ public class BillingManagementService {
 
     @Transactional
     public AbonnementClinique simulateSubscribe(String cliniqueId, String offreId, String interval) {
+        subscriptionAccessService.assertCanSubscribeClinique(cliniqueId);
         Clinique c = cliniqueRepository.findById(cliniqueId).orElseThrow(() -> new IllegalArgumentException("Clinique introuvable"));
         OffreAbonnement offre = loadActiveOfferForClinique(offreId);
 
@@ -156,6 +164,7 @@ public class BillingManagementService {
         a.setClinique(c);
         a.setOffre(offre);
         a.setDateDebut(debut);
+        a.setDatePremierPaiement(debut);
         a.setDateFin(fin);
         a.setMontantPaye(montant != null ? montant : BigDecimal.ZERO);
         a.setStatut("ACTIF");
@@ -167,11 +176,9 @@ public class BillingManagementService {
 
     @Transactional
     public AbonnementClinique simulateSubscribeCabinet(String medecinId, String offreId, String interval) {
+        subscriptionAccessService.assertCanSubscribeCabinet(medecinId);
         Medecin medecin = medecinRepository.findById(medecinId)
-                .orElseThrow(() -> new IllegalArgumentException("Médecin cabinet introuvable"));
-        if (medecin.getClinique() != null) {
-            throw new IllegalStateException("Ce compte est rattaché à une clinique ; utilisez les offres clinique.");
-        }
+                .orElseThrow(() -> new IllegalArgumentException("Médecin introuvable"));
         OffreAbonnement offre = loadActiveOfferForCabinet(offreId);
 
         BigDecimal montant = BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
@@ -189,6 +196,7 @@ public class BillingManagementService {
         a.setMedecinCabinet(medecin);
         a.setOffre(offre);
         a.setDateDebut(debut);
+        a.setDatePremierPaiement(debut);
         a.setDateFin(fin);
         a.setMontantPaye(montant != null ? montant : BigDecimal.ZERO);
         a.setStatut("ACTIF");

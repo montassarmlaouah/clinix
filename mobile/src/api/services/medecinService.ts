@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPatch, apiPut } from '@/src/api/client';
+import { apiGet, apiPost, apiPatch, apiPut, apiDelete } from '@/src/api/client';
 import {
   CONSULTATIONS,
   IMAGERIES,
@@ -6,6 +6,12 @@ import {
   MEDECIN_WORKSPACE,
   ORDONNANCES,
 } from '@/src/api/endpoints';
+import type {
+  CabinetMedecinCreationResponse,
+  CabinetMedecinListItem,
+  CreerCabinetMedecinDTO,
+  VerifierCinCabinetResult,
+} from '@/src/types/cabinet-medecin';
 
 // ── Types — STRICTEMENT alignés avec le backend ───────────────────────────────
 
@@ -72,6 +78,20 @@ export const medecinService = {
 
   addPatientCabinet: (medecinId: string | number, patientDTO: unknown) =>
     apiPost<unknown>(MEDECINS.PATIENTS_ADD(medecinId), patientDTO),
+
+  /** Super admin — cabinets médecins */
+  listCabinets: () => apiGet<CabinetMedecinListItem[]>(MEDECINS.CABINETS),
+
+  verifierCinCabinet: (cin: string, telephone?: string) =>
+    apiGet<VerifierCinCabinetResult>(MEDECINS.CABINETS_VERIFIER_CIN(cin, telephone)),
+
+  creerCabinet: (dto: CreerCabinetMedecinDTO) =>
+    apiPost<CabinetMedecinCreationResponse>(MEDECINS.CABINETS, dto),
+
+  mettreAJourCabinet: (id: string, dto: CreerCabinetMedecinDTO) =>
+    apiPut<Medecin>(MEDECINS.CABINET_BY_ID(id), dto),
+
+  supprimerCabinet: (id: string) => apiDelete<void>(MEDECINS.CABINET_BY_ID(id)),
 };
 
 // ── Consultations ─────────────────────────────────────────────────────────────
@@ -137,5 +157,5 @@ export const ordonnanceService = {
     apiPatch<unknown>(`${ORDONNANCES.VALIDER(id)}?pharmacienId=${pharmacienId}`, {}),
 
   delete: (id: string | number) =>
-    apiGet<void>(ORDONNANCES.DELETE(id)),
+    apiDelete<void>(ORDONNANCES.DELETE(id)),
 };

@@ -31,18 +31,21 @@ interface FieldConfig {
 }
 
 const FIELDS: FieldConfig[] = [
-  { key: 'tensionSystolique', label: 'Tension systolique', placeholder: 'Ex : 120', icon: 'heart-outline', unit: 'mmHg', keyboardType: 'numeric' },
-  { key: 'tensionDiastolique', label: 'Tension diastolique', placeholder: 'Ex : 80', icon: 'heart-outline', unit: 'mmHg', keyboardType: 'numeric' },
-  { key: 'pouls', label: 'Pouls', placeholder: 'Ex : 72', icon: 'pulse-outline', unit: 'bpm', keyboardType: 'numeric' },
-  { key: 'spo2', label: 'SpO2', placeholder: 'Ex : 98', icon: 'pulse-outline', unit: '%', keyboardType: 'numeric' },
-  { key: 'temperature', label: 'Température', placeholder: 'Ex : 37.2', icon: 'thermometer-outline', unit: '°C', keyboardType: 'decimal-pad' },
-  { key: 'glycemie', label: 'Glycémie', placeholder: 'Ex : 1.0', icon: 'water-outline', unit: 'g/L', keyboardType: 'decimal-pad' },
+  { key: 'tensionSystolique',  label: 'Tension systolique',  placeholder: 'Ex : 120', icon: 'heart-outline',       unit: 'mmHg', keyboardType: 'numeric'     },
+  { key: 'tensionDiastolique', label: 'Tension diastolique', placeholder: 'Ex : 80',  icon: 'heart-outline',       unit: 'mmHg', keyboardType: 'numeric'     },
+  // Clé alignée avec le backend : frequenceCardiaque (pas "pouls")
+  { key: 'frequenceCardiaque', label: 'Pouls / FC',          placeholder: 'Ex : 72',  icon: 'pulse-outline',       unit: 'bpm',  keyboardType: 'numeric'     },
+  // Clé alignée avec le backend : saturationOxygene (pas "spo2")
+  { key: 'saturationOxygene',  label: 'SpO₂',               placeholder: 'Ex : 98',  icon: 'pulse-outline',       unit: '%',    keyboardType: 'numeric'     },
+  { key: 'temperature',        label: 'Température',         placeholder: 'Ex : 37.2',icon: 'thermometer-outline', unit: '°C',   keyboardType: 'decimal-pad' },
+  { key: 'poids',              label: 'Poids',               placeholder: 'Ex : 70',  icon: 'body-outline',        unit: 'kg',   keyboardType: 'decimal-pad' },
+  { key: 'glycemie',           label: 'Glycémie',            placeholder: 'Ex : 1.0', icon: 'water-outline',       unit: 'g/L',  keyboardType: 'decimal-pad' },
 ];
 
 export default function ConstantesScreen() {
   const router = useRouter();
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
-  const { userId, cliniqueId } = useAuthStore();
+  const { userId } = useAuthStore();
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -77,8 +80,8 @@ export default function ConstantesScreen() {
       await apiPost(CONSTANTES.CREATE, {
         patientId,
         infirmierId: String(userId),
+        // organisationId supprimé : non mappé côté backend
         ...parsed,
-        organisationId: cliniqueId ?? undefined,
       });
       Alert.alert('Succès', 'Constantes vitales enregistrées.', [
         { text: 'OK', onPress: () => router.back() },

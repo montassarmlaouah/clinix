@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { CreerCabinetMedecinDTO, Medecin, CabinetMedecinCreationResponse } from '../model/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class MedecinService {
-  private baseUrl = 'http://localhost:8080/api/medecins';
+  private baseUrl = `${environment.apiUrl}/api/medecins`;
   private cabinetsUrl = `${this.baseUrl}/cabinets`;
 
   constructor(private http: HttpClient) { }
@@ -15,6 +16,14 @@ export class MedecinService {
   /** Super admin — cabinets médecins (sans clinique) */
   listerCabinetsMedecins(): Observable<Medecin[]> {
     return this.http.get<Medecin[]>(this.cabinetsUrl);
+  }
+
+  verifierCinCabinet(cin: string, telephone?: string): Observable<Record<string, unknown>> {
+    let url = `${this.cabinetsUrl}/verifier-cin?cin=${encodeURIComponent(cin.trim())}`;
+    if (telephone?.trim()) {
+      url += `&telephone=${encodeURIComponent(telephone.trim())}`;
+    }
+    return this.http.get<Record<string, unknown>>(url);
   }
 
   creerCabinetMedecin(dto: CreerCabinetMedecinDTO): Observable<CabinetMedecinCreationResponse> {
@@ -71,7 +80,7 @@ export class MedecinService {
 
   /** Médecin cabinet : liste ses patients */
   listerPatientsCabinet(medecinId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/${medecinId}/patients`);
+    return this.http.get<any[]>(`${this.baseUrl}/${medecinId}/patients?scope=cabinet`);
   }
 
   /** Médecin cabinet : ajouter un patient */

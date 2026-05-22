@@ -30,9 +30,10 @@
         <li><i class="fas fa-check"></i> Annulation possible depuis le portail Stripe / facturation</li>
         <li><i class="fas fa-clock"></i> Après paiement, retour automatique vers « Mon abonnement »</li>
       </ul>
-      <button type="button" class="btn-stripe" (click)="continuerVersStripe()" [disabled]="preparing">
-        <span *ngIf="!preparing"><i class="fab fa-stripe-s"></i> Continuer vers Stripe</span>
-        <span *ngIf="preparing"><i class="fas fa-spinner fa-spin"></i> Préparation…</span>
+      <button type="button" class="btn-stripe" (click)="continuerVersStripe()" [disabled]="preparing || abonnementPaye">
+        <span *ngIf="abonnementPaye"><i class="fas fa-check-circle"></i> Abonnement déjà payé</span>
+        <span *ngIf="!abonnementPaye && !preparing"><i class="fab fa-stripe-s"></i> Continuer vers Stripe</span>
+        <span *ngIf="!abonnementPaye && preparing"><i class="fas fa-spinner fa-spin"></i> Préparation…</span>
       </button>
       <button type="button" class="btn-text" (click)="retourTarifs()" [disabled]="preparing">Modifier le forfait</button>
     </section>

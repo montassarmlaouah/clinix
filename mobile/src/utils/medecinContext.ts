@@ -14,10 +14,12 @@ export function hasMedecinClinique(cliniqueId: string | number | null | undefine
   return cliniqueId != null && cliniqueId !== '' && cliniqueId !== 'null' && cliniqueId !== 'undefined';
 }
 
-/** Accès cabinet (patients / RDV cabinet) — cabinet pur ou médecin de clinique. */
+/** Accès cabinet (patients / RDV cabinet) — cabinet pur ou médecin clinique avec accesCabinet. */
 export function medecinShowCabinetMenus(
   estCabinet: boolean,
   cliniqueId: string | number | null | undefined,
+  accesCabinet?: boolean,
 ): boolean {
-  return isMedecinCabinet(estCabinet, cliniqueId) || hasMedecinClinique(cliniqueId);
+  if (accesCabinet) return true;
+  return isMedecinCabinet(estCabinet, cliniqueId);
 }

@@ -36,17 +36,18 @@ export default function RootLayout() {
   const { token, userId, role, estCabinet, isRehydrated } = useAuthStore();
 
   // ── Gérer les erreurs 402 abonnement expiré ───────────────────────────────
+  // Redirection vers la page d'abonnement au lieu d'une alerte bloquante.
   useEffect(() => {
     const unsub = subscriptionEvents.subscribe(() => {
-      Alert.alert(
-        'Abonnement expiré',
-        'Votre abonnement est expiré ou inactif. Veuillez renouveler votre abonnement pour continuer.',
-        [{ text: 'OK' }],
-        { cancelable: false }
-      );
+      const target = estCabinet
+        ? '/(medecin)/abonnement-paiement'
+        : role?.includes('ADMIN')
+        ? '/(admin)/abonnement-paiement'
+        : '/(medecin)/abonnement-paiement';
+      router.push(target as never);
     });
     return unsub;
-  }, []);
+  }, [role, estCabinet, router]);
 
   useEffect(() => {
     // Attendre que Zustand ait restauré le state persisté

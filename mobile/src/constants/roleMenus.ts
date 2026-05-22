@@ -63,25 +63,28 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
 
 export interface RoleMenuContext {
   estCabinet?: boolean;
+  accesCabinet?: boolean;
   cliniqueId?: string | number | null;
 }
 
 function buildMedecinMenu(ctx: RoleMenuContext): RoleMenuItem[] {
-  const { estCabinet = false, cliniqueId = null } = ctx;
+  const { estCabinet = false, accesCabinet = false, cliniqueId = null } = ctx;
   const clinique = hasMedecinClinique(cliniqueId);
-  const cabinet = medecinShowCabinetMenus(estCabinet, cliniqueId);
+  const cabinet = medecinShowCabinetMenus(estCabinet, cliniqueId, accesCabinet);
   const cabinetOnly = isMedecinCabinet(estCabinet, cliniqueId) && !clinique;
 
   const items: RoleMenuItem[] = [
-    { label: 'Dashboard', route: '/(medecin)/index', icon: 'pulse-outline' },
-    { label: 'Statistiques', route: '/(medecin)/statistiques', icon: 'stats-chart-outline' },
     { label: 'Messagerie', route: '/(medecin)/messagerie', icon: 'chatbubbles-outline' },
     { label: 'Demandes opération', route: '/(medecin)/demandes-operation', icon: 'medical-outline' },
     { label: 'Demandes médicament', route: '/(medecin)/demandes-medicament', icon: 'medkit-outline' },
     { label: 'Mes congés', route: '/(medecin)/conges', icon: 'airplane-outline' },
-    { label: 'Mon abonnement', route: '/(medecin)/abonnement', icon: 'card-outline' },
-    { label: 'Forfaits', route: '/(medecin)/tarifs', icon: 'grid-outline' },
-    { label: 'Paiement Stripe', route: '/(medecin)/abonnement-paiement', icon: 'card-outline' },
+    { label: 'Mon abonnement', route: cabinetOnly ? '/(medecin)/abonnement?scope=cabinet' : '/(medecin)/abonnement', icon: 'card-outline' },
+    ...(cabinet
+      ? [
+          { label: 'Forfaits cabinet', route: '/(medecin)/tarifs?scope=cabinet', icon: 'grid-outline' },
+          { label: 'Paiement cabinet', route: '/(medecin)/abonnement-paiement?scope=cabinet', icon: 'card-outline' },
+        ]
+      : []),
     { label: 'Scanner', route: '/(medecin)/scanner', icon: 'scan-outline' },
     { label: 'Examens', route: '/(medecin)/examens', icon: 'flask-outline' },
     { label: 'Ordonnances', route: '/(medecin)/ordonnances', icon: 'medical-outline' },

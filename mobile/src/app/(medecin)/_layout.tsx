@@ -78,7 +78,6 @@ export default function MedecinLayout(): React.JSX.Element {
       <Tabs.Screen name="examens"                             options={hiddenTabScreenOptions} />
       <Tabs.Screen name="conges"                              options={hiddenTabScreenOptions} />
       <Tabs.Screen name="rendez-vous"                         options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="statistiques"                        options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-medicament"                 options={hiddenTabScreenOptions} />
       <Tabs.Screen name="demandes-operation"                  options={hiddenTabScreenOptions} />
       <Tabs.Screen name="alertes"                             options={hiddenTabScreenOptions} />
@@ -113,6 +112,7 @@ export default function MedecinLayout(): React.JSX.Element {
       <Tabs.Screen name="transferts/creer"                    options={hiddenTabScreenOptions} />
       <Tabs.Screen name="patients/nouveau"                    options={hiddenTabScreenOptions} />
       <Tabs.Screen name="operations/nouveau"                  options={hiddenTabScreenOptions} />
+      <Tabs.Screen name="medicament-nouveau"                  options={hiddenTabScreenOptions} />
       {/* ── Routeur dynamique (doit être déclaré en dernier) ── */}
       <Tabs.Screen name="[screen]"                            options={hiddenTabScreenOptions} />
     </Tabs>

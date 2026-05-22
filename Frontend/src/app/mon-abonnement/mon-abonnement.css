@@ -1240,3 +1240,28 @@
 .historique-section {
   margin-top: 1.5rem;
 }
+
+.scope-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.scope-tab {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid rgba(38, 101, 140, 0.25);
+  background: #fff;
+  color: var(--luna-deep);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scope-tab.active {
+  background: var(--luna-primary);
+  color: #fff;
+  border-color: var(--luna-primary);
+}

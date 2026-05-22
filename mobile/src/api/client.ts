@@ -125,12 +125,17 @@ export async function apiFetch<T>(
     throw { message: 'Session expirée. Veuillez vous reconnecter.', status: 401 } as ApiError;
   }
 
-  // ── 402 Payment Required : abonnement expiré ─────────────────────────────
+  // ── 402 Payment Required : abonnement requis ou expiré ──────────────────────
+  // On laisse remonter l'erreur avec le message du backend pour que l'écran
+  // appelant puisse rediriger vers checkout ou afficher un message adapté.
   if (response.status === 402) {
+    let errorBody: Partial<ApiError & { message?: string }> = {};
+    try { errorBody = await response.clone().json(); } catch { /* pas de body JSON */ }
     subscriptionEvents.emit();
     throw {
-      message: 'Votre abonnement est expiré. Veuillez renouveler votre abonnement pour continuer.',
+      message: errorBody.message ?? 'Abonnement requis. Veuillez souscrire à un plan pour continuer.',
       status: 402,
+      errors: errorBody.errors,
     } as ApiError;
   }
 
@@ -190,9 +195,11 @@ export async function apiUpload<T = unknown>(
   }
 
   if (response.status === 402) {
+    let errorBody: Partial<ApiError & { message?: string }> = {};
+    try { errorBody = await response.clone().json(); } catch { /* pas de body JSON */ }
     subscriptionEvents.emit();
     throw {
-      message: 'Votre abonnement est expiré. Veuillez renouveler votre abonnement pour continuer.',
+      message: errorBody.message ?? 'Abonnement requis. Veuillez souscrire à un plan pour continuer.',
       status: 402,
     } as ApiError;
   }

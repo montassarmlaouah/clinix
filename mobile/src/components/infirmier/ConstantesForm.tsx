@@ -160,9 +160,10 @@ export function ConstantesForm({
     setApiError('');
     try {
       const parse = (v: string) => (v.trim() ? parseFloat(v.replace(',', '.')) : undefined);
+      // Envoi IDs en String (UUID) — Number() convertirait les UUID en NaN
       await apiPost(CONSTANTES.CREATE, {
-        patientId:            Number(patientId),
-        infirmierId:          Number(infirmierId),
+        patientId:            String(patientId),
+        infirmierId:          String(infirmierId),
         tensionSystolique:    parse(values.tensionSystolique),
         tensionDiastolique:   parse(values.tensionDiastolique),
         frequenceCardiaque:   parse(values.frequenceCardiaque),

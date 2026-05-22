@@ -33,7 +33,12 @@
     </div>
     <div class="alert alert-success" *ngIf="simSuccess">
       <i class="fas fa-check-circle"></i> {{ simSuccess }}
-      <a routerLink="/mon-abonnement" class="inline-link">Voir mon abonnement</a>
+      <a routerLink="/mon-abonnement" class="inline-link" *ngIf="!abonnementPaye">Voir mon abonnement</a>
+    </div>
+    <div class="alert alert-info" *ngIf="abonnementPaye">
+      <i class="fas fa-shield-check"></i>
+      Abonnement déjà actif et payé — les boutons de paiement sont désactivés.
+      <a routerLink="/mon-abonnement" class="inline-link">Retour à mon abonnement</a>
     </div>
   </section>
 
@@ -60,14 +65,14 @@
         </li>
         <li><i class="fas fa-shield-halved"></i> Paiement sécurisé Stripe</li>
       </ul>
-      <button type="button" class="btn-cta" [class.btn-cta-accent]="o.popular" (click)="choisirForfait(o)">
-        Choisir ce forfait
+      <button type="button" class="btn-cta" [class.btn-cta-accent]="o.popular" (click)="choisirForfait(o)" [disabled]="abonnementPaye">
+        {{ abonnementPaye ? 'Déjà payé' : 'Choisir ce forfait' }}
       </button>
       <button
         type="button"
         class="btn-sim"
         (click)="simulerSansStripe(o, $event)"
-        [disabled]="simulatingId === o.id"
+        [disabled]="simulatingId === o.id || abonnementPaye"
       >
         <span *ngIf="simulatingId !== o.id"><i class="fas fa-flask"></i> Simuler sans Stripe</span>
         <span *ngIf="simulatingId === o.id"><i class="fas fa-spinner fa-spin"></i> …</span>

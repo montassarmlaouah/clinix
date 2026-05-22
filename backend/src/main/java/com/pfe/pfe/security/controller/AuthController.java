@@ -125,6 +125,13 @@ public class AuthController {
                 userInfo.put("telephone", cud.getTelephone());
                 userInfo.put("role", cud.getRole());
                 userInfo.put("cliniqueId", cud.getCliniqueId());
+                if ("MEDECIN".equalsIgnoreCase(cud.getRole())) {
+                    boolean estCabinet = cud.isAccesCabinet()
+                            || cud.getCliniqueId() == null
+                            || cud.getCliniqueId().isBlank();
+                    userInfo.put("estCabinet", estCabinet);
+                    userInfo.put("accesCabinet", cud.isAccesCabinet());
+                }
             } else {
                 userInfo.put("role", roleStr);
             }

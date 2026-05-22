@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { apiGet } from '@/src/api/client';
-import { PLANNINGS } from '@/src/api/endpoints';
+import { GARDES } from '@/src/api/endpoints';
 import { EmptyState, LoadingOverlay } from '@/src/components/common';
 import { ScreenHeader } from '@/src/components/common/ScreenHeader';
 import { useAuthStore } from '@/src/store/auth.store';
@@ -11,27 +11,41 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
+interface Garde {
+  id: string | number;
+  debut?: string;
+  fin?: string;
+  type?: string;
+  infirmiers?: Array<{ nom?: string; prenom?: string }>;
+}
+
+const TYPE_COLOR: Record<string, string> = {
+  JOUR: '#3b82f6',
+  NUIT: '#7c3aed',
+  MATIN: '#10b981',
+  APRES_MIDI: '#f59e0b',
+};
+
+function formatDateTime(val: string | undefined): string {
+  if (!val) return '\u2014';
+  const d = new Date(val);
+  if (Number.isNaN(d.getTime())) return val;
+  return d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
 export function InfirmierPlanningScreen(): React.JSX.Element {
   const userId = useAuthStore((s) => s.userId);
-  const [items, setItems] = useState<Record<string, unknown>[]>([]);
+  const [gardes, setGardes] = useState<Garde[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     if (!userId) return;
     try {
-      const data = await apiGet<unknown[]>(PLANNINGS.BY_UTILISATEUR(userId));
-      setItems((data as Record<string, unknown>[]) ?? []);
+      const data = await apiGet<Garde[]>(GARDES.BY_UTILISATEUR(userId));
+      setGardes(data ?? []);
     } catch {
-      try {
-        const all = await apiGet<unknown[]>(PLANNINGS.LIST);
-        const filtered = (all as Record<string, unknown>[]).filter(
-          (p) => String(p.infirmierId ?? p.personnelId) === String(userId),
-        );
-        setItems(filtered);
-      } catch {
-        setItems([]);
-      }
+      setGardes([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -44,30 +58,41 @@ export function InfirmierPlanningScreen(): React.JSX.Element {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScreenHeader title="Mon planning" subtitle="Créneaux et gardes" />
+      <ScreenHeader title="Mon planning" subtitle="Gardes et creneaux" />
       {loading ? <LoadingOverlay /> : null}
       <FlatList
-        data={items}
+        data={gardes}
         keyExtractor={(item, i) => String(item.id ?? i)}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); void load(); }} />
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          !loading ? <EmptyState icon="calendar-outline" title="Aucun créneau planifié" /> : null
+          !loading ? <EmptyState icon="calendar-outline" title="Aucun creneau planifie" /> : null
         }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              {String(item.date ?? item.dateDebut ?? item.jour ?? 'Planning')}
-            </Text>
-            <Text style={styles.meta}>
-              {[item.heureDebut, item.heureFin].filter(Boolean).join(' — ') ||
-                String(item.horaire ?? item.shift ?? '')}
-            </Text>
-            {item.service ? <Text style={styles.meta}>Service : {String(item.service)}</Text> : null}
-          </View>
-        )}
+        renderItem={({ item }) => {
+          const typeColor = TYPE_COLOR[item.type ?? ''] ?? LUNA_COLORS.textSecondary;
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardDate}>{formatDateTime(item.debut)}</Text>
+                {item.type ? (
+                  <View style={[styles.badge, { backgroundColor: typeColor }]}>
+                    <Text style={styles.badgeText}>{item.type}</Text>
+                  </View>
+                ) : null}
+              </View>
+              {item.fin ? (
+                <Text style={styles.meta}>{"Jusqu'a"} {formatDateTime(item.fin)}</Text>
+              ) : null}
+              {item.infirmiers && item.infirmiers.length > 0 ? (
+                <Text style={styles.meta}>
+                  {'Infirmiers : '}{item.infirmiers.map((inf) => (inf.prenom ?? '') + ' ' + (inf.nom ?? '')).join(', ')}
+                </Text>
+              ) : null}
+            </View>
+          );
+        }}
       />
     </SafeAreaView>
   );
@@ -75,18 +100,17 @@ export function InfirmierPlanningScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
+  list: { padding: spacing.lg, paddingBottom: 80 },
   card: {
-    backgroundColor: LUNA_COLORS.surface, // ✨ surface blanche
-    borderRadius: borderRadius.lg, // ✨ coins 16px
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderSubtle,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderLeftWidth: 4,
-    borderLeftColor: LUNA_COLORS.tertiary,
-    ...(shadows.sm as object),
+    backgroundColor: LUNA_COLORS.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.card,
   },
-  cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest },
-  meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 4 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  cardDate: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: LUNA_COLORS.text },
+  meta: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, marginTop: 2 },
+  badge: { borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 2 },
+  badgeText: { fontSize: fontSize.xs, color: '#fff', fontWeight: fontWeight.bold },
 });

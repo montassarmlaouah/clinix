@@ -29,7 +29,8 @@ export function DashboardQuickLinks({
   const role = useAuthStore((s) => s.role);
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
   const estCabinet = useAuthStore((s) => s.estCabinet);
-  const menu = getRoleMenu(role, { estCabinet, cliniqueId });
+  const accesCabinet = useAuthStore((s) => s.accesCabinet);
+  const menu = getRoleMenu(role, { estCabinet, accesCabinet, cliniqueId });
   const tabRoutes = getRoleTabRoutes(role);
 
   let items: RoleMenuItem[];

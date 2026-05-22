@@ -2,8 +2,8 @@
     <div class="licences-container">
         <header class="page-header">
             <div class="header-title">
-                <h1 class="luna-dark-text">{{ isPatient() ? 'Mes rendez-vous' : 'Gestion des rendez-vous' }}</h1>
-                <p class="page-subtitle">{{ isPatient() ? 'Prendre un rendez-vous et suivre vos créneaux' : 'Créer et suivre les rendez-vous de la clinique' }}</p>
+                <h1 class="luna-dark-text">{{ isPatient() ? 'Mes rendez-vous' : (isScopeCabinet ? 'Rendez-vous cabinet' : 'Gestion des rendez-vous') }}</h1>
+                <p class="page-subtitle">{{ isPatient() ? 'Prendre un rendez-vous et suivre vos créneaux' : (isScopeCabinet ? 'Créer et suivre les rendez-vous de votre cabinet' : 'Créer et suivre les rendez-vous de la clinique') }}</p>
             </div>
         </header>
 
@@ -19,6 +19,9 @@
         <div class="d-flex justify-content-end mb-3 gap-2">
             <button class="btn btn-primary" *ngIf="isSecretaire()" (click)="ouvrirModalAjout()">
                 <i class="fas fa-plus"></i> Ajouter un rendez-vous
+            </button>
+            <button class="btn btn-primary" *ngIf="isMedecin() && isScopeCabinet" (click)="ouvrirModalAjoutCabinet()">
+                <i class="fas fa-plus"></i> Ajouter un RDV cabinet
             </button>
             <button class="btn btn-primary" *ngIf="isPatient()" (click)="ouvrirModalPrendreRdv()">
                 <i class="fas fa-plus"></i> Prendre rendez-vous

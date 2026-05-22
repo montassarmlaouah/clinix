@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.pfe.pfe.billing.BillingConstants;
 import com.pfe.pfe.billing.BillingManagementService;
 import com.pfe.pfe.billing.CliniqueSmsQuotaService;
+import com.pfe.pfe.billing.SubscriptionAccessService;
 import com.pfe.pfe.billing.StripeCredentialsService;
 import com.pfe.pfe.billing.StripeSubscriptionFlowService;
 import com.pfe.pfe.billing.crypto.FieldCipher;
@@ -39,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class BillingController {
 
     private final BillingManagementService billingManagementService;
+    private final SubscriptionAccessService subscriptionAccessService;
     private final CliniqueSmsQuotaService cliniqueSmsQuotaService;
     private final StripeSubscriptionFlowService stripeSubscriptionFlowService;
     private final StripeCredentialsService stripeCredentialsService;
@@ -344,6 +346,7 @@ public class BillingController {
         m.put("id", a.getId());
         m.put("statut", a.getStatut());
         m.put("dateDebut", a.getDateDebut());
+        m.put("datePremierPaiement", resolveDatePremierPaiement(a));
         m.put("dateFin", a.getDateFin());
         m.put("dateCreation", a.getDateCreation());
         m.put("montantPaye", a.getMontantPaye());
@@ -366,7 +369,18 @@ public class BillingController {
             String nom = a.getMedecinCabinet().getNom() != null ? a.getMedecinCabinet().getNom() : "";
             m.put("medecinCabinetNom", (prenom + " " + nom).trim());
         }
+        m.put("accesAutorise", subscriptionAccessService.isActiveAndPaid(a));
         return m;
+    }
+
+    private java.time.LocalDate resolveDatePremierPaiement(com.pfe.pfe.model.AbonnementClinique a) {
+        if (a.getDatePremierPaiement() != null) {
+            return a.getDatePremierPaiement();
+        }
+        if (subscriptionAccessService.isActiveAndPaid(a)) {
+            return a.getDateDebut();
+        }
+        return null;
     }
 
     private enum BillingScope {

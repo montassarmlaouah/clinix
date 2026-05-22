@@ -52,7 +52,11 @@ export default function MedecinPatientsScreen(): React.JSX.Element {
   const loadAll = useCallback(async () => {
     if (!medecinId) return;
     try {
-      const data = await apiGet<Patient[]>(MEDECINS.PATIENTS_LIST(medecinId));
+      const patientsUrl =
+        scope === 'cabinet'
+          ? `${MEDECINS.PATIENTS_LIST(medecinId)}?scope=cabinet`
+          : MEDECINS.PATIENTS_LIST(medecinId);
+      const data = await apiGet<Patient[]>(patientsUrl);
       setAllPatients(data ?? []);
       setPatients(data ?? []);
     } catch { /* keep previous */ } finally {

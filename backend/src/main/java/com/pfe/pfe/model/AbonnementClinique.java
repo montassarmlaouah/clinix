@@ -44,6 +44,10 @@ public class AbonnementClinique {
     @Column(nullable = false)
     private LocalDate dateDebut;
 
+    /** Date du premier paiement effectif (Stripe / simulation), distincte de la création du dossier. */
+    @Column(name = "date_premier_paiement")
+    private LocalDate datePremierPaiement;
+
     @Column(nullable = false)
     private LocalDate dateFin;
 

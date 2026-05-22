@@ -2,9 +2,10 @@
   <div class="licences-container">
     <header class="page-header">
       <div class="header-title">
-        <h1 class="luna-dark-text">Gestion des patients</h1>
-        <p class="page-subtitle" *ngIf="!auth.isMedecinCabinetExclusif()">Ajouter et suivre les patients de la clinique</p>
-        <p class="page-subtitle" *ngIf="auth.isMedecinCabinetExclusif()">Patients de votre cabinet — ajout et suivi (sans établissement hôpital rattaché)</p>
+        <h1 class="luna-dark-text">{{ isScopeCabinet ? 'Patients cabinet' : 'Gestion des patients' }}</h1>
+        <p class="page-subtitle" *ngIf="isScopeCabinet">Patients de votre cabinet — ajout et suivi (activité libérale)</p>
+        <p class="page-subtitle" *ngIf="!isScopeCabinet && auth.hasMedecinClinique()">Ajouter et suivre les patients de la clinique</p>
+        <p class="page-subtitle" *ngIf="!isScopeCabinet && !auth.hasMedecinClinique()">Ajouter et suivre les patients</p>
       </div>
     </header>
 
@@ -215,7 +216,7 @@
                 </div>
               </div>
 
-              <div class="detail-section" *ngIf="medecinsClinique.length && !auth.isMedecinCabinetExclusif()">
+              <div class="detail-section" *ngIf="medecinsClinique.length && !isScopeCabinet">
                 <h6 class="section-title">
                   <i class="fas fa-user-md"></i> Médecins suivants (optionnel)
                 </h6>

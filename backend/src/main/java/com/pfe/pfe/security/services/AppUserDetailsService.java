@@ -78,7 +78,9 @@ public class AppUserDetailsService implements UserDetailsService {
         if (medecinOpt.isPresent()) {
             Medecin medecin = medecinOpt.get();
             String cliniqueId = medecin.getClinique() != null ? medecin.getClinique().getId() : null;
-            return buildCustomUserDetails(medecin, "MEDECIN", cliniqueId, username);
+            boolean accesCabinet = medecin.getClinique() == null
+                    || Boolean.TRUE.equals(medecin.getAccesCabinet());
+            return buildCustomUserDetails(medecin, "MEDECIN", cliniqueId, username, accesCabinet);
         }
         
         // Chercher dans Infirmier
@@ -142,6 +144,11 @@ public class AppUserDetailsService implements UserDetailsService {
      * Construit CustomUserDetails pour un utilisateur de type User (personnel, admin, patient)
      */
     private CustomUserDetails buildCustomUserDetails(User user, String role, String cliniqueId, String username) {
+        return buildCustomUserDetails(user, role, cliniqueId, username, false);
+    }
+
+    private CustomUserDetails buildCustomUserDetails(
+            User user, String role, String cliniqueId, String username, boolean accesCabinet) {
         // Vérifier que le compte est actif
         if (user.getActif() == null || !user.getActif()) {
             throw new UsernameNotFoundException("Compte non activé: " + username);
@@ -152,7 +159,7 @@ public class AppUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Compte non enregistré: " + username);
         }
         
-        return new CustomUserDetails(user, role, cliniqueId);
+        return new CustomUserDetails(user, role, cliniqueId, accesCabinet);
     }
 
     public boolean existsByUsername(String username) {

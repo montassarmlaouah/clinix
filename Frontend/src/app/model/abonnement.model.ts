@@ -39,6 +39,8 @@ export interface AbonnementCliniqueSummary {
   id: string;
   statut: string;
   dateDebut: string;
+  /** Date du premier paiement (affichage préféré à dateDebut). */
+  datePremierPaiement?: string | null;
   dateFin: string;
   dateCreation: string;
   montantPaye: number;
@@ -53,6 +55,8 @@ export interface AbonnementCliniqueSummary {
   cliniqueNom?: string | null;
   medecinCabinetId?: string | null;
   medecinCabinetNom?: string | null;
+  /** true si statut ACTIF, payé et non expiré */
+  accesAutorise?: boolean;
 }
 
 /** Réponse GET /api/billing/sms-quota */

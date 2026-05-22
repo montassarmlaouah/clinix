@@ -12,6 +12,7 @@ export interface AuthData {
   nom:         string | null;
   prenom:      string | null;
   estCabinet:  boolean;
+  accesCabinet: boolean;
 }
 
 export interface AuthState extends AuthData {
@@ -29,6 +30,7 @@ const initialState: AuthData = {
   nom:         null,
   prenom:      null,
   estCabinet:  false,
+  accesCabinet: false,
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
@@ -58,6 +60,7 @@ export const useAuthStore = create<AuthState>()(
         nom:         state.nom,
         prenom:      state.prenom,
         estCabinet:  state.estCabinet,
+        accesCabinet: state.accesCabinet,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

@@ -180,6 +180,20 @@ export class AuthService {
     }
   }
 
+  /** JWT : accès activité cabinet (médecin libéral ou clinique avec accesCabinet). */
+  getAccesCabinet(): boolean {
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.accesCabinet === true) return true;
+      if (payload.estCabinet === true) return true;
+      return this.isMedecinCabinetExclusif();
+    } catch {
+      return this.isMedecinCabinetExclusif();
+    }
+  }
+
   getCliniqueId(): string | null {
     const token = this.getToken();
     if (!token) {
@@ -284,15 +298,19 @@ export class AuthService {
 
   /**
    * Médecin pouvant gérer un cabinet (patients cabinet, abonnement cabinet).
-   * Cabinet exclusif ou médecin de clinique avec activité cabinet.
    */
   isMedecinCabinet(): boolean {
-    return this.isMedecin();
+    return this.isMedecin() && this.getAccesCabinet();
   }
 
-  /** Abonnement / forfaits cabinet médical (tout médecin). */
+  /** Médecin de clinique avec accès cabinet (deux abonnements possibles). */
+  medecinCliniqueEtCabinet(): boolean {
+    return this.isMedecin() && this.hasMedecinClinique() && this.getAccesCabinet();
+  }
+
+  /** Abonnement / forfaits cabinet médical (médecin avec accès cabinet uniquement). */
   peutGererAbonnementCabinet(): boolean {
-    return this.isMedecin();
+    return this.isMedecin() && this.getAccesCabinet();
   }
 
   isInfirmier(): boolean {

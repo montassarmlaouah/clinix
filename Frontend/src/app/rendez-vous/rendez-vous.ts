@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { RendezVousService } from '../service/rendez-vous.service';
 import { AuthService } from '../service/auth-service';
 import { RendezVous, RendezVousDTO } from '../model/rendez-vous';
@@ -43,15 +44,22 @@ export class RendezVousComponent implements OnInit {
         medecinId: ''
     };
 
+    /** clinique | cabinet — via ?scope= ou défaut selon le profil médecin */
+    scopeMode: 'clinique' | 'cabinet' = 'clinique';
+
     constructor(
         private rendezVousService: RendezVousService,
         private authService: AuthService,
         private patientService: PatientService,
-        private medecinService: MedecinService
+        private medecinService: MedecinService,
+        private route: ActivatedRoute
     ) { }
 
     ngOnInit(): void {
-        this.chargerRendezVous();
+        this.route.queryParamMap.subscribe((params) => {
+            this.scopeMode = this.resolveScope(params.get('scope'));
+            this.chargerRendezVous();
+        });
         if (this.isSecretaire()) {
             this.chargerPatients();
             this.chargerMedecins();
@@ -59,6 +67,23 @@ export class RendezVousComponent implements OnInit {
         if (this.isPatient()) {
             this.chargerMedecins();
         }
+        if (this.isMedecin() && this.isScopeCabinet) {
+            this.chargerPatientsCabinet();
+        }
+    }
+
+    get isScopeCabinet(): boolean {
+        return this.scopeMode === 'cabinet';
+    }
+
+    private resolveScope(param: string | null): 'clinique' | 'cabinet' {
+        if (param === 'cabinet' || param === 'clinique') {
+            return param;
+        }
+        if (this.authService.isMedecinCabinetExclusif()) {
+            return 'cabinet';
+        }
+        return 'clinique';
     }
 
     ouvrirModalPrendreRdv(): void {
@@ -103,6 +128,40 @@ export class RendezVousComponent implements OnInit {
             if (!medecinId) {
                 this.error = 'Médecin non trouvé';
                 this.loading = false;
+                return;
+            }
+            if (this.isScopeCabinet) {
+                if (!this.authService.getAccesCabinet()) {
+                    this.error = 'Accès cabinet non activé pour votre compte.';
+                    this.loading = false;
+                    return;
+                }
+                this.rendezVousService.listerRdvCabinetPourMedecin(medecinId).subscribe({
+                    next: (data) => {
+                        this.rendezVous = data as unknown as RendezVous[];
+                        this.filterRendezVous();
+                        this.loading = false;
+                    },
+                    error: (err) => {
+                        this.error = err.error?.message || 'Erreur lors du chargement';
+                        this.loading = false;
+                    }
+                });
+                return;
+            }
+            const cliniqueId = this.authService.getCliniqueId();
+            if (cliniqueId && cliniqueId !== 'null') {
+                this.rendezVousService.listerRdvCliniquePourMedecin(medecinId, cliniqueId).subscribe({
+                    next: (data) => {
+                        this.rendezVous = data as unknown as RendezVous[];
+                        this.filterRendezVous();
+                        this.loading = false;
+                    },
+                    error: (err) => {
+                        this.error = err.error?.message || 'Erreur lors du chargement';
+                        this.loading = false;
+                    }
+                });
                 return;
             }
             this.rendezVousService.getRendezVousByMedecin(medecinId).subscribe({
@@ -202,6 +261,12 @@ export class RendezVousComponent implements OnInit {
                 this.formData.patientId = pid;
             }
         }
+        if (this.isMedecin() && this.isScopeCabinet) {
+            const mid = this.authService.getUserId();
+            if (mid) {
+                this.formData.medecinId = mid;
+            }
+        }
         if (!this.formData.dateHeure || !this.formData.patientId || !this.formData.medecinId) {
             this.error = 'Veuillez remplir tous les champs obligatoires';
             return;
@@ -287,6 +352,30 @@ export class RendezVousComponent implements OnInit {
     isPatient(): boolean {
         const role = this.authService.getRole();
         return role === 'ROLE_PATIENT' || role === 'PATIENT';
+    }
+
+    chargerPatientsCabinet(): void {
+        const medecinId = this.authService.getUserId();
+        if (!medecinId) return;
+        this.medecinService.listerPatientsCabinet(medecinId).subscribe({
+            next: (data) => this.patients = data || [],
+            error: () => this.patients = []
+        });
+    }
+
+    ouvrirModalAjoutCabinet(): void {
+        const mid = this.authService.getUserId();
+        if (!mid) return;
+        this.isEditMode = false;
+        this.selectedRendezVous = undefined;
+        this.formData = {
+            dateHeure: this.getNowLocalDateTime(),
+            motif: '',
+            patientId: '',
+            medecinId: mid
+        };
+        this.chargerPatientsCabinet();
+        this.showModal = true;
     }
 
     chargerPatients(): void {

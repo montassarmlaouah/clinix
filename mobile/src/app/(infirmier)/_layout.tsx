@@ -113,6 +113,7 @@ export default function InfirmierLayout(): React.JSX.Element {
         {/* Hospitalisation & Demandes */}
         <Tabs.Screen name="hospitalisations"     options={hiddenTabScreenOptions} />
         <Tabs.Screen name="demandes-medicament"  options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="medicament-nouveau"   options={hiddenTabScreenOptions} />
         <Tabs.Screen name="demandes-operation"   options={hiddenTabScreenOptions} />
         <Tabs.Screen name="demandes-operation/[id]" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="taches-soins"         options={hiddenTabScreenOptions} />
