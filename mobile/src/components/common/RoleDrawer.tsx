@@ -1,15 +1,43 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  IconPlane,
+  IconAlertCircle,
+  IconBandage,
+  IconBed,
+  IconCalendar,
+  IconCreditCard,
+  IconCheckbox,
+  IconClipboardList,
+  IconDeviceMobileMessage,
+  IconFileText,
+  IconHeart,
+  IconHelpCircle,
+  IconHome,
+  IconId,
+  IconList,
+  IconLogout,
+  IconMedicalCross,
+  IconMenu2,
+  IconNotes,
+  IconPackage,
+  IconPill,
+  IconReportMedical,
+  IconScan,
+  IconSettings,
+  IconGauge,
+  IconStethoscope,
+  IconCalendarTime,
+  IconTools,
+  IconUser,
+  IconUsers,
+  IconVaccine,
+  IconVideo,
+  IconAlertTriangle,
+  type Icon as TablerIcon,
+} from '@tabler/icons-react-native';
 
 import { ClinixLogo } from '@/src/components/common/ClinixLogo';
 import { getRoleMenu, type RoleMenuItem } from '@/src/constants/roleMenus';
@@ -22,8 +50,74 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-/** Menu latéral par rôle (style web / capture référence) */
-export function RoleDrawer(): React.JSX.Element {
+const IONICON_TO_TABLER: Record<string, TablerIcon> = {
+  'speedometer-outline': IconGauge,
+  'business-outline': IconHome,
+  'person-outline': IconUser,
+  'card-outline': IconCreditCard,
+  'settings-outline': IconSettings,
+  'people-outline': IconUsers,
+  'medical-outline': IconMedicalCross,
+  'bed-outline': IconBed,
+  'construct-outline': IconTools,
+  'grid-outline': IconHome,
+  'heart-outline': IconHeart,
+  'receipt-outline': IconFileText,
+  'calendar-outline': IconCalendar,
+  'airplane-outline': IconPlane,
+  'medkit-outline': IconPill,
+  'list-outline': IconList,
+  'pulse-outline': IconStethoscope,
+  'today-outline': IconCalendarTime,
+  'warning-outline': IconAlertTriangle,
+  'alert-circle-outline': IconAlertCircle,
+  'bandage-outline': IconBandage,
+  'scan-outline': IconScan,
+  'time-outline': IconStethoscope,
+  'checkbox-outline': IconCheckbox,
+  'analytics-outline': IconNotes,
+  'chatbox-outline': IconDeviceMobileMessage,
+  'document-text-outline': IconFileText,
+  'chatbubbles-outline': IconDeviceMobileMessage,
+  'clipboard-outline': IconClipboardList,
+  'folder-open-outline': IconFileText,
+  'flask-outline': IconVaccine,
+  'videocam-outline': IconVideo,
+  'notifications-outline': IconAlertCircle,
+  'person-circle-outline': IconId,
+  'menu-outline': IconMenu2,
+  'home-outline': IconHome,
+  'cut-outline': IconMedicalCross,
+  'lock-closed-outline': IconSettings,
+  'help-circle-outline': IconHelpCircle,
+  'log-out-outline': IconLogout,
+  'arrow-back-outline': IconMenu2,
+  'eye-outline': IconMenu2,
+  'eye-off-outline': IconMenu2,
+  'chevron-up': IconMenu2,
+  'chevron-down': IconMenu2,
+  'crown-outline': IconMenu2,
+  'barcode-outline': IconMenu2,
+  'id-card-outline': IconId,
+  'mail-outline': IconMenu2,
+  'call-outline': IconMenu2,
+  'add-outline': IconMenu2,
+  'pencil-outline': IconMenu2,
+  'trash-outline': IconMenu2,
+  'search-outline': IconMenu2,
+  'filter-outline': IconMenu2,
+  'download-outline': IconMenu2,
+  'upload-outline': IconMenu2,
+  'print-outline': IconMenu2,
+  'share-outline': IconMenu2,
+};
+
+function resolveMenuIcon(iconName: string): TablerIcon {
+  return IONICON_TO_TABLER[iconName] ?? IconMenu2;
+}
+
+// ✨ Fonction interne optimisée avant memo
+function RoleDrawerComponent(): React.JSX.Element {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { open, closeDrawer } = useDrawerStore();
@@ -47,74 +141,141 @@ export function RoleDrawer(): React.JSX.Element {
     router.navigate(item.route as never);
   }
 
+  const headerStyle: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
+    backgroundColor: LUNA_COLORS.primary,
+    gap: spacing.md,
+  };
+
+  const rowStyle: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)',
+  };
+
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={closeDrawer}>
-      <View style={styles.overlay}>
+      <View style={{ flex: 1, flexDirection: 'row' }}>
         <View
-          style={[
-            styles.panel,
-            { paddingTop: insets.top, paddingBottom: insets.bottom },
-          ]}
+          style={{
+            width: '78%',
+            maxWidth: 300,
+            height: '100%',
+            backgroundColor: LUNA_COLORS.surface,
+            borderRightWidth: 1,
+            borderRightColor: LUNA_COLORS.borderSubtle,
+            shadowColor: LUNA_COLORS.darkest,
+            shadowOffset: { width: 4, height: 0 },
+            shadowOpacity: 0.18,
+            shadowRadius: 12,
+            elevation: 10,
+            zIndex: 2,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          }}
         >
-          <View style={styles.header}>
-            <View style={styles.headerAvatar}>
+          <View style={headerStyle}>
+            <View
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: borderRadius.full,
+                backgroundColor: LUNA_COLORS.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+              }}
+            >
               <ClinixLogo variant="icon" width={44} height={44} />
             </View>
-            <View style={styles.headerText}>
-              <Text style={styles.brandTitle} numberOfLines={1}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse }} numberOfLines={1}>
                 CLINIX
               </Text>
               {cliniqueNom ? (
-                <Text style={styles.clinicLine} numberOfLines={1}>
+                <Text style={{ fontSize: fontSize.sm, color: 'rgba(255,255,255,0.85)', marginTop: 2 }} numberOfLines={1}>
                   {cliniqueNom}
                 </Text>
               ) : null}
-              <Text style={styles.userLine} numberOfLines={1}>
+              <Text style={{ fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: LUNA_COLORS.textInverse, marginTop: 2 }} numberOfLines={1}>
                 {userName}
               </Text>
               {roleLabel ? (
-                <Text style={styles.roleLine} numberOfLines={1}>
+                <Text style={{ fontSize: fontSize.xs, color: 'rgba(255,255,255,0.75)', marginTop: 2 }} numberOfLines={1}>
                   {roleLabel}
                 </Text>
               ) : null}
             </View>
           </View>
 
-          <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-            {items.map((item) => (
-              <Pressable
-                key={item.route}
-                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]} // ✨ opacity 0.75
-                onPress={() => navigate(item)}
-              >
-                <Ionicons name={item.icon} size={22} color={LUNA_COLORS.secondary} />
-                <Text style={styles.rowLabel}>{item.label}</Text>
-              </Pressable>
-            ))}
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            {items.map((item) => {
+              const ItemIcon = resolveMenuIcon(item.icon);
+              return (
+                <Pressable
+                  key={item.route}
+                  style={({ pressed }) => [
+                    rowStyle,
+                    pressed && { backgroundColor: LUNA_COLORS.surfaceLight, opacity: 0.75 },
+                  ]}
+                  onPress={() => navigate(item)}
+                >
+                  <ItemIcon size={20} color={LUNA_COLORS.secondary} strokeWidth={1.8} />
+                  <Text style={{ flex: 1, fontSize: fontSize.base, fontWeight: fontWeight.medium, color: LUNA_COLORS.secondary, textAlign: 'left' }}>
+                    {item.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </ScrollView>
 
-          <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: 'rgba(197, 220, 234, 0.6)',
+              paddingTop: spacing.sm,
+              paddingHorizontal: spacing.lg,
+              paddingBottom: Math.max(insets.bottom, spacing.md),
+            }}
+          >
             <Pressable
-              style={({ pressed }) => [styles.footerRow, pressed && { opacity: 0.75 }]} // ✨
+              style={({ pressed }) => [
+                { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.sm },
+                pressed && { opacity: 0.75 },
+              ]}
               onPress={() => {
                 closeDrawer();
                 void logout();
               }}
             >
-              <Ionicons name="log-out-outline" size={22} color={LUNA_COLORS.secondary} />
-              <Text style={styles.footerLabel}>Déconnexion</Text>
+              <IconLogout size={20} color={LUNA_COLORS.secondary} strokeWidth={1.8} />
+              <Text style={{ fontSize: fontSize.base, fontWeight: fontWeight.medium, color: LUNA_COLORS.secondary }}>
+                Déconnexion
+              </Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.helpRow, pressed && { opacity: 0.75 }]} // ✨
+              style={({ pressed }) => [
+                { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md, marginTop: spacing.xs },
+                pressed && { opacity: 0.75 },
+              ]}
               onPress={closeDrawer}
             >
-              <Ionicons name="help-circle-outline" size={20} color={LUNA_COLORS.textDisabled} />
-              <Text style={styles.helpLabel}>Aide & Formation</Text>
+              <IconHelpCircle size={18} color={LUNA_COLORS.textDisabled} strokeWidth={1.8} />
+              <Text style={{ fontSize: fontSize.sm, color: LUNA_COLORS.textDisabled }}>
+                Aide & Formation
+              </Text>
             </Pressable>
           </View>
         </View>
         <Pressable
-          style={styles.backdrop}
+          style={{ flex: 1, backgroundColor: LUNA_COLORS.overlay, zIndex: 1 }}
           onPress={closeDrawer}
           accessibilityLabel="Fermer le menu"
         />
@@ -123,113 +284,5 @@ export function RoleDrawer(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: LUNA_COLORS.overlay,
-    zIndex: 1,
-  },
-  panel: {
-    width: '78%',
-    maxWidth: 300,
-    height: '100%',
-    backgroundColor: LUNA_COLORS.surface,
-    borderRightWidth: 1,
-    borderRightColor: LUNA_COLORS.borderSubtle, // ✨
-    shadowColor: LUNA_COLORS.darkest,
-    shadowOffset: { width: 4, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 10,
-    zIndex: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: LUNA_COLORS.primary,
-    gap: spacing.md,
-  },
-  headerAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: borderRadius.full,
-    backgroundColor: LUNA_COLORS.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  headerText: { flex: 1 },
-  brandTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse, // ✨ sur fond primary
-  },
-  clinicLine: {
-    fontSize: fontSize.sm,
-    color: 'rgba(255,255,255,0.85)', // ✨
-    marginTop: 2,
-  },
-  userLine: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.textInverse, // ✨
-    marginTop: 2,
-  },
-  roleLine: {
-    fontSize: fontSize.xs,
-    color: 'rgba(255,255,255,0.75)', // ✨
-    marginTop: 2,
-  },
-  list: { flex: 1 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur
-  },
-  rowPressed: { backgroundColor: LUNA_COLORS.surfaceLight, opacity: 0.75 }, // ✨
-  rowLabel: {
-    flex: 1,
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.medium,
-    color: LUNA_COLORS.secondary,
-    textAlign: 'left',
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(197, 220, 234, 0.6)', // ✨
-    paddingTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  footerLabel: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.medium,
-    color: LUNA_COLORS.secondary,
-  },
-  helpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    marginTop: spacing.xs,
-  },
-  helpLabel: {
-    fontSize: fontSize.sm,
-    color: LUNA_COLORS.textDisabled,
-  },
-});
+// ✨ Export mémoized pour éviter rerenders parents
+export const RoleDrawer = React.memo(RoleDrawerComponent);

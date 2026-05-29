@@ -4,60 +4,71 @@ import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
 
-/** Styles tableau admin — HeroUI : en-tête primary, lignes alternées, actions rondes. */
+// ✨ Styles tableaux HeroUI v3 — en-têtes dégradés, lignes alternées, ombres subtiles
 export const adminTableStyles = StyleSheet.create({
+  // ── Wrapper tableau (cardé avec ombre douce) ─────────────────────────────────
   tableWrap: {
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
-    borderRadius: borderRadius.lg, // ✨ coins arrondis 16px
+    borderRadius: borderRadius.lg, // ✨ 16px arrondi
     overflow: 'hidden',
     backgroundColor: LUNA_COLORS.surface,
     borderWidth: 1,
     borderColor: LUNA_COLORS.borderSubtle,
-    ...(shadows.sm as object),
+    ...(shadows.md as object), // ✨ Ombre douce (md)
   },
+
+  // ── En-tête (fond primary sombre, texte blanc uppercase) ────────────────────
   tableHeader: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: LUNA_COLORS.primary, // ✨ en-tête primary, texte blanc
-    borderBottomWidth: 0,
+    backgroundColor: LUNA_COLORS.primary, // ✨ #26658c
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(38, 101, 140, 0.2)',
   },
   thText: {
     fontSize: fontSize.xs,
     fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse,
+    color: LUNA_COLORS.textInverse, // ✨ Blanc
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.8, // ✨ HeroUI letter-spacing
   },
+
+  // ── Ligne tableau (alternée blanc/gris clair) ────────────────────────────────
   tableRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: LUNA_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 220, 234, 0.5)', // ✨ séparateur subtil
+    borderBottomColor: 'rgba(197, 220, 234, 0.5)', // ✨ Séparateur subtle
     alignItems: 'center',
   },
   tableRowAlt: {
-    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ lignes alternées
+    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ Ligne paire gris clair
   },
   tableRowPressed: {
-    backgroundColor: LUNA_COLORS.surfaceActive, // ✨ état press/hover
+    backgroundColor: LUNA_COLORS.surfaceActive, // ✨ Bleu clair on press
   },
+
+  // ── Actions (boutons icônes ronds semi-transparents) ────────────────────────
   actionsRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     alignItems: 'center',
   },
   actionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full, // ✨ boutons icônes ronds
-    backgroundColor: 'rgba(45, 156, 219, 0.12)',
+    width: 36, // ✨ Augmenté à 36px pour meilleure UX
+    height: 36,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(45, 156, 219, 0.12)', // ✨ Bleu semi-transparent
     alignItems: 'center',
     justifyContent: 'center',
+    ...(shadows.sm as object),
   },
+
+  // ── Numéro chambre (titre gras) ────────────────────────────────────────────
   chambreNum: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.bold,
@@ -74,6 +85,8 @@ export const adminTableStyles = StyleSheet.create({
     borderRadius: borderRadius.xs,
     alignSelf: 'flex-start',
   },
+
+  // ── Texte cellule (standard) ───────────────────────────────────────────────
   cellText: {
     fontSize: fontSize.sm,
     color: LUNA_COLORS.textPrimary,
@@ -83,56 +96,57 @@ export const adminTableStyles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: LUNA_COLORS.textSecondary,
   },
+
+  // ── Badge type (fond clair coloré, coins arrondis) ──────────────────────────
   typeBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.full, // ✨ Coins arrondis
     backgroundColor: LUNA_COLORS.surfaceLight,
     alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(45, 156, 219, 0.25)',
   },
   typeBadgeTxt: {
     fontSize: fontSize.xs,
     color: LUNA_COLORS.textPrimary,
     fontWeight: fontWeight.semibold,
-  },
-  capBar: {
-    height: 5,
-    backgroundColor: LUNA_COLORS.border,
-    borderRadius: borderRadius.xs,
-    overflow: 'hidden',
-    marginBottom: 3,
-  },
-  capFill: {
-    height: '100%',
-    backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.xs,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4, // ✨ point coloré devant le statut
-  },
-  statusTxt: {
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
+
+  // ── Barre capacité (colorée selon statut) ──────────────────────────────────
+  capBar: {
+    height: 6, // ✨ Augmenté à 6px
+    backgroundColor: 'rgba(197, 220, 234, 0.4)',
+    borderRadius: borderRadius.xs,
+    overflow: 'hidden',
+    marginTop: spacing.xs,
+  },
+  capBarFill: {
+    height: '100%',
+    backgroundColor: LUNA_COLORS.secondary, // ✨ #2d9cdb
+    borderRadius: borderRadius.xs,
+  },
+  capBarSuccess: {
+    backgroundColor: LUNA_COLORS.success,
+  },
+  capBarWarning: {
+    backgroundColor: LUNA_COLORS.warning,
+  },
+  capBarDanger: {
+    backgroundColor: LUNA_COLORS.danger,
+  },
+
+  // ── Vide (aucun résultat) ──────────────────────────────────────────────────
   emptyRow: {
-    padding: spacing.xxxl,
+    paddingVertical: spacing.xl,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: LUNA_COLORS.surfaceLight,
   },
   emptyText: {
-    color: LUNA_COLORS.textSecondary,
     fontSize: fontSize.sm,
+    color: LUNA_COLORS.textSecondary,
   },
 });

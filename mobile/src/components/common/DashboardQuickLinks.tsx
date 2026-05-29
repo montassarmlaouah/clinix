@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
+import { IconMenu2, type Icon as TablerIcon } from '@tabler/icons-react-native';
 
 import { getRoleMenu, type RoleMenuItem } from '@/src/constants/roleMenus';
 import { getRoleTabRoutes } from '@/src/constants/roleTabs';
@@ -13,13 +13,11 @@ import { fontSize, fontWeight, typography } from '@/src/theme/typography';
 interface DashboardQuickLinksProps {
   maxItems?: number;
   excludeRoutes?: string[];
-  /** Routes affichées en priorité (ex. navigation principale admin). */
   pinnedRoutes?: readonly string[];
-  /** Couleur de la bordure gauche des tuiles */
   accentColor?: string;
 }
 
-export function DashboardQuickLinks({
+export const DashboardQuickLinks = React.memo(function DashboardQuickLinks({
   maxItems = 12,
   excludeRoutes = [],
   pinnedRoutes,
@@ -54,9 +52,11 @@ export function DashboardQuickLinks({
   const shown = items.slice(0, maxItems);
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>Accès rapide</Text>
-      <View style={styles.grid}>
+    <View style={{ marginTop: spacing.lg }}>
+      <Text style={{ ...typography.sectionTitle, marginBottom: spacing.md, paddingHorizontal: spacing.xs }}>
+        Accès rapide
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {shown.map((item) => (
           <QuickTile
             key={item.route}
@@ -68,7 +68,7 @@ export function DashboardQuickLinks({
       </View>
     </View>
   );
-}
+});
 
 function QuickTile({
   item,
@@ -79,56 +79,47 @@ function QuickTile({
   accentColor: string;
   onPress: () => void;
 }) {
+  const tileStyle: ViewStyle = {
+    width: '30%',
+    minWidth: 100,
+    backgroundColor: LUNA_COLORS.surfaceLight,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    alignItems: 'center',
+    borderLeftWidth: 4,
+    borderLeftColor: accentColor,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+    ...shadows.sm,
+  };
+
   return (
-    <Pressable style={[styles.tile, { borderLeftColor: accentColor }]} onPress={onPress}>
-      <View style={styles.iconWrap}>
-        <Ionicons name={item.icon} size={24} color={LUNA_COLORS.secondary} />
+    <Pressable style={tileStyle} onPress={onPress}>
+      <View
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: borderRadius.md,
+          backgroundColor: LUNA_COLORS.tabActiveBg,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.sm,
+        }}
+      >
+        <IconMenu2 size={24} color={LUNA_COLORS.secondary} strokeWidth={1.8} />
       </View>
-      <Text style={styles.label} numberOfLines={2}>
+      <Text
+        style={{
+          fontSize: fontSize.xs,
+          color: LUNA_COLORS.textPrimary,
+          textAlign: 'center',
+          fontWeight: fontWeight.medium,
+          lineHeight: 15,
+        }}
+        numberOfLines={2}
+      >
         {item.label}
       </Text>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { marginTop: spacing.lg },
-  title: {
-    ...typography.sectionTitle,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.xs,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  tile: {
-    width: '30%',
-    minWidth: 100,
-    backgroundColor: LUNA_COLORS.surfaceLight, // ✨ fond surfaceLight
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    alignItems: 'center',
-    borderLeftWidth: 4, // ✨ bordure colorée gauche
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderSubtle,
-    ...(shadows.sm as object),
-  },
-  iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.md,
-    backgroundColor: LUNA_COLORS.tabActiveBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  label: {
-    fontSize: fontSize.xs,
-    color: LUNA_COLORS.textPrimary,
-    textAlign: 'center',
-    fontWeight: fontWeight.medium,
-    lineHeight: 15,
-  },
-});

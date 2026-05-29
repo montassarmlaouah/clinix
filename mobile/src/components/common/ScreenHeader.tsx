@@ -9,14 +9,11 @@ interface ScreenHeaderProps {
   subtitle?: string;
   onBack?: () => void;
   right?: React.ReactNode;
-  /** Afficher le bouton retour (défaut : true) */
   showBack?: boolean;
-  /** Bandeau logo CLINIX (défaut : false sur écrans secondaires) */
   showBrand?: boolean;
 }
 
-/** En-tête — même barre que Personnel (menu · logo · notif · profil, ou retour). */
-export function ScreenHeader({
+export const ScreenHeader = React.memo(function ScreenHeader({
   title,
   subtitle,
   onBack,
@@ -53,4 +50,4 @@ export function ScreenHeader({
       right={right}
     />
   );
-}
+});

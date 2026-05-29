@@ -215,7 +215,7 @@ export function ProfilCommun({ roleLabel, children }: ProfilCommunProps): React.
               <View style={styles.divider} />
               <View style={styles.abonnementCard}>
                 <View style={styles.abonnementHeader}>
-                  <Ionicons name="crown-outline" size={18} color={LUNA_COLORS.warning} />
+                  <Ionicons name="star-outline" size={18} color={LUNA_COLORS.warning} />
                   <Text style={styles.abonnementTitle}>Abonnement actuel</Text>
                 </View>
                 <Text style={styles.abonnementOffre}>{profile.abonnement.offreNom ?? '—'}</Text>

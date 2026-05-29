@@ -1,15 +1,16 @@
-import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
+import { IconTrendingUp, IconTrendingDown, type Icon as TablerIcon } from '@tabler/icons-react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight, typography } from '@/src/theme/typography';
+import { resolveTablerIcon } from '@/src/utils/iconMapper';
 
 interface LunaStatCardProps {
   label: string;
   value: string | number;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: string | TablerIcon;
   color?: string;
   bgColor?: string;
   trend?: 'up' | 'down' | null;
@@ -17,7 +18,7 @@ interface LunaStatCardProps {
   style?: ViewStyle;
 }
 
-export function LunaStatCard({
+export const LunaStatCard = React.memo(function LunaStatCard({
   label,
   value,
   icon,
@@ -27,82 +28,56 @@ export function LunaStatCard({
   onPress,
   style,
 }: LunaStatCardProps): React.JSX.Element {
-  const content = (
-    <>
-      {icon ? (
-        <View style={[styles.iconWrap, { backgroundColor: `${color}18` }]}>
-          <Ionicons name={icon} size={24} color={color} />
-        </View>
-      ) : null}
-      <View style={styles.valueRow}>
-        <Text style={styles.value}>{value}</Text>
-        {trend ? (
-          <Text style={[styles.trend, trend === 'up' ? styles.trendUp : styles.trendDown]}>
-            {trend === 'up' ? '↑' : '↓'}
-          </Text>
-        ) : null}
-      </View>
-      <Text style={styles.label}>{label}</Text>
-    </>
-  );
+  const IconComponent = typeof icon === 'string' ? resolveTablerIcon(icon) : (icon ?? null);
 
-  if (onPress) {
-    return (
-      <Pressable
-        onPress={onPress}
-        style={[styles.card, { backgroundColor: bgColor, borderLeftColor: color }, style]}
-      >
-        {content}
-      </Pressable>
-    );
-  }
-
-  return (
-    <View style={[styles.card, { backgroundColor: bgColor, borderLeftColor: color }, style]}>
-      {content}
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  card: {
+  const cardStyle: ViewStyle = {
     flex: 1,
     minWidth: '45%',
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     alignItems: 'flex-start',
     gap: spacing.xs,
-    borderLeftWidth: 4, // ✨ bordure colorée gauche
+    borderLeftWidth: 4,
+    borderLeftColor: color,
     borderWidth: 1,
     borderColor: LUNA_COLORS.borderSubtle,
-    ...(shadows.sm as object),
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.xs,
-  },
-  value: {
-    ...typography.statValue,
-    marginTop: spacing.xs,
-  },
-  trend: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-  },
-  trendUp: { color: LUNA_COLORS.success },
-  trendDown: { color: LUNA_COLORS.error },
-  label: {
-    fontSize: fontSize.xs,
-    color: LUNA_COLORS.textSecondary,
-    fontWeight: fontWeight.medium,
-  },
+    ...shadows.sm,
+  };
+
+  const content = (
+    <>
+      {IconComponent ? (
+        <View style={{ width: 40, height: 40, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs, backgroundColor: `${color}18` }}>
+          <IconComponent size={24} color={color} strokeWidth={1.8} />
+        </View>
+      ) : null}
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: spacing.xs }}>
+        <Text style={{ ...typography.statValue, marginTop: spacing.xs }}>{value}</Text>
+        {trend ? (
+          trend === 'up' ? (
+            <IconTrendingUp size={16} color={LUNA_COLORS.success} strokeWidth={2} />
+          ) : (
+            <IconTrendingDown size={16} color={LUNA_COLORS.danger} strokeWidth={2} />
+          )
+        ) : null}
+      </View>
+      <Text style={{ fontSize: fontSize.xs, color: LUNA_COLORS.textSecondary, fontWeight: fontWeight.medium }}>
+        {label}
+      </Text>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={[cardStyle, style]}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={[cardStyle, style]}>
+      {content}
+    </View>
+  );
 });

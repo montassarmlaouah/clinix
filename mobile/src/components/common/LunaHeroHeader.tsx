@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
 
 import { ClinixLogo } from '@/src/components/common/ClinixLogo';
 import { APP_TAGLINE, getProfilRoute } from '@/src/constants/branding';
@@ -10,6 +9,13 @@ import { usePageHeader } from '@/src/hooks/usePageHeader';
 import { useAuthStore } from '@/src/store/auth.store';
 import { useDrawerStore } from '@/src/store/drawer.store';
 import { usePageHeaderStore } from '@/src/store/pageHeader.store';
+import {
+  IconArrowLeft,
+  IconBell,
+  IconMenu2,
+  IconUser,
+} from '@tabler/icons-react-native';
+
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight } from '@/src/theme/typography';
@@ -18,7 +24,6 @@ export interface LunaHeroHeaderProps {
   title: string;
   subtitle?: string;
   showBrand?: boolean;
-  /** Menu hamburger (navigation par rôle) */
   showMenu?: boolean;
   showNotifications?: boolean;
   showProfil?: boolean;
@@ -29,7 +34,6 @@ export interface LunaHeroHeaderProps {
   children?: React.ReactNode;
 }
 
-/** Rendu visuel de la barre supérieure (sans hook store). */
 export function LunaHeroHeaderView({
   title,
   subtitle,
@@ -53,55 +57,90 @@ export function LunaHeroHeaderView({
   const userLine = [prenom, nom].filter(Boolean).join(' ').trim() || roleLabel;
   const line2 = subtitle ?? undefined;
 
+  const iconBtnStyle: ViewStyle = {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  };
+
   return (
-    <View style={styles.wrap}>
-      <View style={styles.gradientFade} pointerEvents="none" />
-      <View style={styles.navRow}>
+    <View
+      style={{
+        backgroundColor: LUNA_COLORS.primary,
+        paddingHorizontal: spacing.md,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.md,
+        overflow: 'hidden',
+      }}
+    >
+      <View
+        style={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: '55%',
+          backgroundColor: LUNA_COLORS.secondary,
+          opacity: 0.45,
+        }}
+        pointerEvents="none"
+      />
+
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs, minHeight: 48 }}>
         {showBack ? (
           <Pressable
-            style={styles.iconBtn}
+            style={iconBtnStyle}
             onPress={onBack ?? (() => router.back())}
             hitSlop={8}
             accessibilityLabel="Retour"
           >
-            <Ionicons name="arrow-back" size={24} color={LUNA_COLORS.textInverse} />
+            <IconArrowLeft size={22} color={LUNA_COLORS.textInverse} strokeWidth={2} />
           </Pressable>
         ) : showMenu ? (
           <Pressable
-            style={styles.iconBtn}
+            style={iconBtnStyle}
             onPress={openDrawer}
             hitSlop={8}
             accessibilityLabel="Ouvrir le menu"
           >
-            <Ionicons name="menu" size={24} color={LUNA_COLORS.textInverse} />
+            <IconMenu2 size={22} color={LUNA_COLORS.textInverse} strokeWidth={2} />
           </Pressable>
         ) : (
-          <View style={styles.iconPlaceholder} />
+          <View style={{ width: 40 }} />
         )}
 
         {center ? (
-          <View style={styles.centerSlot}>{center}</View>
+          <View style={{ flex: 1, minWidth: 0, marginHorizontal: spacing.xs, justifyContent: 'center' }}>
+            {center}
+          </View>
         ) : showBrand ? (
           <>
-            <Pressable onPress={openDrawer} style={styles.logoTap} accessibilityLabel="CLINIX">
+            <Pressable
+              onPress={openDrawer}
+              style={{ marginTop: 6, marginLeft: spacing.xs }}
+              accessibilityLabel="CLINIX"
+            >
               <ClinixLogo variant="icon" width={32} height={32} />
             </Pressable>
-            <View style={styles.titleRow}>
-              <View style={styles.textCol}>
-                <Text style={styles.pageTitle} numberOfLines={1}>
+            <View style={{ flex: 1, minWidth: 0, paddingLeft: spacing.xs, paddingTop: 2 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse }} numberOfLines={1}>
                   {title}
                 </Text>
                 {line2 ? (
-                  <Text style={styles.pageSub} numberOfLines={1}>
+                  <Text style={{ fontSize: fontSize.sm, color: 'rgba(255,255,255,0.90)', marginTop: 2 }} numberOfLines={1}>
                     {line2}
                   </Text>
                 ) : showBrand && !subtitle && userLine ? (
-                  <Text style={styles.pageSub} numberOfLines={1}>
+                  <Text style={{ fontSize: fontSize.sm, color: 'rgba(255,255,255,0.90)', marginTop: 2 }} numberOfLines={1}>
                     {userLine}
                   </Text>
                 ) : null}
                 {showBrand && !subtitle && !line2 ? (
-                  <Text style={styles.tagline} numberOfLines={1}>
+                  <Text style={{ fontSize: fontSize.xs, color: 'rgba(255,255,255,0.70)', marginTop: 2 }} numberOfLines={1}>
                     {APP_TAGLINE}
                   </Text>
                 ) : null}
@@ -109,13 +148,13 @@ export function LunaHeroHeaderView({
             </View>
           </>
         ) : (
-          <View style={styles.titleRow}>
-            <View style={styles.textCol}>
-              <Text style={styles.pageTitle} numberOfLines={1}>
+          <View style={{ flex: 1, minWidth: 0, paddingLeft: spacing.xs, paddingTop: 2 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse }} numberOfLines={1}>
                 {title}
               </Text>
               {line2 ? (
-                <Text style={styles.pageSub} numberOfLines={1}>
+                <Text style={{ fontSize: fontSize.sm, color: 'rgba(255,255,255,0.90)', marginTop: 2 }} numberOfLines={1}>
                   {line2}
                 </Text>
               ) : null}
@@ -123,35 +162,34 @@ export function LunaHeroHeaderView({
           </View>
         )}
 
-        {right ? <View style={styles.rightSlot}>{right}</View> : null}
+        {right ? <View style={{ marginRight: spacing.xs }}>{right}</View> : null}
 
         {showNotifications ? (
           <Pressable
-            style={styles.iconBtn}
+            style={iconBtnStyle}
             onPress={() => router.push('/notifications' as never)}
             accessibilityLabel="Notifications"
           >
-            <Ionicons name="notifications-outline" size={22} color={LUNA_COLORS.textInverse} />
+            <IconBell size={20} color={LUNA_COLORS.textInverse} strokeWidth={2} />
           </Pressable>
         ) : null}
 
         {showProfil ? (
           <Pressable
-            style={styles.iconBtn}
+            style={iconBtnStyle}
             onPress={() => router.push(getProfilRoute(role) as never)}
             accessibilityLabel="Profil"
           >
-            <Ionicons name="person-outline" size={22} color={LUNA_COLORS.textInverse} />
+            <IconUser size={20} color={LUNA_COLORS.textInverse} strokeWidth={2} />
           </Pressable>
         ) : null}
       </View>
 
-      {children ? <View style={styles.children}>{children}</View> : null}
+      {children ? <View style={{ marginTop: spacing.md }}>{children}</View> : null}
     </View>
   );
 }
 
-/** Barre supérieure type web : menu · logo · notifications · profil */
 export function LunaHeroHeader(props: LunaHeroHeaderProps): React.JSX.Element | null {
   const layoutHeaderEnabled = usePageHeaderStore((s) => s.layoutHeaderEnabled);
 
@@ -172,73 +210,3 @@ export function LunaHeroHeader(props: LunaHeroHeaderProps): React.JSX.Element | 
 
   return <LunaHeroHeaderView {...props} />;
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    backgroundColor: LUNA_COLORS.primary, // ✨ fond primary avec fade secondary
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    overflow: 'hidden',
-  },
-  gradientFade: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: '55%',
-    backgroundColor: LUNA_COLORS.secondary,
-    opacity: 0.45,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.xs,
-    minHeight: 48,
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: borderRadius.full,
-    backgroundColor: 'rgba(255,255,255,0.12)', // ✨ boutons semi-transparents
-  },
-  iconPlaceholder: { width: 44 },
-  logoTap: {
-    marginTop: 6,
-    marginLeft: spacing.xs,
-  },
-  titleRow: {
-    flex: 1,
-    minWidth: 0,
-    paddingLeft: spacing.xs,
-    paddingTop: 2,
-  },
-  textCol: { flex: 1 },
-  pageTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse,
-  },
-  pageSub: {
-    fontSize: fontSize.sm,
-    color: 'rgba(255,255,255,0.90)',
-    marginTop: 2,
-  },
-  tagline: {
-    fontSize: fontSize.xs,
-    color: 'rgba(255,255,255,0.70)',
-    marginTop: 2,
-  },
-  rightSlot: {
-    marginRight: spacing.xs,
-  },
-  centerSlot: {
-    flex: 1,
-    minWidth: 0,
-    marginHorizontal: spacing.xs,
-    justifyContent: 'center',
-  },
-  children: { marginTop: spacing.md },
-});

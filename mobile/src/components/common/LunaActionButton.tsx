@@ -1,14 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import type { ComponentProps } from 'react';
 import React from 'react';
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, type ViewStyle } from 'react-native';
+import { IconPlus, type Icon as TablerIcon } from '@tabler/icons-react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius } from '@/src/theme/spacing';
 
-type IonIcon = ComponentProps<typeof Ionicons>['name'];
-
-/** Aligné adminTable actionBtn : 32px rond, fond semi-transparent. */
 export type LunaActionButtonSize = 'sm' | 'md';
 
 const SIZES: Record<LunaActionButtonSize, { btn: number; icon: number }> = {
@@ -17,17 +13,16 @@ const SIZES: Record<LunaActionButtonSize, { btn: number; icon: number }> = {
 };
 
 export interface LunaActionButtonProps {
-  icon: IonIcon;
+  icon: TablerIcon;
   onPress: () => void;
   disabled?: boolean;
   size?: LunaActionButtonSize;
   color?: string;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewStyle;
 }
 
-/** Bouton d'action icône rond (tableaux admin). */
-export function LunaActionButton({
-  icon,
+export const LunaActionButton = React.memo(function LunaActionButton({
+  icon: Icon,
   onPress,
   disabled = false,
   size = 'md',
@@ -38,30 +33,21 @@ export function LunaActionButton({
   return (
     <Pressable
       style={[
-        styles.btn,
         {
           width: dim.btn,
           height: dim.btn,
-          backgroundColor: `${color}1F`, // ✨ fond semi-transparent
+          borderRadius: borderRadius.full,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: `${color}1F`,
         },
-        disabled && styles.btnDisabled,
+        disabled && { opacity: 0.45 },
         style,
       ]}
       onPress={onPress}
       disabled={disabled}
     >
-      <Ionicons name={icon} size={dim.icon} color={color} />
+      <Icon size={dim.icon} color={color} strokeWidth={1.8} />
     </Pressable>
   );
-}
-
-const styles = StyleSheet.create({
-  btn: {
-    borderRadius: borderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.45,
-  },
 });

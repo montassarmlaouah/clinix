@@ -5,13 +5,14 @@ import {
   Modal, TextInput, ScrollView, TouchableOpacity, Switch,
 } from 'react-native';
 import { LunaHeroHeader, LunaScreen } from '@/src/components/common';
-import { Ionicons } from '@expo/vector-icons';
+import { IconBrandStripe, IconPlus, IconPencil, IconTrash, IconLayersOff, IconCreditCard, IconSettings, IconBuilding, IconMedicalCross, type Icon as TablerIcon } from '@tabler/icons-react-native';
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/src/api/client';
 import { BILLING } from '@/src/api/endpoints';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { typography } from '@/src/theme/typography';
 import type { OffreAbonnement, AbonnementCliniqueSummary, StripeConfig } from '@/src/types/superadmin.types';
+import { resolveTablerIcon } from '@/src/utils/iconMapper';
 
 export default function AbonnementsScreen() {
   const [offres, setOffres]                     = useState<OffreAbonnement[]>([]);
@@ -230,11 +231,11 @@ export default function AbonnementsScreen() {
         right={
           <View style={styles.headerBtns}>
             <TouchableOpacity style={styles.stripeBtn} onPress={openStripeModal} activeOpacity={0.75}>
-              <Ionicons name="logo-stripe" size={16} color={LUNA_COLORS.primary} />
+              <IconBrandStripe size={16} color={LUNA_COLORS.primary} />
               <Text style={styles.stripeBtnText}>Stripe</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.addBtn} onPress={() => openOffreModal()} activeOpacity={0.75}>
-              <Ionicons name="add" size={22} color="#fff" />
+              <IconPlus size={22} color="#fff" strokeWidth={2} />
             </TouchableOpacity>
           </View>
         }
@@ -319,15 +320,15 @@ export default function AbonnementsScreen() {
 
                 <View style={styles.offreActions}>
                   <TouchableOpacity style={[styles.actionBtn, styles.actionEdit]} onPress={() => openOffreModal(offre)} activeOpacity={0.75}>
-                    <Ionicons name="pencil" size={14} color={LUNA_COLORS.secondary} />
+                    <IconPencil size={14} color={LUNA_COLORS.secondary} strokeWidth={2} />
                     <Text style={[styles.actionBtnText, { color: LUNA_COLORS.secondary }]}>Modifier</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionBtn, styles.actionStripe]} onPress={() => syncStripeProduct(offre)} activeOpacity={0.75}>
-                    <Ionicons name="logo-stripe" size={14} color="#635bff" />
+                    <IconBrandStripe size={14} color="#635bff" strokeWidth={2} />
                     <Text style={[styles.actionBtnText, { color: '#635bff' }]}>Sync</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionBtn, styles.actionDelete]} onPress={() => deleteOffre(offre)} activeOpacity={0.75}>
-                    <Ionicons name="trash" size={14} color={LUNA_COLORS.error} />
+                    <IconTrash size={14} color={LUNA_COLORS.error} strokeWidth={2} />
                     <Text style={[styles.actionBtnText, { color: LUNA_COLORS.error }]}>Supprimer</Text>
                   </TouchableOpacity>
                 </View>
@@ -337,7 +338,7 @@ export default function AbonnementsScreen() {
 
           {offres.length === 0 && (
             <View style={styles.emptyBox}>
-              <Ionicons name="layers-outline" size={36} color={LUNA_COLORS.textDisabled} />
+              <IconLayersOff size={36} color={LUNA_COLORS.textDisabled} strokeWidth={1.5} />
               <Text style={styles.emptyText}>Aucune offre pour le moment</Text>
             </View>
           )}
@@ -383,7 +384,7 @@ export default function AbonnementsScreen() {
           <View style={styles.modalSheet}>
             <View style={styles.modalHandle} />
             <View style={styles.modalTitleRow}>
-              <Ionicons name="logo-stripe" size={20} color="#635bff" />
+              <IconBrandStripe size={20} color="#635bff" strokeWidth={2} />
               <Text style={styles.modalTitle}>Configuration Stripe</Text>
             </View>
 
@@ -544,11 +545,7 @@ export default function AbonnementsScreen() {
                   style={[styles.catBtn, offreForm.categorie === 'CLINIQUE' && styles.catBtnActive]}
                   onPress={() => setCategorieOffre('CLINIQUE')}
                 >
-                  <Ionicons
-                    name="business-outline"
-                    size={16}
-                    color={offreForm.categorie === 'CLINIQUE' ? '#fff' : LUNA_COLORS.textSecondary}
-                  />
+                  <IconBuilding size={16} color={offreForm.categorie === 'CLINIQUE' ? '#fff' : LUNA_COLORS.textSecondary} strokeWidth={2} />
                   <Text style={[styles.catBtnText, offreForm.categorie === 'CLINIQUE' && styles.catBtnTextActive]}>
                     Clinique
                   </Text>
@@ -557,11 +554,7 @@ export default function AbonnementsScreen() {
                   style={[styles.catBtn, offreForm.categorie === 'CABINET_MEDICAL' && styles.catBtnCabinet]}
                   onPress={() => setCategorieOffre('CABINET_MEDICAL')}
                 >
-                  <Ionicons
-                    name="medkit-outline"
-                    size={16}
-                    color={offreForm.categorie === 'CABINET_MEDICAL' ? '#fff' : LUNA_COLORS.textSecondary}
-                  />
+                  <IconMedicalCross size={16} color={offreForm.categorie === 'CABINET_MEDICAL' ? '#fff' : LUNA_COLORS.textSecondary} strokeWidth={2} />
                   <Text style={[styles.catBtnText, offreForm.categorie === 'CABINET_MEDICAL' && styles.catBtnTextActive]}>
                     Cabinet
                   </Text>
@@ -647,10 +640,11 @@ export default function AbonnementsScreen() {
 
 /* ─── Sub-components ─── */
 function StatCard({ label, value, icon, color }: any) {
+  const Icon = resolveTablerIcon(icon);
   return (
     <View style={styles.statCard}>
       <View style={[styles.statIconWrap, { backgroundColor: color + '1a' }]}>
-        <Ionicons name={icon} size={20} color={color} />
+        <Icon size={20} color={color} strokeWidth={1.8} />
       </View>
       <Text style={[styles.statValue, { color }]}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>

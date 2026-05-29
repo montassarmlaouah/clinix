@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
@@ -18,7 +18,7 @@ interface ListCardProps {
   style?: ViewStyle;
 }
 
-export function ListCard({
+export const ListCard = React.memo(function ListCard({
   title,
   subtitle,
   meta,
@@ -30,50 +30,7 @@ export function ListCard({
   statusBar = 'none',
   style,
 }: ListCardProps): React.JSX.Element {
-  const content = (
-    <>
-      {left ? <View style={styles.left}>{left}</View> : null}
-      <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={2}>{title}</Text>
-        {subtitle ? <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text> : null}
-        {meta ? <Text style={[styles.meta, { color: accentColor }]} numberOfLines={1}>{meta}</Text> : null}
-      </View>
-      {right ? <View style={styles.right}>{right}</View> : null}
-      {badge ? (
-        <View style={styles.badge}>
-          <Text style={styles.badgeTxt}>{badge}</Text>
-        </View>
-      ) : null}
-      {statusBar !== 'none' ? (
-        <View
-          style={[
-            styles.statusBar,
-            statusBar === 'alert' ? styles.statusBarAlert : styles.statusBarMuted,
-          ]}
-        />
-      ) : null}
-    </>
-  );
-
-  const cardStyle = [
-    styles.card,
-    statusBar === 'none' ? { borderLeftColor: accentColor, borderLeftWidth: 4 } : styles.cardFlat,
-    style,
-  ];
-
-  if (onPress) {
-    return (
-      <Pressable onPress={onPress} style={cardStyle}>
-        {content}
-      </Pressable>
-    );
-  }
-
-  return <View style={cardStyle}>{content}</View>;
-}
-
-const styles = StyleSheet.create({
-  card: {
+  const cardStyle: ViewStyle = {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: LUNA_COLORS.surface,
@@ -82,56 +39,65 @@ const styles = StyleSheet.create({
     paddingRight: spacing.sm,
     marginBottom: 0,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(197, 220, 234, 0.6)', // ✨ séparateur subtil
-  },
-  cardFlat: {
-    borderLeftWidth: 0,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.md,
-    padding: spacing.lg,
-    borderBottomWidth: 0,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderSubtle,
-    ...(shadows.sm as object),
-  },
-  left: { marginRight: spacing.md },
-  body: { flex: 1, minWidth: 0 },
-  title: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: LUNA_COLORS.darkest,
-  },
-  subtitle: {
-    fontSize: fontSize.sm,
-    color: LUNA_COLORS.tertiary,
-    marginTop: 4,
-  },
-  meta: {
-    fontSize: fontSize.xs,
-    color: LUNA_COLORS.textSecondary,
-    marginTop: 4,
-  },
-  right: { marginLeft: spacing.sm },
-  badge: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.lg + 36,
-    backgroundColor: LUNA_COLORS.secondary,
-    borderRadius: borderRadius.full,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  badgeTxt: {
-    fontSize: 9,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse,
-  },
-  statusBar: {
-    width: 4,
-    alignSelf: 'stretch',
-    borderRadius: borderRadius.sm,
-    marginLeft: spacing.xs,
-  },
-  statusBarMuted: { backgroundColor: LUNA_COLORS.borderDark },
-  statusBarAlert: { backgroundColor: LUNA_COLORS.error },
+    borderBottomColor: 'rgba(197, 220, 234, 0.6)',
+    ...(statusBar !== 'none' ? {} : { borderLeftColor: accentColor, borderLeftWidth: 4 }),
+  };
+
+  const content = (
+    <>
+      {left ? <View style={{ marginRight: spacing.md }}>{left}</View> : null}
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={{ fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: LUNA_COLORS.darkest }} numberOfLines={2}>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text style={{ fontSize: fontSize.sm, color: LUNA_COLORS.tertiary, marginTop: 4 }} numberOfLines={2}>
+            {subtitle}
+          </Text>
+        ) : null}
+        {meta ? (
+          <Text style={{ fontSize: fontSize.xs, color: accentColor, marginTop: 4 }} numberOfLines={1}>
+            {meta}
+          </Text>
+        ) : null}
+      </View>
+      {right ? <View style={{ marginLeft: spacing.sm }}>{right}</View> : null}
+      {badge ? (
+        <View
+          style={{
+            position: 'absolute',
+            top: spacing.sm,
+            left: spacing.lg + 36,
+            backgroundColor: LUNA_COLORS.secondary,
+            borderRadius: borderRadius.full,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+          }}
+        >
+          <Text style={{ fontSize: 9, fontWeight: fontWeight.bold, color: LUNA_COLORS.textInverse }}>{badge}</Text>
+        </View>
+      ) : null}
+      {statusBar !== 'none' ? (
+        <View
+          style={{
+            width: 4,
+            alignSelf: 'stretch',
+            borderRadius: borderRadius.sm,
+            marginLeft: spacing.xs,
+            backgroundColor: statusBar === 'alert' ? LUNA_COLORS.danger : LUNA_COLORS.borderDark,
+          }}
+        />
+      ) : null}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={[cardStyle, style]}>
+        {content}
+      </Pressable>
+    );
+  }
+
+  return <View style={[cardStyle, style]}>{content}</View>;
 });

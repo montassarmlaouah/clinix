@@ -20,10 +20,11 @@ import { useAuthStore } from '@/src/store/auth.store';
 import {
   DashboardQuickLinks,
   EmptyState,
-  LoadingOverlay,
   LunaHeroHeader,
   LunaScreen,
 } from '@/src/components/common';
+import { SkeletonLoader, SkeletonCard, SkeletonList } from '@/src/components/common/SkeletonLoader';
+import { LoadingSpinner } from '@/src/components/common/LoadingSpinner';
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, shadows, spacing } from '@/src/theme/spacing';
 import { fontSize, fontWeight, typography } from '@/src/theme/typography';
@@ -178,13 +179,33 @@ export default function InfirmierDashboard() {
 
   const onRefresh = () => { setRefreshing(true); load(); };
 
-  if (loading) return <LoadingOverlay />;
-
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
     day:     'numeric',
     month:   'long',
   });
+
+  // ✨ Composant skeleton pour KPI grid pendant loading
+  const KpiGridSkeleton = () => (
+    <View style={styles.kpiGrid}>
+      <SkeletonLoader width="47%" height={140} borderRadius={borderRadius.lg} style={{ marginBottom: spacing.md }} />
+      <SkeletonLoader width="47%" height={140} borderRadius={borderRadius.lg} style={{ marginBottom: spacing.md }} />
+      <SkeletonLoader width="47%" height={140} borderRadius={borderRadius.lg} style={{ marginBottom: spacing.md }} />
+      <SkeletonLoader width="47%" height={140} borderRadius={borderRadius.lg} style={{ marginBottom: spacing.md }} />
+    </View>
+  );
+
+  // ✨ Composant skeleton pour actions
+  const ActionsSkeleton = () => (
+    <View style={styles.actionsGrid}>
+      {Array.from({ length: 12 }).map((_, i) => (
+        <View key={i} style={styles.quickAction}>
+          <SkeletonLoader width={52} height={52} borderRadius={borderRadius.lg} />
+          <SkeletonLoader width="100%" height={10} borderRadius={4} style={{ marginTop: spacing.xs }} />
+        </View>
+      ))}
+    </View>
+  );
 
   // ── Rendu ──────────────────────────────────────────────────────────────────
   return (
@@ -209,8 +230,20 @@ export default function InfirmierDashboard() {
         }
         ListHeaderComponent={
           <>
-            {/* ── KPIs principaux ─────────────────────────────────────── */}
-            <View style={styles.kpiGrid}>
+            {loading ? (
+              <>
+                {/* ✨ Skeleton loaders pendant chargement */}
+                <View style={{ paddingHorizontal: spacing.xl, paddingTop: spacing.lg }}>
+                  <SkeletonLoader height={56} borderRadius={borderRadius.md} style={{ marginBottom: spacing.lg }} />
+                  <KpiGridSkeleton />
+                  <Text style={[styles.sectionTitle, { opacity: 0.5 }]}>Actions rapides</Text>
+                  <ActionsSkeleton />
+                </View>
+              </>
+            ) : (
+              <>
+                {/* ── KPIs principaux ─────────────────────────────────────── */}
+                <View style={styles.kpiGrid}>
               <KpiCard
                 icon="medkit-outline"
                 value={stats.soinsAFaire}
@@ -354,6 +387,8 @@ export default function InfirmierDashboard() {
               maxItems={4}
               excludeRoutes={['/(infirmier)/index']}
             />
+              </>
+            )}
           </>
         }
         ListEmptyComponent={

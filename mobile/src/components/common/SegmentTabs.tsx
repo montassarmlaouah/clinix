@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
@@ -14,7 +14,6 @@ interface SegmentTabsProps<T extends string> {
   options: SegmentOption<T>[];
   value: T;
   onChange: (key: T) => void;
-  /** Sur fond sombre (header hero) */
   onDark?: boolean;
 }
 
@@ -25,7 +24,16 @@ export function SegmentTabs<T extends string>({
   onDark = true,
 }: SegmentTabsProps<T>): React.JSX.Element {
   return (
-    <View style={[styles.wrap, onDark ? styles.wrapDark : styles.wrapLight]}>
+    <View
+      style={{
+        flexDirection: 'row',
+        borderRadius: borderRadius.full,
+        padding: 4,
+        gap: 4,
+        backgroundColor: onDark ? 'rgba(255,255,255,0.12)' : LUNA_COLORS.surface,
+        ...(onDark ? {} : { borderWidth: 1, borderColor: LUNA_COLORS.borderSubtle }),
+      }}
+    >
       {options.map((opt) => {
         const active = opt.key === value;
         return (
@@ -33,28 +41,30 @@ export function SegmentTabs<T extends string>({
             key={opt.key}
             onPress={() => onChange(opt.key)}
             style={({ pressed }) => [
-              styles.tab,
-              onDark
-                ? active
-                  ? styles.tabActiveDark
-                  : styles.tabIdleDark
-                : active
-                  ? styles.tabActiveLight
-                  : styles.tabIdleLight,
-              pressed && { opacity: 0.75 }, // ✨
+              {
+                flex: 1,
+                paddingVertical: spacing.sm,
+                alignItems: 'center',
+                borderRadius: borderRadius.full,
+                backgroundColor: active
+                  ? LUNA_COLORS.secondary
+                  : onDark
+                    ? 'transparent'
+                    : LUNA_COLORS.background,
+              },
+              pressed && { opacity: 0.75 },
             ]}
           >
             <Text
-              style={[
-                styles.label,
-                onDark
-                  ? active
-                    ? styles.labelActiveDark
-                    : styles.labelIdleDark
-                  : active
-                    ? styles.labelActiveLight
-                    : styles.labelIdleLight,
-              ]}
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: active
+                  ? LUNA_COLORS.textInverse
+                  : onDark
+                    ? 'rgba(255,255,255,0.75)'
+                    : LUNA_COLORS.textSecondary,
+              }}
             >
               {opt.label}
             </Text>
@@ -64,33 +74,3 @@ export function SegmentTabs<T extends string>({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    borderRadius: borderRadius.full,
-    padding: 4,
-    gap: 4,
-  },
-  wrapDark: { backgroundColor: 'rgba(255,255,255,0.12)' },
-  wrapLight: {
-    backgroundColor: LUNA_COLORS.surface,
-    borderWidth: 1,
-    borderColor: LUNA_COLORS.borderSubtle, // ✨
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderRadius: borderRadius.full,
-  },
-  tabActiveDark: { backgroundColor: LUNA_COLORS.secondary },
-  tabIdleDark: { backgroundColor: 'transparent' },
-  tabActiveLight: { backgroundColor: LUNA_COLORS.secondary },
-  tabIdleLight: { backgroundColor: LUNA_COLORS.background },
-  label: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
-  labelActiveDark: { color: LUNA_COLORS.textInverse },
-  labelIdleDark: { color: 'rgba(255,255,255,0.75)' },
-  labelActiveLight: { color: LUNA_COLORS.textInverse },
-  labelIdleLight: { color: LUNA_COLORS.textSecondary },
-});

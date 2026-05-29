@@ -6,7 +6,6 @@ import { IMAGERIES } from '@/src/api/endpoints';
 import { createTabBarIcon, RoleTabsShell } from '@/src/components/common';
 import { hiddenTabScreenOptions, useLunaTabBarOptions } from '@/src/theme/tabBar';
 
-/** Barre du bas : 3 icÃ´nes â€” Accueil Â· File Â· Examens */
 export default function RadiologueLayout(): React.JSX.Element {
   const [pendingCount, setPendingCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -35,37 +34,22 @@ export default function RadiologueLayout(): React.JSX.Element {
 
   return (
     <RoleTabsShell>
-    <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Accueil',
-          tabBarIcon: createTabBarIcon('home-outline'),
-        }}
-      />
-      <Tabs.Screen
-        name="demandes"
-        options={{
-          title: 'File',
-          tabBarIcon: createTabBarIcon('time-outline', { badge: pendingCount }),
-        }}
-      />
-      <Tabs.Screen
-        name="rapports"
-        options={{
-          title: 'Examens',
-          tabBarIcon: createTabBarIcon('document-text-outline'),
-        }}
-      />
-      <Tabs.Screen name="messagerie" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="agenda" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
-      <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />      <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
-    </Tabs>
+      <Tabs screenOptions={screenOptions}>
+        {/* ── 4 onglets visibles ── */}
+        <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: createTabBarIcon('home') }} />
+        <Tabs.Screen name="demandes" options={{ title: 'Examens', tabBarIcon: createTabBarIcon('reportMedical', { badge: pendingCount }) }} />
+        <Tabs.Screen name="rapports" options={{ title: 'Résultats', tabBarIcon: createTabBarIcon('fileText') }} />
+        <Tabs.Screen name="agenda" options={{ title: 'Planning', tabBarIcon: createTabBarIcon('calendar') }} />
+
+        {/* ── Écrans cachés ── */}
+        <Tabs.Screen name="messagerie" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="menu" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="profil" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="examen" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="rapport" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="statistiques" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="notifications" options={hiddenTabScreenOptions} />
+      </Tabs>
     </RoleTabsShell>
   );
 }
-

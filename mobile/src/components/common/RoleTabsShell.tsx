@@ -1,6 +1,6 @@
 import { useSegments } from 'expo-router';
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LunaHeroHeaderView } from '@/src/components/common/LunaHeroHeader';
@@ -14,11 +14,7 @@ interface RoleTabsShellProps {
   children: React.ReactNode;
 }
 
-/**
- * Enveloppe les layouts par rôle : barre supérieure LUNA (menu · logo · notif · profil)
- * sur toutes les pages, avec titre dynamique via usePageHeader.
- */
-export function RoleTabsShell({ children }: RoleTabsShellProps): React.JSX.Element {
+function RoleTabsShellComponent({ children }: RoleTabsShellProps): React.JSX.Element {
   const segments = useSegments() as string[];
   const role = useAuthStore((s) => s.role);
   const roleLabel = role ? (roleLabels[role] ?? role.replace('ROLE_', '')) : '';
@@ -47,8 +43,8 @@ export function RoleTabsShell({ children }: RoleTabsShellProps): React.JSX.Eleme
   const displaySubtitle = subtitle ?? routeDefaults.subtitle ?? roleLabel;
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+    <View style={{ flex: 1, backgroundColor: LUNA_COLORS.background }}>
+      <SafeAreaView style={{ backgroundColor: LUNA_COLORS.secondary }} edges={['top']}>
         <LunaHeroHeaderView
           title={displayTitle}
           subtitle={displaySubtitle}
@@ -62,13 +58,13 @@ export function RoleTabsShell({ children }: RoleTabsShellProps): React.JSX.Eleme
           center={center}
         />
       </SafeAreaView>
-      <View style={styles.content}>{children}</View>
+      <View style={{ flex: 1 }}>{children}</View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: LUNA_COLORS.background },
-  headerSafe: { backgroundColor: LUNA_COLORS.secondary },
-  content: { flex: 1 },
+// ✨ Memoized avec comparateur custom pour éviter rerenders inutiles
+export const RoleTabsShell = React.memo(RoleTabsShellComponent, (prev, next) => {
+  // Rerender uniquement si children change
+  return prev.children === next.children;
 });

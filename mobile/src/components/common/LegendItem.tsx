@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
@@ -11,37 +11,14 @@ interface LegendItemProps {
   value?: string | number;
 }
 
-export function LegendItem({ color, label, value }: LegendItemProps): React.JSX.Element {
+export const LegendItem = React.memo(function LegendItem({ color, label, value }: LegendItemProps): React.JSX.Element {
   return (
-    <View style={styles.row}>
-      <View style={[styles.dot, { backgroundColor: color }]} />
-      <Text style={styles.label}>{label}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}>
+      <View style={{ width: 10, height: 10, borderRadius: borderRadius.full, backgroundColor: color }} />
+      <Text style={{ flex: 1, fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary }}>{label}</Text>
       {value !== undefined ? (
-        <Text style={[styles.value, { color }]}>{value}</Text>
+        <Text style={{ fontSize: fontSize.sm, fontWeight: '600', color }}>{value}</Text>
       ) : null}
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           spacing.xs,
-    marginBottom:  spacing.xs,
-  },
-  dot: {
-    width:        10,
-    height:       10,
-    borderRadius: borderRadius.full,
-  },
-  label: {
-    flex:      1,
-    fontSize:  fontSize.sm,
-    color:     LUNA_COLORS.textSecondary,
-  },
-  value: {
-    fontSize:  fontSize.sm,
-    fontWeight: '600',
-  },
 });

@@ -21,11 +21,7 @@ export interface AppPageShellProps {
   style?: ViewStyle;
 }
 
-/**
- * Enveloppe standard : barre supérieure LUNA (comme Personnel) + contenu.
- * La barre du bas reste visible via le layout Tabs parent.
- */
-export function AppPageShell({
+export const AppPageShell = React.memo(function AppPageShell({
   title,
   subtitle,
   showBack = false,
@@ -73,4 +69,4 @@ export function AppPageShell({
       {children}
     </LunaScreen>
   );
-}
+});

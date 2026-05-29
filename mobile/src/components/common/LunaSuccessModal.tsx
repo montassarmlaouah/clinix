@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View, type ViewStyle } from 'react-native';
+import { IconCheck } from '@tabler/icons-react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { borderRadius, spacing } from '@/src/theme/spacing';
@@ -10,11 +10,10 @@ export interface LunaSuccessModalProps {
   visible: boolean;
   message: string;
   onClose: () => void;
-  /** Fermeture automatique (ms). 0 = désactivé. */
   autoCloseMs?: number;
 }
 
-export function LunaSuccessModal({
+export const LunaSuccessModal = React.memo(function LunaSuccessModal({
   visible,
   message,
   onClose,
@@ -26,47 +25,27 @@ export function LunaSuccessModal({
     return () => clearTimeout(t);
   }, [visible, autoCloseMs, onClose]);
 
-  return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable
-          style={({ pressed }) => [styles.card, pressed && { opacity: 0.98 }]} // ✨
-          onPress={(e) => e.stopPropagation()}
-        >
-          <View style={styles.badge}>
-            <Ionicons name="checkmark" size={44} color={LUNA_COLORS.textInverse} />
-            <Text style={styles.badgeLabel}>SUCCESS</Text>
-          </View>
-          <Text style={styles.message}>{message}</Text>
-          <Pressable style={styles.okBtn} onPress={onClose} activeOpacity={0.75}>
-            <Text style={styles.okTxt}>OK</Text>
-          </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
-  );
-}
-
-const styles = StyleSheet.create({
-  backdrop: {
+  const backdropStyle: ViewStyle = {
     flex: 1,
     backgroundColor: LUNA_COLORS.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
-  },
-  card: {
+  };
+
+  const cardStyle: ViewStyle = {
     width: '100%',
     maxWidth: 320,
     backgroundColor: LUNA_COLORS.surface,
-    borderRadius: borderRadius.lg, // ✨
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: LUNA_COLORS.borderSubtle, // ✨
+    borderColor: LUNA_COLORS.borderSubtle,
     padding: spacing.xl,
     alignItems: 'center',
     gap: spacing.md,
-  },
-  badge: {
+  };
+
+  const badgeStyle: ViewStyle = {
     width: 120,
     height: 120,
     borderRadius: 60,
@@ -79,32 +58,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 8,
-  },
-  badgeLabel: {
-    marginTop: 2,
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.bold,
-    color: LUNA_COLORS.textInverse,
-    letterSpacing: 1.2,
-  },
-  message: {
-    fontSize: fontSize.base,
-    color: LUNA_COLORS.textPrimary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  okBtn: {
+  };
+
+  const okBtnStyle: ViewStyle = {
     marginTop: spacing.sm,
-    backgroundColor: LUNA_COLORS.secondary, // ✨
+    backgroundColor: LUNA_COLORS.secondary,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.full, // ✨ pill
+    borderRadius: borderRadius.full,
     minWidth: 120,
     alignItems: 'center',
-  },
-  okTxt: {
-    color: LUNA_COLORS.textInverse,
-    fontWeight: fontWeight.semibold,
-    fontSize: fontSize.base,
-  },
+  };
+
+  return (
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
+      <Pressable style={backdropStyle} onPress={onClose}>
+        <Pressable style={cardStyle} onPress={(e) => e.stopPropagation()}>
+          <View style={badgeStyle}>
+            <IconCheck size={44} color={LUNA_COLORS.textInverse} strokeWidth={2.5} />
+            <Text
+              style={{
+                marginTop: 2,
+                fontSize: fontSize.xs,
+                fontWeight: fontWeight.bold,
+                color: LUNA_COLORS.textInverse,
+                letterSpacing: 1.2,
+              }}
+            >
+              SUCCESS
+            </Text>
+          </View>
+          <Text style={{ fontSize: fontSize.base, color: LUNA_COLORS.textPrimary, textAlign: 'center', lineHeight: 22 }}>
+            {message}
+          </Text>
+          <Pressable style={({ pressed }) => [okBtnStyle, pressed && { opacity: 0.75 }]} onPress={onClose}>
+            <Text style={{ color: LUNA_COLORS.textInverse, fontWeight: fontWeight.semibold, fontSize: fontSize.base }}>
+              OK
+            </Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
 });

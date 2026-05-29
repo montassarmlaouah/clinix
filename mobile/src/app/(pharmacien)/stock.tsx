@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { pharmacieService, type Medicament, type Stock } from '@/src/api/services/pharmacie.service';
 import { EmptyState, ListCard, LoadingOverlay, LunaHeroHeader, LunaScreen, SegmentTabs } from '@/src/components/common';
@@ -91,4 +91,33 @@ export default function PharmacienStockScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingBottom: 80 },
+  card: {
+    backgroundColor: LUNA_COLORS.surface,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+  },
+  cardAlert: {
+    borderColor: LUNA_COLORS.danger,
+    backgroundColor: `${LUNA_COLORS.danger}08`,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: LUNA_COLORS.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  meta: {
+    fontSize: 13,
+    color: LUNA_COLORS.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  alert: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: LUNA_COLORS.danger,
+    marginTop: spacing.xs,
+  },
 });

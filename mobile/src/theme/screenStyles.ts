@@ -4,7 +4,6 @@ import { LUNA_COLORS } from './colors';
 import { borderRadius, shadows, spacing } from './spacing';
 import { fontSize, fontWeight, typography } from './typography';
 
-/** Styles réutilisables pour écrans — HeroUI v3 */
 export const screenStyles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
@@ -57,7 +56,7 @@ export const screenStyles = StyleSheet.create({
   inputFocused: {
     borderWidth: 2,
     borderColor: LUNA_COLORS.secondary,
-    shadowColor: '#2d9cdb',
+    shadowColor: LUNA_COLORS.secondary,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -137,7 +136,7 @@ export const screenStyles = StyleSheet.create({
     justifyContent: 'center',
     ...(Platform.OS === 'ios'
       ? {
-          shadowColor: '#2d9cdb',
+          shadowColor: LUNA_COLORS.secondary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.35,
           shadowRadius: 12,

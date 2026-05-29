@@ -1,18 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import React from 'react';
 import { ActivityIndicator, Modal, Pressable, Text, View } from 'react-native';
+import { IconAlertTriangle, IconX } from '@tabler/icons-react-native';
 
 import { LUNA_COLORS } from '@/src/theme/colors';
 import { lunaModalStyles as s } from '@/src/theme/lunaModal';
 
-type IonIcon = ComponentProps<typeof Ionicons>['name'];
+type TablerIconComponent = React.FC<ComponentProps<typeof IconAlertTriangle>>;
 
 export interface LunaConfirmModalProps {
   visible: boolean;
   title: string;
   message: string;
-  icon?: IonIcon;
+  icon?: TablerIconComponent;
   confirmLabel?: string;
   cancelLabel?: string;
   onClose: () => void;
@@ -21,11 +21,11 @@ export interface LunaConfirmModalProps {
   error?: string | null;
 }
 
-export function LunaConfirmModal({
+export const LunaConfirmModal = React.memo(function LunaConfirmModal({
   visible,
   title,
   message,
-  icon = 'warning-outline',
+  icon: Icon = IconAlertTriangle,
   confirmLabel = 'Confirmer',
   cancelLabel = 'Annuler',
   onClose,
@@ -38,16 +38,16 @@ export function LunaConfirmModal({
       <Pressable style={s.overlayCenter} onPress={onClose}>
         <Pressable style={s.card} onPress={(e) => e.stopPropagation()}>
           <View style={s.header}>
-            <Ionicons name={icon} size={22} color={LUNA_COLORS.tertiary} />
+            <Icon size={20} color={LUNA_COLORS.tertiary} strokeWidth={1.8} />
             <Text style={s.headerTitle} numberOfLines={1}>
               {title}
             </Text>
             <Pressable onPress={onClose} hitSlop={12} style={({ pressed }) => pressed && { opacity: 0.75 }}>
-              <Ionicons name="close" size={24} color={LUNA_COLORS.tertiary} />
+              <IconX size={22} color={LUNA_COLORS.tertiary} strokeWidth={2} />
             </Pressable>
           </View>
           <View style={[s.body, { alignItems: 'center', gap: 12 }]}>
-            <Ionicons name={icon} size={48} color={LUNA_COLORS.warning} />
+            <Icon size={48} color={LUNA_COLORS.warning} strokeWidth={1.5} />
             <Text style={{ fontSize: 15, color: LUNA_COLORS.textPrimary, textAlign: 'center' }}>
               {message}
             </Text>
@@ -73,4 +73,4 @@ export function LunaConfirmModal({
       </Pressable>
     </Modal>
   );
-}
+});

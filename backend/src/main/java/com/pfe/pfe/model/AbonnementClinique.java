@@ -29,12 +29,12 @@ public class AbonnementClinique {
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "clinique_id")
+    @JoinColumn(name = "clinique_id", nullable = true)
     private Clinique clinique;
 
     /** Cabinet médical (médecin sans clinique) — exclusif avec clinique. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medecin_cabinet_id")
+    @JoinColumn(name = "medecin_cabinet_id", nullable = true)
     private Medecin medecinCabinet;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
