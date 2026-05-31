@@ -181,7 +181,7 @@ export default function EditPatientScreen(): React.JSX.Element {
                 numeroSecuriteSociale: numeroSecuriteSociale.trim() || undefined,
                 medecinReferentId: medecinReferentId != null ? String(medecinReferentId) : null,
                 medecinIds,
-                chambreId: '', // empty string triggers discharge in backend
+                chambreId: '',
               };
               await patientService.updatePatient(id, payload);
               setChambreId(null);
@@ -194,9 +194,37 @@ export default function EditPatientScreen(): React.JSX.Element {
             }
           },
         },
-      ]
+      ],
     );
   };
+
+  function handleDesactiver() {
+    if (!id) return;
+    Alert.alert(
+      'Désactiver le patient',
+      'Archiver ce patient ? Le compte ne pourra plus se connecter.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Désactiver',
+          style: 'destructive',
+          onPress: async () => {
+            setSaving(true);
+            try {
+              await patientService.deletePatient(id);
+              Alert.alert('Succès', 'Patient désactivé.', [
+                { text: 'OK', onPress: () => router.back() },
+              ]);
+            } catch (e: unknown) {
+              Alert.alert('Erreur', (e as { message?: string })?.message ?? 'Échec');
+            } finally {
+              setSaving(false);
+            }
+          },
+        },
+      ],
+    );
+  }
 
   // ── Sauvegarde ────────────────────────────────────────────────────────────
   async function handleSave() {
@@ -468,6 +496,14 @@ export default function EditPatientScreen(): React.JSX.Element {
             loading={saving}
             fullWidth
             size="lg"
+          />
+          <Button
+            title="Désactiver le patient"
+            variant="danger"
+            onPress={handleDesactiver}
+            loading={saving}
+            fullWidth
+            style={{ marginTop: spacing.md }}
           />
         </View>
       </ScrollView>

@@ -71,6 +71,21 @@ public class RendezVousService {
 
         return saved;
     }
+
+    /**
+     * RDV cabinet : le patient doit être rattaché au médecin en cabinet (medecinCabinet).
+     */
+    public RendezVous creerRendezVousCabinet(RendezVousDTO dto) {
+        Patient patient = patientRepository.findById(dto.getPatientId())
+                .orElseThrow(() -> new RuntimeException("Patient non trouvé"));
+        Medecin medecin = medecinRepository.findById(dto.getMedecinId())
+                .orElseThrow(() -> new RuntimeException("Médecin non trouvé"));
+        if (patient.getMedecinCabinet() == null
+                || !dto.getMedecinId().equals(patient.getMedecinCabinet().getId())) {
+            throw new RuntimeException("Ce patient n'est pas suivi dans votre cabinet.");
+        }
+        return creerRendezVous(dto);
+    }
     
     public List<RendezVous> obtenirRendezVousParPatient(String patientId) {
         return rendezVousRepository.findByPatientId(patientId);

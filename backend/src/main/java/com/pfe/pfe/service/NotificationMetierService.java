@@ -128,7 +128,7 @@ public class NotificationMetierService {
     @Transactional
     public void notifyAdminCliniqueStockFaible(Long adminId, String adminIdStr, String message, Long referenceId) {
         creer(adminId, adminIdStr, "ADMIN_CLINIQUE", CODE_STOCK_FAIBLE, "Alerte stock faible", message,
-                NotificationUtilisateur.TypeNotification.WARNING, referenceId, "STOCK", "/equipements");
+                NotificationUtilisateur.TypeNotification.WARNING, referenceId, "STOCK", "/pharmacie");
     }
 
     @Transactional

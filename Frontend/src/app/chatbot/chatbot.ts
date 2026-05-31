@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+import { ChatService } from '../service/chat.service';
 
 interface Message {
   text: string;
@@ -18,6 +20,7 @@ interface Message {
 export class ChatbotComponent {
   isOpen = false;
   isMinimized = false;
+  isLoading = false;
   messages: Message[] = [
     {
       text: 'Bonjour! Comment puis-je vous aider aujourd\'hui?',
@@ -26,6 +29,8 @@ export class ChatbotComponent {
     }
   ];
   userMessage = '';
+
+  constructor(private chat: ChatService) {}
 
   toggleChat(): void {
     this.isOpen = !this.isOpen;
@@ -44,7 +49,7 @@ export class ChatbotComponent {
   }
 
   sendMessage(): void {
-    if (!this.userMessage.trim()) return;
+    if (!this.userMessage.trim() || this.isLoading) return;
 
     // Ajouter le message utilisateur
     this.messages.push({
@@ -53,37 +58,39 @@ export class ChatbotComponent {
       timestamp: new Date()
     });
 
-    const userMsg = this.userMessage.toLowerCase();
+    const userMsg = this.userMessage;
     this.userMessage = '';
+    this.isLoading = true;
 
-    // Simuler une réponse du bot
-    setTimeout(() => {
-      this.messages.push({
-        text: this.getBotResponse(userMsg),
-        isBot: true,
-        timestamp: new Date()
+    this.chat
+      .ask(userMsg)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe({
+        next: (reply) => {
+          this.messages.push({
+            text: reply || 'Je n’ai pas de réponse pour le moment. Réessayez.',
+            isBot: true,
+            timestamp: new Date(),
+          });
+          this.scrollToBottom();
+        },
+        error: (err) => {
+          const body = err?.error;
+          const msg =
+            (typeof body === 'string' ? body : body?.message) ||
+            (err?.status === 429
+              ? 'Limite Gemini atteinte. Attendez une minute puis réessayez.'
+              : err?.status === 503
+                ? 'Assistant non configuré (clé Gemini manquante côté serveur).'
+                : 'Erreur : impossible de contacter le serveur.');
+          this.messages.push({
+            text: String(msg),
+            isBot: true,
+            timestamp: new Date(),
+          });
+          this.scrollToBottom();
+        },
       });
-      this.scrollToBottom();
-    }, 500);
-  }
-
-  private getBotResponse(message: string): string {
-    // Réponses simples basées sur les mots-clés
-    if (message.includes('bonjour') || message.includes('salut')) {
-      return 'Bonjour! Comment puis-je vous aider aujourd\'hui?';
-    } else if (message.includes('aide') || message.includes('help')) {
-      return 'Je peux vous aider avec:\n• Informations sur les services\n• Prise de rendez-vous\n• Gestion des patients\n• Questions générales';
-    } else if (message.includes('rendez-vous') || message.includes('rdv')) {
-      return 'Pour prendre un rendez-vous, veuillez accéder à la section "Rendez-vous" dans le menu.';
-    } else if (message.includes('service')) {
-      return 'Vous pouvez gérer les services médicaux dans la section "Services Médicaux" du menu.';
-    } else if (message.includes('patient')) {
-      return 'La gestion des patients est disponible dans la section "Patients" du menu.';
-    } else if (message.includes('merci')) {
-      return 'De rien! N\'hésitez pas si vous avez d\'autres questions.';
-    } else {
-      return 'Je suis là pour vous aider. Pouvez-vous reformuler votre question ou taper "aide" pour voir ce que je peux faire?';
-    }
   }
 
   private scrollToBottom(): void {

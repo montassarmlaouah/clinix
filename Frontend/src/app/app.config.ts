@@ -4,6 +4,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { tokenInterceptor } from './interceptor/token-interceptor';
+import { billingScopeInterceptor } from './interceptor/billing-scope.interceptor';
 import { subscriptionInterceptor } from './interceptor/subscription-interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -11,6 +12,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([tokenInterceptor, subscriptionInterceptor]))
+    provideHttpClient(
+      withInterceptors([tokenInterceptor, billingScopeInterceptor, subscriptionInterceptor]),
+    ),
   ]
 };

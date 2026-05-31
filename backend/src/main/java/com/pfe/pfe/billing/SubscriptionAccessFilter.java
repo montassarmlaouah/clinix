@@ -43,6 +43,7 @@ public class SubscriptionAccessFilter extends OncePerRequestFilter {
         if (path.startsWith("/auth/")
                 || path.startsWith("/api/auth/")
                 || path.startsWith("/api/billing/")
+                || path.startsWith("/api/chat/")
                 || path.startsWith("/api/webhooks/")
                 || path.equals("/api/health")
                 || path.startsWith("/swagger-ui/")
@@ -72,12 +73,9 @@ public class SubscriptionAccessFilter extends OncePerRequestFilter {
 
         if ("MEDECIN".equals(role)) {
             if (cabinetScope) {
-                if (!user.isAccesCabinet()) {
-                    deny(response, "Accès cabinet non activé pour votre compte.");
-                    return;
-                }
                 if (!subscriptionAccessService.hasActivePaidCabinetSubscription(user.getId())) {
-                    deny(response, "Abonnement cabinet requis ou expiré. Veuillez souscrire à un forfait cabinet.");
+                    deny(response,
+                            "Abonnement cabinet requis ou expiré. Veuillez choisir un forfait et effectuer le paiement (page Forfaits cabinet).");
                     return;
                 }
             } else if (StringUtils.hasText(user.getCliniqueId())) {

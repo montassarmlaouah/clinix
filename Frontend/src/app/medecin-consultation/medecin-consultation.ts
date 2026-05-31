@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { MSG_ABONNEMENT_CABINET_REQUIS, redirectSiAbonnementCabinetRequis } from '../service/cabinet-access.util';
 import { forkJoin, of, catchError } from 'rxjs';
 import { PatientService } from '../service/patient-service';
 import { RendezVousService } from '../service/rendez-vous.service';
@@ -56,7 +57,8 @@ export class MedecinConsultationComponent implements OnInit {
     private http: HttpClient,
     private patientService: PatientService,
     private rdvService: RendezVousService,
-    public auth: AuthService
+    public auth: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -66,15 +68,26 @@ export class MedecinConsultationComponent implements OnInit {
       this.error = 'Identifiant médecin manquant dans la session.';
       return;
     }
+    this.auth.hydrateCabinetAccess().subscribe(() => this.chargerDonnees(mid));
+  }
+
+  private chargerDonnees(mid: string): void {
     const clin$ = this.cliniqueId
       ? this.patientService.getPatientsByClinique(this.cliniqueId)
-      : this.patientService.obtenirTousLesPatients();
-    forkJoin({
-      clinique: clin$,
-      cabinet: this.patientService
-        .getPatientsCabinetMedecin(mid)
-        .pipe(catchError(() => of([] as Patient[]))),
-    }).subscribe({
+      : of([] as Patient[]);
+    const cabinet$ = this.auth.peutAccederEspaceCabinet()
+      ? this.patientService.getPatientsCabinetMedecin(mid).pipe(
+          catchError((e) => {
+            const msg = e?.error?.message;
+            if (typeof msg === 'string' && msg) {
+              this.error = msg;
+            }
+            return of([] as Patient[]);
+          })
+        )
+      : of([] as Patient[]);
+
+    forkJoin({ clinique: clin$, cabinet: cabinet$ }).subscribe({
       next: ({ clinique, cabinet }) => {
         this.patientsClinique = (clinique ?? []) as Patient[];
         this.patientsCabinet = (cabinet ?? []) as Patient[];
@@ -82,6 +95,10 @@ export class MedecinConsultationComponent implements OnInit {
       },
       error: () => (this.error = 'Impossible de charger les patients (clinique / cabinet).'),
     });
+  }
+
+  get peutCabinet(): boolean {
+    return this.auth.peutAccederEspaceCabinet();
   }
 
   get medecinId(): string | null {
@@ -170,6 +187,13 @@ export class MedecinConsultationComponent implements OnInit {
   ajouterPatientCabinet(): void {
     const mid = this.medecinId;
     if (!mid) return;
+    if (redirectSiAbonnementCabinetRequis(this.auth, this.router)) {
+      return;
+    }
+    if (!this.auth.peutAccederEspaceCabinet()) {
+      this.error = MSG_ABONNEMENT_CABINET_REQUIS;
+      return;
+    }
     const f = this.cabinetForm;
     if (!f.nom?.trim() || !f.prenom?.trim() || !f.telephone?.trim() || !f.dateNaissance) {
       this.error = 'Nom, prénom, téléphone et date de naissance obligatoires pour un patient cabinet.';
@@ -214,7 +238,7 @@ export class MedecinConsultationComponent implements OnInit {
       dateHeure,
       motif: f.motif.trim(),
     };
-    this.rdvService.creerRendezVous(dto).subscribe({
+    this.rdvService.creerRendezVous(dto, 'cabinet').subscribe({
         next: () => {
           this.success = 'Rendez-vous cabinet créé.';
           this.rdvCabForm = { patientId: '', dateHeureLocal: '', motif: '' };

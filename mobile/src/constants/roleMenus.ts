@@ -34,7 +34,10 @@ export const ROLE_MENUS: Record<string, RoleMenuItem[]> = {
   ROLE_SUPER_ADMIN: menu('ROLE_SUPER_ADMIN', [], '/(superadmin)/profil'),
   ROLE_ADMIN_CLINIQUE: menu(
     'ROLE_ADMIN_CLINIQUE',
-    [{ label: 'Paiement Stripe', route: '/(admin)/abonnement-paiement', icon: 'card-outline' }],
+    [
+      { label: 'Paiement Stripe', route: '/(admin)/abonnement-paiement', icon: 'card-outline' },
+      { label: 'Facturation patient', route: '/(admin)/facturation-patient', icon: 'receipt-outline' },
+    ],
     '/(admin)/profil',
   ),
   ROLE_SECRETAIRE: menu('ROLE_SECRETAIRE', [], '/(secretaire)/profil'),

@@ -13,8 +13,12 @@ export class RendezVousService {
   constructor(private http: HttpClient) { }
 
   // Créer un nouveau rendez-vous
-  creerRendezVous(rendezVousDTO: RendezVousDTO): Observable<RendezVous> {
-    return this.http.post<RendezVous>(this.baseUrl, rendezVousDTO);
+  creerRendezVous(rendezVousDTO: RendezVousDTO, scope?: 'clinique' | 'cabinet'): Observable<RendezVous> {
+    let params = new HttpParams();
+    if (scope === 'cabinet') {
+      params = params.set('scope', 'cabinet');
+    }
+    return this.http.post<RendezVous>(this.baseUrl, rendezVousDTO, { params });
   }
 
   // Alias pour createRendezVous
@@ -33,8 +37,16 @@ export class RendezVousService {
   }
 
   // Mettre à jour un rendez-vous
-  updateRendezVous(id: string, rendezVousDTO: RendezVousDTO): Observable<RendezVous> {
-    return this.http.put<RendezVous>(`${this.baseUrl}/${id}`, rendezVousDTO);
+  updateRendezVous(
+    id: string,
+    rendezVousDTO: RendezVousDTO,
+    scope?: 'clinique' | 'cabinet',
+  ): Observable<RendezVous> {
+    let params = new HttpParams();
+    if (scope === 'cabinet') {
+      params = params.set('scope', 'cabinet');
+    }
+    return this.http.put<RendezVous>(`${this.baseUrl}/${id}`, rendezVousDTO, { params });
   }
 
   // Supprimer un rendez-vous

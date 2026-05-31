@@ -25,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.pfe.pfe.dto.RendezVousDTO;
 import com.pfe.pfe.model.RendezVous;
+import com.pfe.pfe.security.MedecinCabinetSecurity;
 import com.pfe.pfe.security.services.CustomUserDetails;
 import com.pfe.pfe.service.RendezVousService;
 
@@ -39,8 +40,16 @@ public class RendezVousController {
     private final RendezVousService rendezVousService;
     
     @PostMapping
-    public ResponseEntity<RendezVous> creerRendezVous(@RequestBody RendezVousDTO dto) {
-        RendezVous rendezVous = rendezVousService.creerRendezVous(dto);
+    public ResponseEntity<RendezVous> creerRendezVous(
+            @RequestBody RendezVousDTO dto,
+            @RequestParam(name = "scope", required = false) String scope) {
+        RendezVous rendezVous;
+        if ("cabinet".equalsIgnoreCase(scope != null ? scope.trim() : "")) {
+            MedecinCabinetSecurity.assertMedecinCabinetAccess(dto.getMedecinId());
+            rendezVous = rendezVousService.creerRendezVousCabinet(dto);
+        } else {
+            rendezVous = rendezVousService.creerRendezVous(dto);
+        }
         return new ResponseEntity<>(rendezVous, HttpStatus.CREATED);
     }
 
@@ -88,7 +97,7 @@ public class RendezVousController {
     /** RDV « cabinet » : patients rattachés au médecin en cabinet. */
     @GetMapping("/medecin/{medecinId}/rdv-cabinet")
     public ResponseEntity<List<RendezVous>> listerRdvCabinetPourMedecin(@PathVariable String medecinId) {
-        assertMedecinConnecte(medecinId);
+        MedecinCabinetSecurity.assertMedecinCabinetAccess(medecinId);
         return ResponseEntity.ok(rendezVousService.listerRendezVousCabinetPourMedecin(medecinId));
     }
 

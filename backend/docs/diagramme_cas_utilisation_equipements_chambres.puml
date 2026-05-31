@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+
+title Cas d'utilisation - Sprint 5 : Equipements, maintenance, chambres et facturation
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #F5FAFF
+  BorderColor #3B6EA5
+}
+
+actor "Administrateur\nclinique" as AC
+actor "Technicien\nmaintenance" as TM
+actor "Secretaire" as SEC
+actor "Patient" as PAT
+
+rectangle "Equipements & maintenance" {
+  usecase "Consulter les equipements" as UC1
+  usecase "Creer / modifier un equipement" as UC2
+  usecase "Declarer une panne" as UC3
+  usecase "Suivre pannes & maintenances" as UC4
+  usecase "Planifier une maintenance" as UC5
+  usecase "Cloturer une maintenance" as UC6
+}
+
+rectangle "Chambres" {
+  usecase "Consulter les chambres" as UC7
+  usecase "Affecter une chambre" as UC8
+  usecase "Liberer une chambre" as UC9
+}
+
+rectangle "Facturation patient" {
+  usecase "Gerer le catalogue\ndes prestations" as F1
+  usecase "Generer la facture\n(sortie / hospitalisation)" as F2
+  usecase "Ajouter des prestations" as F3
+  usecase "Emettre la facture" as F4
+  usecase "Valider le paiement" as F5
+  usecase "Teletransmettre CNAM" as F6
+  usecase "Telecharger le PDF" as F7
+}
+
+' --- Acteurs / equipements ---
+AC --> UC1
+AC --> UC2
+AC --> UC3
+TM --> UC4
+TM --> UC5
+TM --> UC6
+
+' --- Acteurs / chambres ---
+AC --> UC7
+SEC --> UC7
+SEC --> UC8
+SEC --> UC9
+
+' --- Acteurs / facturation ---
+AC --> F1
+SEC --> F2
+SEC --> F4
+SEC --> F5
+SEC --> F6
+PAT --> F7
+
+' --- Relations entre cas ---
+UC3 ..> UC4 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC9 ..> F2 : <<include>>
+F2 ..> F3 : <<extend>>
+F2 ..> F1 : <<include>>
+F4 ..> F7 : <<extend>>
+
+note bottom of F2
+  La sortie du patient (liberation de chambre)
+  declenche le calcul des jours de sejour
+  et la generation automatique de la facture.
+end note
+
+@enduml

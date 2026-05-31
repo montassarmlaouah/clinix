@@ -24,6 +24,7 @@ export class AbonnementTarifsComponent implements OnInit {
   billingScope: 'clinique' | 'cabinet' = 'clinique';
   abonnementPaye = false;
   loadingAbonnement = false;
+  messagePaiementRequis = '';
 
   constructor(
     private abonnementService: AbonnementService,
@@ -33,9 +34,15 @@ export class AbonnementTarifsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('raison') === 'paiement_requis') {
+      this.messagePaiementRequis =
+        'Un abonnement cabinet actif est requis pour accéder aux patients et rendez-vous cabinet. Choisissez un forfait ci-dessous.';
+    }
     const qScope = (this.route.snapshot.queryParamMap.get('scope') || '').toLowerCase();
     if (qScope === 'cabinet') {
-      this.billingScope = 'cabinet';
+      // Le scope "cabinet" n'est valable que pour les médecins.
+      // (Ne pas dépendre d'un flag JWT "accesCabinet" qui peut être absent / incohérent côté données.)
+      this.billingScope = this.auth.isMedecin() ? 'cabinet' : 'clinique';
     } else if (qScope === 'clinique') {
       this.billingScope = 'clinique';
     } else if (this.auth.isMedecinCabinetExclusif()) {
@@ -71,7 +78,8 @@ export class AbonnementTarifsComponent implements OnInit {
   }
 
   private verifierAbonnementExistant(): void {
-    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    // Toujours expliciter le scope pour éviter les ambiguïtés backend (clinique vs cabinet).
+    const scope: 'clinique' | 'cabinet' = this.billingScope;
     this.loadingAbonnement = true;
     this.abonnementService.getCurrentSubscription(scope).subscribe({
       next: (cur) => {
@@ -139,11 +147,12 @@ export class AbonnementTarifsComponent implements OnInit {
     this.error = '';
     this.simSuccess = '';
     this.simulatingId = o.id;
-    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    const scope: 'clinique' | 'cabinet' = this.billingScope;
     this.abonnementService.souscriptionSimulee(o.id, this.intervalSelection, scope).subscribe({
       next: (r) => {
         this.simulatingId = null;
         this.simSuccess = typeof r['message'] === 'string' ? r['message'] : 'Abonnement enregistré (simulation).';
+        this.auth.hydrateCabinetAccess().subscribe(() => this.verifierAbonnementExistant());
       },
       error: (e: { error?: { message?: string } }) => {
         this.simulatingId = null;

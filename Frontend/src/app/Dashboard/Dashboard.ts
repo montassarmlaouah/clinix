@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../service/auth-service';
 import { CliniqueService } from '../service/clinique-service';
 import { RendezVousService } from '../service/rendez-vous.service';
@@ -14,10 +14,14 @@ import { AbsenceService } from '../service/absence.service';
 import { ToastService } from '../service/toast-service';
 import { Clinique, Medecin, RendezVousDTO, Patient } from '../model/user.model';
 import { MedecinService } from '../service/medecin.service';
+import { MedecinStatistiques, MedecinWorkspaceService } from '../service/medecin-workspace.service';
 import { RadiologueWorkspaceService, RadiologueWorkspaceStats } from '../service/radiologue-workspace.service';
 import { TechnicienMaintenanceService } from '../service/technicien-maintenance.service';
 import { EquipementService } from '../service/equipement.service';
 import { DemandesMedicamentService } from '../service/demandes-medicament.service';
+import { AbonnementService } from '../service/abonnement.service';
+import { AbonnementCliniqueSummary } from '../model/abonnement.model';
+import { FacturationPatientService, FacturePatient } from '../service/facturation-patient.service';
 import { Chart, registerables, TooltipItem } from 'chart.js';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -39,6 +43,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('adminOverviewChart') adminOverviewChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('adminPersonnelChart') adminPersonnelChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('adminChambresServiceChart') adminChambresServiceChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('adminRevenueChart') adminRevenueChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('infirmierPresencesChart') infirmierPresencesChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('infirmierCongesChart') infirmierCongesChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('infirmierAgeChart') infirmierAgeChartRef!: ElementRef<HTMLCanvasElement>;
@@ -50,6 +55,13 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('secretaireAgeChart') secretaireAgeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('secretaireSexeChart') secretaireSexeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('technicienEquipementsChart') technicienEquipementsChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('radiologueWorkflowChart') radiologueWorkflowChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('radiologueOverviewChart') radiologueOverviewChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pharmacienDemandesChart') pharmacienDemandesChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pharmacienWorkflowChart') pharmacienWorkflowChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('medecinActivityChart') medecinActivityChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('medecinOverviewChart') medecinOverviewChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('patientRdvChart') patientRdvChartRef!: ElementRef<HTMLCanvasElement>;
   userRole: string | null = null;
   userName: string = '';
 
@@ -67,6 +79,25 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   };
 
   rendezVousRecents: RendezVousDTO[] = [];
+  patientStats = {
+    totalRdv: 0,
+    enAttente: 0,
+    confirmes: 0,
+    termines: 0
+  };
+  /** Dashboard médecin */
+  medecinStats: MedecinStatistiques = {
+    patientsCabinet: 0,
+    patientsConsultationsDistincts: 0,
+    consultationsTotal: 0,
+    consultationsCeMois: 0,
+    ordonnancesTotal: 0,
+    rendezVousAujourdhui: 0,
+    soinsEnAttenteValidation: 0,
+  };
+  medecinAbonnementCabinet: AbonnementCliniqueSummary | null = null;
+  medecinAbonnementLoading = false;
+  medecinAbonnementError = '';
 
   // Clinique de l'utilisateur
   maClinique: Clinique | null = null;
@@ -88,6 +119,16 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     pharmaciens: 0,
     radiologues: 0
   };
+
+  /** Revenus factures patients (encaissements). */
+  adminRevenuePeriode: 'mois' | 'semaine' = 'mois';
+  adminRevenueTotal = 0;
+  adminRevenueMoisCourant = 0;
+  adminRevenueSemaineCourante = 0;
+  adminRevenueFacturesPayees = 0;
+  adminRevenueLabels: string[] = [];
+  adminRevenueData: number[] = [];
+  private adminFacturesPayees: FacturePatient[] = [];
 
   // Liste des cliniques pour Super Admin
   cliniques: Clinique[] = [];
@@ -137,7 +178,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   secretaireStats = {
     totalPatients: 0,
     patientsRecents: 0,
-    taux: 0
+    taux: 0,
+    rendezVousEnAttente: 0
   };
 
   secretairePatientsAgeDistribution: { labels: string[], data: number[] } = { labels: [], data: [] };
@@ -168,6 +210,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   private adminOverviewChart: Chart | null = null;
   private adminPersonnelChart: Chart | null = null;
   private adminChambresServiceChart: Chart | null = null;
+  private adminRevenueChart: Chart | null = null;
   private infirmierPresencesChart: Chart | null = null;
   private infirmierCongesChart: Chart | null = null;
   private chefPlanningTrendChart: Chart | null = null;
@@ -179,6 +222,14 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   private secretaireAgeChart: Chart | null = null;
   private secretaireSexeChart: Chart | null = null;
   private technicienEquipementsChart: Chart | null = null;
+  private radiologueWorkflowChart: Chart | null = null;
+  private radiologueOverviewChart: Chart | null = null;
+  private pharmacienDemandesChart: Chart | null = null;
+  private pharmacienWorkflowChart: Chart | null = null;
+  private medecinActivityChart: Chart | null = null;
+  private medecinOverviewChart: Chart | null = null;
+  private patientRdvChart: Chart | null = null;
+  private readonly lunaChartTitleColor = '#023859';
 
   constructor(
     public authService: AuthService,
@@ -196,10 +247,18 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     private radiologueWorkspaceService: RadiologueWorkspaceService,
     private technicienMaintenanceService: TechnicienMaintenanceService,
     private equipementService: EquipementService,
-    private demandesMedicamentService: DemandesMedicamentService
+    private demandesMedicamentService: DemandesMedicamentService,
+    private abonnementService: AbonnementService,
+    private medecinWorkspaceService: MedecinWorkspaceService,
+    private facturationPatientService: FacturationPatientService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    if (!this.authService.getToken()) {
+      this.router.navigate(['/login']);
+      return;
+    }
     this.userRole = this.authService.getRole();
     this.userName = this.authService.getPrenom() || this.authService.getNom() || '';
     this.loadDashboardData();
@@ -228,6 +287,9 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.adminChambresServiceChart) {
       this.adminChambresServiceChart.destroy();
+    }
+    if (this.adminRevenueChart) {
+      this.adminRevenueChart.destroy();
     }
     if (this.infirmierPresencesChart) {
       this.infirmierPresencesChart.destroy();
@@ -261,6 +323,27 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.technicienEquipementsChart) {
       this.technicienEquipementsChart.destroy();
+    }
+    if (this.radiologueWorkflowChart) {
+      this.radiologueWorkflowChart.destroy();
+    }
+    if (this.radiologueOverviewChart) {
+      this.radiologueOverviewChart.destroy();
+    }
+    if (this.pharmacienDemandesChart) {
+      this.pharmacienDemandesChart.destroy();
+    }
+    if (this.pharmacienWorkflowChart) {
+      this.pharmacienWorkflowChart.destroy();
+    }
+    if (this.medecinActivityChart) {
+      this.medecinActivityChart.destroy();
+    }
+    if (this.medecinOverviewChart) {
+      this.medecinOverviewChart.destroy();
+    }
+    if (this.patientRdvChart) {
+      this.patientRdvChart.destroy();
     }
   }
 
@@ -347,30 +430,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         datasets: [{
           label: 'Capacité (lits)',
           data: sortedCliniques.map(c => Math.round(Number(c.capacite) || 0)),
-          backgroundColor: [
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)',
-            'rgba(255, 159, 64, 0.8)',
-            'rgba(255, 99, 132, 0.8)',
-            'rgba(38, 101, 140, 0.8)',
-            'rgba(2, 56, 89, 0.8)',
-            'rgba(99, 179, 237, 0.8)',
-            'rgba(129, 140, 248, 0.8)',
-            'rgba(251, 191, 36, 0.8)'
-          ],
-          borderColor: [
-            'rgba(54, 162, 235, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)',
-            'rgba(255, 99, 132, 1)',
-            'rgba(38, 101, 140, 1)',
-            'rgba(2, 56, 89, 1)',
-            'rgba(99, 179, 237, 1)',
-            'rgba(129, 140, 248, 1)',
-            'rgba(251, 191, 36, 1)'
-          ],
+          backgroundColor: this.lunaBarColors(this.cliniques.length, 0.8),
+          borderColor: this.lunaBarColors(this.cliniques.length, 1),
           borderWidth: 1,
           borderRadius: 8
         }]
@@ -432,12 +493,12 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         datasets: [{
           data: [this.stats.cliniquesActives, this.stats.cliniquesInactives],
           backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',
-            'rgba(239, 68, 68, 0.8)'
+            this.lunaRgba('teal', 0.85),
+            this.lunaRgba('deep', 0.85)
           ],
           borderColor: [
-            'rgba(34, 197, 94, 1)',
-            'rgba(239, 68, 68, 1)'
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('deep', 1)
           ],
           borderWidth: 2,
           hoverOffset: 10
@@ -587,9 +648,10 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       radiologues: this.personnelService.listerRadiologues().pipe(catchError(() => of([] as any[]))),
       services: this.serviceMedicalService.obtenirServicesParClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
       chambres: this.chambreService.listerParClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
-      equipements: this.equipementService.obtenirEquipementsParClinique(cliniqueId).pipe(catchError(() => of([] as any[])))
+      equipements: this.equipementService.obtenirEquipementsParClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
+      factures: this.facturationPatientService.parClinique(cliniqueId).pipe(catchError(() => of([] as FacturePatient[]))),
     }).subscribe({
-      next: ({ clinique, patients, medecins, infirmiers, secretaires, pharmaciens, radiologues, services, chambres, equipements }) => {
+      next: ({ clinique, patients, medecins, infirmiers, secretaires, pharmaciens, radiologues, services, chambres, equipements, factures }) => {
         this.maClinique = clinique;
         this.stats.totalPatients = patients.length;
 
@@ -629,6 +691,8 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
           };
         });
 
+        this.buildAdminRevenueFromFactures(factures || []);
+
         this.loading = false;
         setTimeout(() => this.initAdminCliniqueCharts(), 100);
       },
@@ -645,6 +709,208 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     this.initAdminOverviewChart();
     this.initAdminPersonnelChart();
     this.initAdminChambresServiceChart();
+    this.initAdminRevenueChart();
+  }
+
+  basculerAdminRevenuePeriode(periode: 'mois' | 'semaine'): void {
+    if (this.adminRevenuePeriode === periode) {
+      return;
+    }
+    this.adminRevenuePeriode = periode;
+    this.refreshAdminRevenueSeries();
+    setTimeout(() => this.initAdminRevenueChart(), 50);
+  }
+
+  private montantFactureEncaisse(f: FacturePatient): number {
+    const paye = Number(f.montantPaye);
+    if (!Number.isNaN(paye) && paye > 0) {
+      return paye;
+    }
+    if (f.statut === 'PAYEE') {
+      const total = Number(f.montantTotal);
+      return !Number.isNaN(total) && total > 0 ? total : 0;
+    }
+    return 0;
+  }
+
+  private buildAdminRevenueFromFactures(factures: FacturePatient[]): void {
+    this.adminFacturesPayees = factures.filter((f) => this.montantFactureEncaisse(f) > 0);
+    this.adminRevenueFacturesPayees = this.adminFacturesPayees.length;
+    this.adminRevenueTotal = this.adminFacturesPayees.reduce(
+      (sum, f) => sum + this.montantFactureEncaisse(f),
+      0
+    );
+
+    const now = new Date();
+    const debutMois = new Date(now.getFullYear(), now.getMonth(), 1);
+    const debutSemaine = new Date(now);
+    debutSemaine.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
+    debutSemaine.setHours(0, 0, 0, 0);
+
+    this.adminRevenueMoisCourant = 0;
+    this.adminRevenueSemaineCourante = 0;
+    for (const f of this.adminFacturesPayees) {
+      const d = f.dateFacture ? new Date(f.dateFacture) : null;
+      if (!d || Number.isNaN(d.getTime())) {
+        continue;
+      }
+      const montant = this.montantFactureEncaisse(f);
+      if (d >= debutMois) {
+        this.adminRevenueMoisCourant += montant;
+      }
+      if (d >= debutSemaine) {
+        this.adminRevenueSemaineCourante += montant;
+      }
+    }
+
+    this.refreshAdminRevenueSeries();
+  }
+
+  private refreshAdminRevenueSeries(): void {
+    if (this.adminRevenuePeriode === 'semaine') {
+      this.adminRevenueLabels = this.buildLastWeekLabels(12);
+      this.adminRevenueData = this.aggregateRevenueByWeek(this.adminFacturesPayees, 12);
+    } else {
+      this.adminRevenueLabels = this.buildLastMonthLabels(12);
+      this.adminRevenueData = this.aggregateRevenueByMonth(this.adminFacturesPayees, 12);
+    }
+  }
+
+  private buildLastMonthLabels(count: number): string[] {
+    const labels: string[] = [];
+    const now = new Date();
+    for (let i = count - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      labels.push(d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }));
+    }
+    return labels;
+  }
+
+  private buildLastWeekLabels(count: number): string[] {
+    const labels: string[] = [];
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - (count - 1) * 7);
+    start.setHours(0, 0, 0, 0);
+    for (let i = 0; i < count; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i * 7);
+      labels.push(`S${this.getIsoWeekNumber(d)}`);
+    }
+    return labels;
+  }
+
+  private getIsoWeekNumber(date: Date): number {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  }
+
+  private aggregateRevenueByMonth(factures: FacturePatient[], count: number): number[] {
+    const buckets = new Array<number>(count).fill(0);
+    const now = new Date();
+    const keys: string[] = [];
+    for (let i = count - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
+    for (const f of factures) {
+      const d = f.dateFacture ? new Date(f.dateFacture) : null;
+      if (!d || Number.isNaN(d.getTime())) {
+        continue;
+      }
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const idx = keys.indexOf(key);
+      if (idx >= 0) {
+        buckets[idx] += this.montantFactureEncaisse(f);
+      }
+    }
+    return buckets.map((v) => Math.round(v * 100) / 100);
+  }
+
+  private aggregateRevenueByWeek(factures: FacturePatient[], count: number): number[] {
+    const buckets = new Array<number>(count).fill(0);
+    const now = new Date();
+    const weekStarts: Date[] = [];
+    const start = new Date(now);
+    start.setDate(now.getDate() - (count - 1) * 7);
+    start.setHours(0, 0, 0, 0);
+    for (let i = 0; i < count; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i * 7);
+      weekStarts.push(d);
+    }
+    for (const f of factures) {
+      const d = f.dateFacture ? new Date(f.dateFacture) : null;
+      if (!d || Number.isNaN(d.getTime())) {
+        continue;
+      }
+      for (let i = weekStarts.length - 1; i >= 0; i--) {
+        const weekEnd = i < weekStarts.length - 1 ? weekStarts[i + 1] : new Date(now.getTime() + 86400000);
+        if (d >= weekStarts[i] && d < weekEnd) {
+          buckets[i] += this.montantFactureEncaisse(f);
+          break;
+        }
+      }
+    }
+    return buckets.map((v) => Math.round(v * 100) / 100);
+  }
+
+  private initAdminRevenueChart(): void {
+    if (!this.adminRevenueChartRef) {
+      return;
+    }
+    if (this.adminRevenueChart) {
+      this.adminRevenueChart.destroy();
+      this.adminRevenueChart = null;
+    }
+    const ctx = this.adminRevenueChartRef.nativeElement.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+    const titre =
+      this.adminRevenuePeriode === 'semaine'
+        ? 'Revenus encaissés par semaine (factures patients)'
+        : 'Revenus encaissés par mois (factures patients)';
+
+    this.adminRevenueChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: this.adminRevenueLabels,
+        datasets: [
+          {
+            label: 'Montant encaissé (DT)',
+            data: this.adminRevenueData,
+            backgroundColor: this.lunaBarColors(this.adminRevenueLabels.length),
+            borderWidth: 1,
+            borderRadius: 8,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: this.lunaChartTitle(titre),
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${Number(ctx.raw).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DT`,
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => `${value} DT`,
+            },
+          },
+        },
+      },
+    });
   }
 
   private initAdminOverviewChart(): void {
@@ -723,13 +989,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
             this.adminPersonnelBreakdown.pharmaciens,
             this.adminPersonnelBreakdown.radiologues
           ],
-          backgroundColor: [
-            'rgba(54, 162, 235, 0.85)',
-            'rgba(75, 192, 192, 0.85)',
-            'rgba(153, 102, 255, 0.85)',
-            'rgba(255, 159, 64, 0.85)',
-            'rgba(255, 99, 132, 0.85)'
-          ],
+          backgroundColor: this.lunaBarColors(5),
           borderWidth: 1,
           borderRadius: 8
         }]
@@ -739,12 +999,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: {
-            display: true,
-            text: 'Personnel par Rôle',
-            font: { size: 16, weight: 'bold' },
-            color: '#1a3a5c'
-          }
+          title: this.lunaChartTitle('Personnel par Rôle')
         },
         scales: {
           y: {
@@ -766,17 +1021,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       this.adminChambresServiceChart.destroy();
     }
 
-    const colors = [
-      'rgba(38, 101, 140, 0.85)',
-      'rgba(84, 172, 191, 0.85)',
-      'rgba(2, 56, 89, 0.85)',
-      'rgba(167, 235, 242, 0.85)',
-      'rgba(54, 162, 235, 0.85)',
-      'rgba(75, 192, 192, 0.85)',
-      'rgba(153, 102, 255, 0.85)',
-      'rgba(255, 159, 64, 0.85)',
-      'rgba(255, 99, 132, 0.85)',
-    ];
+    const colors = this.lunaBarColors(this.chambresParService.length);
 
     this.adminChambresServiceChart = new Chart(ctx, {
       type: 'bar',
@@ -826,27 +1071,142 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadMedecinData(): void {
-    const medecinId = this.authService.getUserId();
-    if (medecinId) {
-      this.rendezVousService.getRendezVousByMedecin(medecinId).subscribe({
-        next: (rdvs) => {
-          this.rendezVousRecents = rdvs.slice(0, 5);
-          this.stats.rendezVousEnAttente = rdvs.filter(r => r.statut === 'EN_ATTENTE').length;
-          const today = new Date().toDateString();
-          this.stats.rendezVousAujourdhui = rdvs.filter(r =>
-            new Date(r.dateHeure).toDateString() === today
-          ).length;
-          this.loading = false;
-        },
-        error: (err: any) => {
-          if (err?.status !== 403) {
-            this.handleError(err, 'Erreur chargement rendez-vous');
-          }
-          this.loading = false;
-        }
-      });
-    } else {
+    const uid = this.authService.getUserId();
+    if (!uid) {
       this.loading = false;
+      return;
+    }
+
+    this.medecinAbonnementError = '';
+    this.medecinAbonnementCabinet = null;
+    this.medecinAbonnementLoading = this.authService.peutGererAbonnementCabinet();
+
+    const stats$ = this.medecinWorkspaceService.statistiques(uid).pipe(
+      catchError(() => of(null as MedecinStatistiques | null))
+    );
+    const abo$ = this.authService.peutGererAbonnementCabinet()
+      ? this.abonnementService.getCurrentSubscription('cabinet').pipe(catchError(() => of(null)))
+      : of(null);
+
+    forkJoin({ stats: stats$, abo: abo$ }).subscribe({
+      next: ({ stats, abo }) => {
+        if (stats) {
+          this.medecinStats = stats;
+        }
+        this.medecinAbonnementCabinet = abo;
+        this.medecinAbonnementLoading = false;
+        this.loading = false;
+        setTimeout(() => this.initMedecinCharts(), 100);
+      },
+      error: () => {
+        this.medecinAbonnementError = 'Impossible de charger le tableau de bord.';
+        this.medecinAbonnementLoading = false;
+        this.loading = false;
+      },
+    });
+  }
+
+  private initMedecinCharts(): void {
+    this.initMedecinActivityChart();
+    this.initMedecinOverviewChart();
+  }
+
+  private initMedecinActivityChart(): void {
+    if (!this.medecinActivityChartRef) return;
+    const ctx = this.medecinActivityChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.medecinActivityChart) this.medecinActivityChart.destroy();
+
+    const s = this.medecinStats;
+    this.medecinActivityChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Patients', 'RDV jour', 'Consult. mois', 'Consult. tot.', 'Ordonnances', 'Soins à valider'],
+        datasets: [{
+          label: 'Activité',
+          data: [
+            s.patientsCabinet,
+            s.rendezVousAujourdhui,
+            s.consultationsCeMois,
+            s.consultationsTotal,
+            s.ordonnancesTotal,
+            s.soinsEnAttenteValidation
+          ],
+          backgroundColor: this.lunaBarColors(6),
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: this.lunaChartTitle('Activité médicale')
+        },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  private initMedecinOverviewChart(): void {
+    if (!this.medecinOverviewChartRef) return;
+    const ctx = this.medecinOverviewChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.medecinOverviewChart) this.medecinOverviewChart.destroy();
+
+    const s = this.medecinStats;
+    this.medecinOverviewChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['RDV aujourd\'hui', 'Consultations (mois)', 'Ordonnances'],
+        datasets: [{
+          data: [s.rendezVousAujourdhui, s.consultationsCeMois, s.ordonnancesTotal],
+          backgroundColor: [
+            this.lunaRgba('light', 0.9),
+            this.lunaRgba('teal', 0.9),
+            this.lunaRgba('blue', 0.9)
+          ],
+          borderColor: [
+            this.lunaRgba('light', 1),
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('blue', 1)
+          ],
+          borderWidth: 2,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          title: this.lunaChartTitle('Répartition globale')
+        }
+      }
+    });
+  }
+
+  get medecinAvecCabinet(): boolean {
+    return this.authService.peutGererAbonnementCabinet();
+  }
+
+  get medecinCliniqueEtCabinet(): boolean {
+    return this.authService.medecinCliniqueEtCabinet();
+  }
+
+  libelleStatutAbonnement(statut?: string | null): string {
+    switch ((statut || '').toUpperCase()) {
+      case 'ACTIF':
+        return 'Actif';
+      case 'EN_ATTENTE_PAIEMENT':
+        return 'En attente de paiement';
+      case 'IMPAYE':
+        return 'Paiement échoué';
+      case 'ANNULE':
+        return 'Annulé';
+      default:
+        return statut || 'Inconnu';
     }
   }
 
@@ -861,10 +1221,87 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         this.radiologueStats = stats;
         this.radiologueMessagesNonLus = messagesNonLus;
         this.loading = false;
+        setTimeout(() => this.initRadiologueCharts(), 100);
       },
       error: () => {
         this.loading = false;
       },
+    });
+  }
+
+  private initRadiologueCharts(): void {
+    this.initRadiologueWorkflowChart();
+    this.initRadiologueOverviewChart();
+  }
+
+  private initRadiologueWorkflowChart(): void {
+    if (!this.radiologueWorkflowChartRef) return;
+    const ctx = this.radiologueWorkflowChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.radiologueWorkflowChart) this.radiologueWorkflowChart.destroy();
+
+    const s = this.radiologueStats;
+    this.radiologueWorkflowChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['File d\'attente', 'En cours', 'CR à finaliser', 'Validés'],
+        datasets: [{
+          label: 'Examens',
+          data: [s.fileAttente, s.mesExamensEnCours, s.comptesRendusAFinaliser, s.examensValides],
+          backgroundColor: this.lunaBarColors(4),
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: this.lunaChartTitle('Activité imagerie')
+        },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
+    });
+  }
+
+  private initRadiologueOverviewChart(): void {
+    if (!this.radiologueOverviewChartRef) return;
+    const ctx = this.radiologueOverviewChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.radiologueOverviewChart) this.radiologueOverviewChart.destroy();
+
+    const s = this.radiologueStats;
+    this.radiologueOverviewChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['File d\'attente', 'En cours', 'CR à finaliser', 'Validés'],
+        datasets: [{
+          data: [s.fileAttente, s.mesExamensEnCours, s.comptesRendusAFinaliser, s.examensValides],
+          backgroundColor: [
+            this.lunaRgba('light', 0.9),
+            this.lunaRgba('teal', 0.9),
+            this.lunaRgba('blue', 0.9),
+            this.lunaRgba('deep', 0.9)
+          ],
+          borderColor: [
+            this.lunaRgba('light', 1),
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('blue', 1),
+            this.lunaRgba('deep', 1)
+          ],
+          borderWidth: 2,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          title: this.lunaChartTitle('Répartition globale')
+        }
+      }
     });
   }
 
@@ -936,11 +1373,15 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
           {
             data: [s.fonctionnel, s.panneHors, s.maintenance],
             backgroundColor: [
-              'rgba(40, 167, 69, 0.88)',
-              'rgba(220, 53, 69, 0.88)',
-              'rgba(255, 159, 64, 0.88)',
+              this.lunaRgba('teal', 0.88),
+              this.lunaRgba('deep', 0.88),
+              this.lunaRgba('blue', 0.88),
             ],
-            borderColor: ['rgba(25, 135, 84, 1)', 'rgba(176, 42, 55, 1)', 'rgba(200, 120, 40, 1)'],
+            borderColor: [
+              this.lunaRgba('teal', 1),
+              this.lunaRgba('deep', 1),
+              this.lunaRgba('blue', 1),
+            ],
             borderWidth: 2,
             hoverOffset: 10,
           },
@@ -1126,12 +1567,12 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
             type: 'line',
             label: 'Tendance',
             data: this.infirmierPresencesParMois.data,
-            borderColor: 'rgba(67, 233, 123, 1)',
-            backgroundColor: 'rgba(67, 233, 123, 0.12)',
+            borderColor: this.lunaRgba('teal', 1),
+            backgroundColor: this.lunaRgba('teal', 0.15),
             borderWidth: 2.5,
             fill: true,
             tension: 0.4,
-            pointBackgroundColor: 'rgba(67, 233, 123, 1)',
+            pointBackgroundColor: this.lunaRgba('deep', 1),
             pointRadius: 4,
             yAxisID: 'y'
           }
@@ -1173,14 +1614,14 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
             this.infirmierCongesRepartition.refuse
           ],
           backgroundColor: [
-            'rgba(246, 166, 35, 0.85)',
-            'rgba(67, 233, 123, 0.85)',
-            'rgba(217, 83, 79, 0.85)'
+            this.lunaRgba('light', 0.9),
+            this.lunaRgba('teal', 0.9),
+            this.lunaRgba('deep', 0.9)
           ],
           borderColor: [
-            'rgba(246, 166, 35, 1)',
-            'rgba(67, 233, 123, 1)',
-            'rgba(217, 83, 79, 1)'
+            this.lunaRgba('light', 1),
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('deep', 1)
           ],
           borderWidth: 2,
           hoverOffset: 10
@@ -1191,12 +1632,7 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
         maintainAspectRatio: false,
         plugins: {
           legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
-          title: {
-            display: true,
-            text: 'Répartition des Congés',
-            font: { size: 15, weight: 'bold' },
-            color: '#1a3a5c'
-          }
+          title: this.lunaChartTitle('Répartition des Congés')
         }
       }
     });
@@ -1208,8 +1644,13 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       this.rendezVousService.getRendezVousByPatient(patientId).subscribe({
         next: (rdvs) => {
           this.rendezVousRecents = rdvs.slice(0, 5);
-          this.stats.rendezVousEnAttente = rdvs.filter(r => r.statut === 'EN_ATTENTE').length;
+          this.patientStats.totalRdv = rdvs.length;
+          this.patientStats.enAttente = rdvs.filter(r => r.statut === 'EN_ATTENTE').length;
+          this.patientStats.confirmes = rdvs.filter(r => r.statut === 'CONFIRME').length;
+          this.patientStats.termines = rdvs.filter(r => r.statut === 'TERMINE').length;
+          this.stats.rendezVousEnAttente = this.patientStats.enAttente;
           this.loading = false;
+          setTimeout(() => this.initPatientCharts(), 100);
         },
         error: (err: any) => {
           if (err?.status !== 403) {
@@ -1221,6 +1662,44 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.loading = false;
     }
+  }
+
+  private initPatientCharts(): void {
+    if (!this.patientRdvChartRef) return;
+    const ctx = this.patientRdvChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.patientRdvChart) this.patientRdvChart.destroy();
+
+    const p = this.patientStats;
+    this.patientRdvChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['En attente', 'Confirmés', 'Terminés'],
+        datasets: [{
+          data: [p.enAttente, p.confirmes, p.termines],
+          backgroundColor: [
+            this.lunaRgba('light', 0.9),
+            this.lunaRgba('teal', 0.9),
+            this.lunaRgba('deep', 0.9)
+          ],
+          borderColor: [
+            this.lunaRgba('light', 1),
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('deep', 1)
+          ],
+          borderWidth: 2,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          title: this.lunaChartTitle('Mes rendez-vous par statut')
+        }
+      }
+    });
   }
 
   private loadChefPersonnelData(): void {
@@ -1586,11 +2065,15 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.patientService.getPatientsByClinique(cliniqueId).subscribe({
-      next: (patients) => {
+    forkJoin({
+      patients: this.patientService.getPatientsByClinique(cliniqueId).pipe(catchError(() => of([] as any[]))),
+      rdvs: this.rendezVousService.getRendezVousByClinique(cliniqueId).pipe(catchError(() => of([] as RendezVousDTO[])))
+    }).subscribe({
+      next: ({ patients, rdvs }) => {
         const patientsList = (patients as any[]);
         this.secretaireStats.totalPatients = patientsList.length;
         this.stats.totalPatients = patientsList.length;
+        this.secretaireStats.rendezVousEnAttente = (rdvs as RendezVousDTO[]).filter(r => r.statut === 'EN_ATTENTE').length;
 
         // Calculer les patients créés ce mois-ci
         const now = new Date();
@@ -1861,6 +2344,81 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       this.pharmacienStats.demandesRefusees = demandes.filter((d: any) => d.statut === 'REFUSE').length;
       this.pharmacienDemandes = demandes.filter((d: any) => d.statut === 'EN_ATTENTE');
       this.loading = false;
+      setTimeout(() => this.initPharmacienCharts(), 100);
+    });
+  }
+
+  private initPharmacienCharts(): void {
+    this.initPharmacienDemandesChart();
+    this.initPharmacienWorkflowChart();
+  }
+
+  private initPharmacienDemandesChart(): void {
+    if (!this.pharmacienDemandesChartRef) return;
+    const ctx = this.pharmacienDemandesChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.pharmacienDemandesChart) this.pharmacienDemandesChart.destroy();
+
+    const s = this.pharmacienStats;
+    this.pharmacienDemandesChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['En attente', 'Traitées', 'Refusées'],
+        datasets: [{
+          data: [s.demandesEnAttente, s.demandesTraitees, s.demandesRefusees],
+          backgroundColor: [
+            this.lunaRgba('light', 0.9),
+            this.lunaRgba('teal', 0.9),
+            this.lunaRgba('deep', 0.9)
+          ],
+          borderColor: [
+            this.lunaRgba('light', 1),
+            this.lunaRgba('teal', 1),
+            this.lunaRgba('deep', 1)
+          ],
+          borderWidth: 2,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          title: this.lunaChartTitle('Répartition des demandes')
+        }
+      }
+    });
+  }
+
+  private initPharmacienWorkflowChart(): void {
+    if (!this.pharmacienWorkflowChartRef) return;
+    const ctx = this.pharmacienWorkflowChartRef.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (this.pharmacienWorkflowChart) this.pharmacienWorkflowChart.destroy();
+
+    const s = this.pharmacienStats;
+    this.pharmacienWorkflowChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['En attente', 'Traitées', 'Refusées', 'Total reçues'],
+        datasets: [{
+          label: 'Demandes',
+          data: [s.demandesEnAttente, s.demandesTraitees, s.demandesRefusees, s.totalDemandes],
+          backgroundColor: this.lunaBarColors(4),
+          borderWidth: 1,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: this.lunaChartTitle('Suivi des demandes médicaments')
+        },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+      }
     });
   }
 
@@ -1914,6 +2472,31 @@ export class Dashboard implements OnInit, AfterViewInit, OnDestroy {
       'PLANIFIE': 'Planifié'
     };
     return labels[statut] || statut;
+  }
+
+  private lunaRgba(channel: 'light' | 'teal' | 'blue' | 'deep', alpha: number): string {
+    const map = {
+      light: [167, 235, 242],
+      teal: [84, 172, 191],
+      blue: [38, 101, 140],
+      deep: [2, 56, 89]
+    } as const;
+    const [r, g, b] = map[channel];
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  private lunaBarColors(count: number, alpha = 0.85): string[] {
+    const palette: Array<'light' | 'teal' | 'blue' | 'deep'> = ['teal', 'blue', 'deep', 'light', 'blue', 'teal', 'deep', 'light'];
+    return Array.from({ length: count }, (_, i) => this.lunaRgba(palette[i % palette.length], alpha));
+  }
+
+  private lunaChartTitle(text: string): { display: boolean; text: string; font: { size: number; weight: 'bold' }; color: string } {
+    return {
+      display: true,
+      text,
+      font: { size: 16, weight: 'bold' },
+      color: this.lunaChartTitleColor
+    };
   }
 
   private handleError(err: any, defaultMsg: string): void {

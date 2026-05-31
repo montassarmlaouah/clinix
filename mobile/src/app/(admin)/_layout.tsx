@@ -24,6 +24,7 @@ export default function AdminLayout(): React.JSX.Element {
         <Tabs.Screen name="abonnement" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="pharmacie" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="abonnement-paiement" options={hiddenTabScreenOptions} />
+        <Tabs.Screen name="facturation-patient" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="demandes-operation" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="demandes-medicament" options={hiddenTabScreenOptions} />
         <Tabs.Screen name="conges-medecin" options={hiddenTabScreenOptions} />

@@ -53,20 +53,28 @@ public class StripeWebhookController {
         }
 
         try {
-            event.getDataObjectDeserializer().getObject().ifPresent(obj -> {
-                if ("checkout.session.completed".equals(type) && obj instanceof Session session) {
+            Object dataObject = event.getDataObjectDeserializer().getObject().orElse(null);
+            if (dataObject == null) {
+                try {
+                    dataObject = event.getDataObjectDeserializer().deserializeUnsafe();
+                } catch (Exception ignored) {
+                    /* fallback deserializeUnsafe */
+                }
+            }
+            if (dataObject != null) {
+                if ("checkout.session.completed".equals(type) && dataObject instanceof Session session) {
                     stripeSubscriptionFlowService.handleCheckoutCompleted(session);
-                } else if ("checkout.session.expired".equals(type) && obj instanceof Session session) {
+                } else if ("checkout.session.expired".equals(type) && dataObject instanceof Session session) {
                     stripeSubscriptionFlowService.handleCheckoutExpired(session);
                 } else if (("customer.subscription.updated".equals(type) || "customer.subscription.deleted".equals(type))
-                        && obj instanceof Subscription subscription) {
+                        && dataObject instanceof Subscription subscription) {
                     stripeSubscriptionFlowService.handleSubscriptionUpdated(subscription);
-                } else if ("invoice.paid".equals(type) && obj instanceof Invoice invoice) {
+                } else if ("invoice.paid".equals(type) && dataObject instanceof Invoice invoice) {
                     stripeSubscriptionFlowService.handleInvoicePaid(invoice);
-                } else if ("invoice.payment_failed".equals(type) && obj instanceof Invoice invoice) {
+                } else if ("invoice.payment_failed".equals(type) && dataObject instanceof Invoice invoice) {
                     stripeSubscriptionFlowService.handleInvoicePaymentFailed(invoice);
                 }
-            });
+            }
             stripeWebhookEventLogRepository.save(new StripeWebhookEventLog(event.getId(), type, java.time.LocalDateTime.now()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur traitement webhook");

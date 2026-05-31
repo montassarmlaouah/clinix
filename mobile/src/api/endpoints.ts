@@ -23,10 +23,13 @@ export const AUTH_ENDPOINTS = {
 export const PATIENTS = {
   LIST:         `${API}/patients`,
   BY_CLINIQUE:  (cliniqueId: number | string) => `${API}/patients/clinique/${cliniqueId}`,
+  INACTIFS_BY_CLINIQUE: (cliniqueId: number | string) =>
+    `${API}/patients/clinique/${cliniqueId}/inactifs`,
   BY_SERVICE:   (serviceId: number | string)  => `${API}/patients/service/${serviceId}`,
   BY_NUMERO:    (numero: string)              => `${API}/patients/numero/${encodeURIComponent(numero)}`,
   BY_ID:        (id: number | string)         => `${API}/patients/${id}`,
   UPDATE:       (id: number | string)         => `${API}/patients/${id}`,
+  REACTIVER:    (id: number | string)         => `${API}/patients/${id}/reactiver`,
   DELETE:       (id: number | string)         => `${API}/patients/${id}`,
   CREATE:       `${API}/patients`,
   VERIFIER_SECRETAIRE: (id: number | string)  => `${API}/patients/${id}/verifier-secretaire`,
@@ -164,18 +167,25 @@ export const PERSONNEL = {
   },
   MEDECINS:    `${API}/personnel/medecins`,
   MEDECIN_BY_ID: (id: number | string) => `${API}/personnel/medecins/${id}`,
+  MEDECIN_REACTIVER: (id: number | string) => `${API}/personnel/medecins/${id}/reactiver`,
   INFIRMIERS:  `${API}/personnel/infirmiers`,
   INFIRMIER_BY_ID: (id: number | string) => `${API}/personnel/infirmiers/${id}`,
+  INFIRMIER_REACTIVER: (id: number | string) => `${API}/personnel/infirmiers/${id}/reactiver`,
   RADIOLOGUES: `${API}/personnel/radiologues`,
   RADIOLOGUE_BY_ID: (id: number | string) => `${API}/personnel/radiologues/${id}`,
+  RADIOLOGUE_REACTIVER: (id: number | string) => `${API}/personnel/radiologues/${id}/reactiver`,
   PHARMACIENS: `${API}/personnel/pharmaciens`,
   PHARMACIEN_BY_ID: (id: number | string) => `${API}/personnel/pharmaciens/${id}`,
+  PHARMACIEN_REACTIVER: (id: number | string) => `${API}/personnel/pharmaciens/${id}/reactiver`,
   SECRETAIRES: `${API}/personnel/secretaires`,
   SECRETAIRE_BY_ID: (id: number | string) => `${API}/personnel/secretaires/${id}`,
+  SECRETAIRE_REACTIVER: (id: number | string) => `${API}/personnel/secretaires/${id}/reactiver`,
   CHEFS:       `${API}/personnel/chefs-personnel`,
   CHEF_BY_ID:  (id: number | string) => `${API}/personnel/chefs-personnel/${id}`,
+  CHEF_REACTIVER: (id: number | string) => `${API}/personnel/chefs-personnel/${id}/reactiver`,
   TECHNICIENS: `${API}/personnel/techniciens-maintenance`,
   TECHNICIEN_BY_ID: (id: number | string) => `${API}/personnel/techniciens-maintenance/${id}`,
+  TECHNICIEN_REACTIVER: (id: number | string) => `${API}/personnel/techniciens-maintenance/${id}/reactiver`,
 } as const;
 
 // ── Cliniques ─────────────────────────────────────────────────────────────────
@@ -336,6 +346,8 @@ export const GARDES = {
   BY_UTILISATEUR:   (utilisateurId: string | number) => `${API}/gardes/utilisateur/${utilisateurId}`,
   BY_TYPE:          (type: string) => `${API}/gardes/type/${encodeURIComponent(type)}`,
   BY_PLANNING:      (planningId: string | number) => `${API}/gardes/planning/${planningId}`,
+  PDF_UTILISATEUR:  (utilisateurId: string | number, debut: string, fin: string) =>
+    `${API}/gardes/utilisateur/${utilisateurId}/pdf?debut=${encodeURIComponent(debut)}&fin=${encodeURIComponent(fin)}`,
   UPDATE:           (id: string | number) => `${API}/gardes/${id}`,
   DELETE:           (id: string | number) => `${API}/gardes/${id}`,
 } as const;
@@ -346,7 +358,16 @@ export const PLANNINGS = {
   CREATE_MENSUEL:     `${API}/plannings/mensuel`,
   LIST:               `${API}/plannings`,
   BY_ID:              (id: string | number) => `${API}/plannings/${id}`,
-  PDF:                (id: string | number) => `${API}/plannings/${id}/pdf`,
+  PDF:                (id: string | number, params?: { serviceId?: string; utilisateurId?: string }) => {
+    let url = `${API}/plannings/${id}/pdf`;
+    const q = new URLSearchParams();
+    if (params?.serviceId) q.set('serviceId', params.serviceId);
+    if (params?.utilisateurId) q.set('utilisateurId', params.utilisateurId);
+    const qs = q.toString();
+    return qs ? `${url}?${qs}` : url;
+  },
+  BY_PERIODE:         (debut: string, fin: string) =>
+    `${API}/plannings/periode?debut=${encodeURIComponent(debut)}&fin=${encodeURIComponent(fin)}`,
   BY_UTILISATEUR:     (utilisateurId: string | number) => `${API}/plannings/utilisateur/${utilisateurId}`,
   BY_TYPE:            (type: string) => `${API}/plannings/type/${encodeURIComponent(type)}`,
   VALIDER:            (id: string | number) => `${API}/plannings/${id}/valider`,
@@ -445,8 +466,15 @@ export const MEDICAMENTS = {
 // ── Pharmacie / Stocks ────────────────────────────────────────────────────────
 export const STOCKS = {
   LIST:       `${API}/stocks`,
+  CREATE:     `${API}/stocks`,
   BY_CLINIQUE:(cliniqueId: string | number) => `${API}/stocks/clinique/${cliniqueId}`,
   BAS:        `${API}/stocks/bas`,
+  BY_ID:      (id: string | number) => `${API}/stocks/${id}`,
+  UPDATE:     (id: string | number) => `${API}/stocks/${id}`,
+  DELETE:     (id: string | number) => `${API}/stocks/${id}`,
+  ENTREE:     (id: string | number) => `${API}/stocks/${id}/entree`,
+  SORTIE:     (id: string | number) => `${API}/stocks/${id}/sortie`,
+  ALERTE_EMAIL: (id: string | number) => `${API}/stocks/${id}/alerte-email`,
 } as const;
 
 // ── Maintenances ──────────────────────────────────────────────────────────────
@@ -473,11 +501,15 @@ export const BILLING = {
   DELETE_OFFRE:         (id: string | number) => `${API}/billing/offres/${id}`,
   SYNC_STRIPE:          (id: string | number) => `${API}/billing/offres/${id}/sync-stripe`,
   CHECKOUT:             `${API}/billing/checkout`,
+  CONFIRM_CHECKOUT:     `${API}/billing/confirm-checkout`,
   SOUSCRIPTION_SIMULEE: `${API}/billing/souscription-simulee`,
   ABONNEMENT_COURANT:   `${API}/billing/abonnement-courant`,
   ABONNEMENTS_ACTIFS:   `${API}/billing/abonnements/actifs`,
   ABONNEMENTS_PAYES:    `${API}/billing/abonnements/payes`,
   HISTORIQUE:           `${API}/billing/abonnements/historique`,
+  SMS_QUOTA:            `${API}/billing/sms-quota`,
+  SMS_QUOTA_CLINIQUE:   (cliniqueId: string | number) =>
+    `${API}/billing/clinique/${cliniqueId}/sms-quota`,
   STRIPE_CONFIG:        `${API}/billing/stripe-config`,
 } as const;
 
@@ -513,10 +545,18 @@ export const DOSSIERS = {
 
 // ── Facturation patient (CNAM, sortie, PDF) ───────────────────────────────────
 export const FACTURATION_PATIENT = {
-  PRESTATIONS: (cliniqueId: string | number) =>
-    `${API}/facturation-patient/prestations/clinique/${cliniqueId}`,
-  PAR_CLINIQUE: (cliniqueId: string | number) =>
-    `${API}/facturation-patient/clinique/${cliniqueId}`,
+  PRESTATIONS: (cliniqueId: string | number, inclureInactives = false) => {
+    const base = `${API}/facturation-patient/prestations/clinique/${cliniqueId}`;
+    return inclureInactives ? `${base}?inclureInactives=true` : base;
+  },
+  INIT_CATALOGUE: (cliniqueId: string | number) =>
+    `${API}/facturation-patient/prestations/clinique/${cliniqueId}/initialiser`,
+  UPDATE_PRESTATION: (id: string | number) =>
+    `${API}/facturation-patient/prestations/${id}`,
+  PAR_CLINIQUE: (cliniqueId: string | number, statut?: string) => {
+    const base = `${API}/facturation-patient/clinique/${cliniqueId}`;
+    return statut ? `${base}?statut=${encodeURIComponent(statut)}` : base;
+  },
   BY_ID: (id: string | number) => `${API}/facturation-patient/${id}`,
   GENERER: `${API}/facturation-patient/generer`,
   EMETTRE: (id: string | number) => `${API}/facturation-patient/${id}/emettre`,

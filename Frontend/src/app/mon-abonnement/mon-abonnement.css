@@ -770,6 +770,34 @@
   line-height: 1.45;
 }
 
+.cta-strip--paid {
+  border-color: rgba(84, 172, 191, 0.45);
+  background: linear-gradient(135deg, rgba(167, 235, 242, 0.2), rgba(255, 255, 255, 0.95));
+}
+
+.cta-strip--paid .cta-strip-text h3 {
+  color: #0d6b5c;
+}
+
+.cta-strip--warn {
+  border-color: rgba(255, 193, 7, 0.5);
+  background: linear-gradient(135deg, rgba(255, 243, 205, 0.5), #fff);
+}
+
+.cta-strip--warn .cta-strip-text h3 {
+  color: #856404;
+}
+
+.luna-input.readonly.text-success {
+  color: #0d6b5c;
+  font-weight: 600;
+}
+
+.luna-input.readonly.text-danger {
+  color: #b42318;
+  font-weight: 600;
+}
+
 .btn-cta-tarifs {
   display: inline-flex;
   align-items: center;

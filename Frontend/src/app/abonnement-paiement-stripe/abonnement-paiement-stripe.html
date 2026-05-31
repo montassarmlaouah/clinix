@@ -1,5 +1,9 @@
 <div class="pay-page">
-  <a routerLink="/tarifs-abonnement" class="back-link"><i class="fas fa-arrow-left"></i> Autres forfaits</a>
+  <a
+    routerLink="/tarifs-abonnement"
+    [queryParams]="{ scope: billingScope }"
+    class="back-link"
+  ><i class="fas fa-arrow-left"></i> Autres forfaits</a>
 
   <h1 class="page-title">Paiement sécurisé — Stripe (test)</h1>
   <p class="subtitle">

@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+
+title sd [Declarer une panne sur un equipement]
+
+autonumber
+
+actor Admin as "Administrateur clinique"
+boundary UI as ":UI Equipements"
+control Controller as "EquipementController"
+control Service as "EquipementService"
+entity DAO as "EquipementRepository"
+
+ref over Admin, UI
+  S'authentifier
+end ref
+
+Admin -> UI : 1 : Selectionner un equipement
+Admin -> UI : 2 : Cliquer Declarer une panne
+UI --> Admin : 3 : Afficher formulaire panne
+Admin -> UI : 4 : Saisir description + priorite
+Admin -> UI : 5 : Confirmer la declaration
+UI -> Controller : 6 : POST /api/equipements/{id}/panne
+Controller -> Service : 7 : declarerPanne(id, dto)
+Service -> DAO : 8 : findById(id)
+DAO --> Service : 9 : Equipement
+
+alt Equipement introuvable
+  Service --> Controller : 10 : NotFoundException
+  Controller --> UI : 11 : 404 Not Found
+else Declaration valide
+  Service -> Service : 10 : Changer etat -> EN_PANNE
+  Service -> DAO : 11 : save(equipement + intervention)
+  Service --> Controller : 12 : Intervention creee
+  Controller --> UI : 13 : 200 OK
+  UI --> Admin : 14 : Afficher panne enregistree + notifier technicien
+end
+
+@enduml

@@ -78,15 +78,23 @@ export class MonAbonnementComponent implements OnInit {
 
   ngOnInit(): void {
     const qScope = this.route.snapshot.queryParamMap.get('scope');
-    if (qScope === 'cabinet' || qScope === 'clinique') {
+    if (this.authService.isMedecin()) {
+      // Le médecin ne gère que son abonnement cabinet (pas celui de la clinique).
+      this.vueScope = 'cabinet';
+    } else if (qScope === 'cabinet' || qScope === 'clinique') {
       this.vueScope = qScope;
     }
     const checkout = this.route.snapshot.queryParamMap.get('checkout');
+    const sessionId = this.route.snapshot.queryParamMap.get('session_id');
     this.checkoutSuccesStripe = checkout === 'success';
     if (checkout === 'success') {
-      this.success =
-        'Paiement Stripe terminé. Votre abonnement sera confirmé sous peu (webhook) ; rafraîchissez après quelques secondes si besoin.';
-      this.planifierRafraichissementAbonnement();
+      if (sessionId) {
+        this.confirmerPaiementStripe(sessionId);
+      } else {
+        this.success =
+          'Paiement Stripe terminé. Rafraîchissez la page ou reconnectez-vous si l\'abonnement n\'apparaît pas.';
+        this.planifierRafraichissementAbonnement();
+      }
     } else if (checkout === 'cancel') {
       this.error = 'Paiement annulé. Vous pouvez réessayer quand vous le souhaitez.';
     }
@@ -135,15 +143,16 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   private initVueScope(): void {
-    const qScope = this.route.snapshot.queryParamMap.get('scope');
-    if (qScope === 'cabinet' || qScope === 'clinique') {
+    if (this.authService.isMedecin()) {
+      this.vueScope = 'cabinet';
       return;
     }
-    if (this.authService.isMedecinCabinetExclusif()) {
-      this.vueScope = 'cabinet';
-    } else {
-      this.vueScope = 'clinique';
+    const qScope = this.route.snapshot.queryParamMap.get('scope');
+    if (qScope === 'cabinet' || qScope === 'clinique') {
+      this.vueScope = qScope;
+      return;
     }
+    this.vueScope = 'clinique';
   }
 
   chargerAbonnementEtHistorique(): void {
@@ -174,6 +183,9 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   basculerVueScope(scope: 'clinique' | 'cabinet'): void {
+    if (this.authService.isMedecin() || !this.afficheOngletsScope) {
+      return;
+    }
     if (this.vueScope === scope) {
       return;
     }
@@ -200,13 +212,18 @@ export class MonAbonnementComponent implements OnInit {
     );
   }
 
-  /** Médecin avec clinique + accès cabinet : onglets clinique / cabinet. */
+  /** Médecin avec clinique + accès cabinet (hors page abonnement). */
   get medecinDoubleContexte(): boolean {
     return this.authService.medecinCliniqueEtCabinet();
   }
 
+  /** Le médecin ne bascule pas : abonnement cabinet uniquement (clinique = admin). */
+  get afficheOngletsScope(): boolean {
+    return false;
+  }
+
   get isVueCabinet(): boolean {
-    return this.vueScope === 'cabinet';
+    return this.authService.isMedecin() || this.vueScope === 'cabinet';
   }
 
   get isMedecinCabinetExclusif(): boolean {
@@ -214,16 +231,13 @@ export class MonAbonnementComponent implements OnInit {
   }
 
   private get scopeApi(): 'clinique' | 'cabinet' | undefined {
+    if (this.authService.isMedecin()) {
+      return 'cabinet';
+    }
     if (this.authService.isAdminClinique() || this.authService.isSecretaire()) {
       return undefined;
     }
-    if (this.authService.isMedecinCabinetExclusif()) {
-      return 'cabinet';
-    }
-    if (this.medecinDoubleContexte) {
-      return this.vueScope;
-    }
-    return this.authService.hasMedecinClinique() ? 'clinique' : 'cabinet';
+    return 'clinique';
   }
 
   get peutSouscrireAbonnement(): boolean {
@@ -236,9 +250,32 @@ export class MonAbonnementComponent implements OnInit {
     return this.authService.peutGererAbonnementCabinet() && this.vueScope === 'cabinet';
   }
 
-  /** Abonnement courant actif et payé — pas de nouveau paiement. */
+  /** Abonnement courant actif, payé et dans la période — pas de nouveau paiement. */
   get abonnementDejaPaye(): boolean {
     return this.abonnementCourant?.accesAutorise === true;
+  }
+
+  /** Jours restants avant expiration (cabinet ou clinique). */
+  get joursRestantsAbonnement(): number | null {
+    const fin = this.abonnementCourant?.dateFin;
+    if (!fin) return null;
+    const end = new Date(fin);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diff = Math.ceil((end.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  }
+
+  get dateDebutAbonnementAffichee(): string | null {
+    const a = this.abonnementCourant;
+    if (!a) return null;
+    return a.datePremierPaiement || a.dateDebut || null;
+  }
+
+  get libelleAccesApi(): string {
+    if (!this.abonnementCourant) return '—';
+    return this.abonnementCourant.accesAutorise ? 'Autorisé' : 'Non autorisé (expiré ou impayé)';
   }
 
   get offresActivesCount(): number {
@@ -499,6 +536,36 @@ export class MonAbonnementComponent implements OnInit {
       `${offre.nombreChambresMax ?? 0} chambres`,
       `${offre.nombrePersonnelMax ?? 0} personnels`,
     ];
+  }
+
+  private confirmerPaiementStripe(sessionId: string): void {
+    this.loading = true;
+    this.error = '';
+    const qScope = this.route.snapshot.queryParamMap.get('scope');
+    const scope =
+      qScope === 'cabinet' || qScope === 'clinique'
+        ? (qScope as 'clinique' | 'cabinet')
+        : this.scopeApi;
+    this.abonnementService.confirmStripeCheckout(sessionId, scope).subscribe({
+      next: (res) => {
+        this.success = res.message || 'Paiement confirmé. Votre abonnement est actif.';
+        this.abonnementCourant = res.abonnement ?? null;
+        this.checkoutSuccesStripe = false;
+        this.authService.hydrateCabinetAccess().subscribe(() => {
+          this.chargerAbonnementEtHistorique();
+        });
+      },
+      error: (e: { error?: { message?: string; details?: string } }) => {
+        const msg = e?.error?.message;
+        const details = e?.error?.details;
+        this.error =
+          msg ||
+          details ||
+          'Impossible de confirmer le paiement Stripe. Utilisez « Rafraîchir » ou réessayez dans quelques secondes.';
+        this.loading = false;
+        this.planifierRafraichissementAbonnement();
+      },
+    });
   }
 
   chargerAbonnementCourant(): void {

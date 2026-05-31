@@ -4,7 +4,8 @@ Ce dossier contient les diagrammes de sequence principaux du projet.
 
 ## Liste des fichiers
 
-- `diagramme_sequence_connexion.puml`: Flux d'authentification (login, verification, tokens JWT, erreurs).
+- `diagramme_sequence_authentification.puml`: **Connexion JWT complete** (login, generation token HMAC, requetes protegees via JwtFilter).
+- `diagramme_sequence_connexion.puml`: Vue simplifiee du login JWT (alias connexion).
 - `diagramme_sequence_rendez_vous.puml`: Creation de rendez-vous avec verification de disponibilite.
 - `diagramme_sequence_patients.puml`: Creation d'un patient avec controles de validation.
 - `diagramme_sequence_ordonnance.puml`: Creation d'ordonnance avec verification metier.

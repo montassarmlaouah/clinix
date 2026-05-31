@@ -27,6 +27,7 @@ import com.stripe.model.Subscription;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
+import com.stripe.param.checkout.SessionRetrieveParams;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,6 +61,7 @@ public class StripeSubscriptionFlowService {
             throw new IllegalStateException("Cette offre n'est pas destinée aux cliniques");
         }
 
+        annulerAbonnementsEnAttenteClinique(cliniqueId);
         offre = ensureStripePrices(offre);
         String priceId = resolvePriceId(offre, interval);
         String customerId = resolveOrCreateCliniqueCustomer(clinique);
@@ -90,6 +92,7 @@ public class StripeSubscriptionFlowService {
             throw new IllegalStateException("Cette offre n'est pas destinée aux cabinets médicaux");
         }
 
+        annulerAbonnementsEnAttenteCabinet(medecinId);
         offre = ensureStripePrices(offre);
         String priceId = resolvePriceId(offre, interval);
         String customerId = resolveOrCreateMedecinCustomer(medecin);
@@ -215,6 +218,79 @@ public class StripeSubscriptionFlowService {
         }
     }
 
+    /**
+     * Confirmation explicite après retour Stripe (ne dépend pas du webhook local).
+     *
+     * @param utilisateurId       id du compte connecté (médecin, admin clinique, etc.)
+     * @param cliniqueUtilisateurId clinique du JWT (admin / secrétaire / médecin rattaché)
+     */
+    @Transactional
+    public AbonnementClinique confirmCheckoutSession(String sessionId, String utilisateurId, String cliniqueUtilisateurId) {
+        if (!StringUtils.hasText(sessionId)) {
+            throw new IllegalArgumentException("sessionId Stripe requis");
+        }
+        Stripe.apiKey = stripeCredentialsService.resolveSecretKey();
+        Session session;
+        try {
+            SessionRetrieveParams params = SessionRetrieveParams.builder()
+                    .addExpand("subscription")
+                    .addExpand("subscription.latest_invoice")
+                    .build();
+            session = Session.retrieve(sessionId, params, null);
+        } catch (StripeException e) {
+            throw new IllegalStateException("Session Stripe introuvable : " + e.getMessage(), e);
+        }
+        verifierProprietaireSession(session, utilisateurId, cliniqueUtilisateurId);
+        if (!paiementStripeFinalise(session)) {
+            throw new IllegalStateException(
+                    "Paiement Stripe non finalisé. Statut session : " + session.getStatus()
+                            + ", paiement : " + session.getPaymentStatus());
+        }
+        handleCheckoutCompleted(session);
+        String abonnementId = session.getMetadata() != null ? session.getMetadata().get("abonnementId") : null;
+        return abonnementRepository.findByIdWithDetails(abonnementId)
+                .orElseThrow(() -> new IllegalStateException("Abonnement introuvable après confirmation"));
+    }
+
+    private boolean paiementStripeFinalise(Session session) {
+        if (session == null) {
+            return false;
+        }
+        String paymentStatus = session.getPaymentStatus();
+        if (StringUtils.hasText(paymentStatus)) {
+            String ps = paymentStatus.trim();
+            if ("paid".equalsIgnoreCase(ps) || "no_payment_required".equalsIgnoreCase(ps)) {
+                return true;
+            }
+        }
+        return "complete".equalsIgnoreCase(session.getStatus());
+    }
+
+    private void verifierProprietaireSession(Session session, String utilisateurId, String cliniqueUtilisateurId) {
+        String abonnementId = session.getMetadata() != null ? session.getMetadata().get("abonnementId") : null;
+        if (!StringUtils.hasText(abonnementId)) {
+            throw new IllegalStateException("Session Stripe sans abonnement associé");
+        }
+        AbonnementClinique a = abonnementRepository.findByIdWithDetails(abonnementId)
+                .orElseThrow(() -> new IllegalArgumentException("Abonnement introuvable"));
+
+        if (a.getMedecinCabinet() != null) {
+            String ownerMedecinId = a.getMedecinCabinet().getId();
+            if (!StringUtils.hasText(utilisateurId) || !utilisateurId.equals(ownerMedecinId)) {
+                throw new IllegalStateException("Cette session Stripe concerne un abonnement cabinet médical. "
+                        + "Connectez-vous avec le compte médecin ayant effectué le paiement.");
+            }
+            return;
+        }
+
+        if (a.getClinique() != null) {
+            String ownerCliniqueId = a.getClinique().getId();
+            if (!StringUtils.hasText(cliniqueUtilisateurId) || !cliniqueUtilisateurId.equals(ownerCliniqueId)) {
+                throw new IllegalStateException("Cette session Stripe n'appartient pas à votre clinique");
+            }
+        }
+    }
+
     @Transactional
     public void handleCheckoutCompleted(Session session) {
         String abonnementId = session.getMetadata() != null ? session.getMetadata().get("abonnementId") : null;
@@ -223,6 +299,12 @@ public class StripeSubscriptionFlowService {
         }
         AbonnementClinique a = abonnementRepository.findById(abonnementId).orElse(null);
         if (a == null) {
+            return;
+        }
+        if ("ACTIF".equalsIgnoreCase(a.getStatut())
+                && a.getMontantPaye() != null
+                && a.getMontantPaye().signum() > 0
+                && session.getId().equals(a.getStripeSessionId())) {
             return;
         }
         a.setStripeSessionId(session.getId());
@@ -252,7 +334,55 @@ public class StripeSubscriptionFlowService {
         } else {
             appliquerDatesPremierPaiement(a, null);
         }
+        if (a.getMontantPaye() == null || a.getMontantPaye().signum() <= 0) {
+            appliquerMontantDepuisOffre(a);
+        }
+        activerAccesCabinetSiMedecin(a);
         abonnementRepository.save(a);
+    }
+
+    private void appliquerMontantDepuisOffre(AbonnementClinique a) {
+        if (a.getOffre() == null) {
+            return;
+        }
+        BigDecimal montant = BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(a.getPeriodeFacturation())
+                && a.getOffre().getPrixAnnuel() != null
+                && a.getOffre().getPrixAnnuel().signum() > 0
+                ? a.getOffre().getPrixAnnuel()
+                : a.getOffre().getPrixMensuel();
+        if (montant != null && montant.signum() > 0) {
+            a.setMontantPaye(montant);
+        }
+    }
+
+    private void annulerAbonnementsEnAttenteCabinet(String medecinId) {
+        abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId).stream()
+                .filter(a -> "EN_ATTENTE_PAIEMENT".equalsIgnoreCase(a.getStatut()))
+                .forEach(a -> {
+                    a.setStatut("ANNULE");
+                    abonnementRepository.save(a);
+                });
+    }
+
+    private void annulerAbonnementsEnAttenteClinique(String cliniqueId) {
+        abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream()
+                .filter(a -> a.getMedecinCabinet() == null)
+                .filter(a -> "EN_ATTENTE_PAIEMENT".equalsIgnoreCase(a.getStatut()))
+                .forEach(a -> {
+                    a.setStatut("ANNULE");
+                    abonnementRepository.save(a);
+                });
+    }
+
+    private void activerAccesCabinetSiMedecin(AbonnementClinique a) {
+        if (a.getMedecinCabinet() == null) {
+            return;
+        }
+        Medecin m = a.getMedecinCabinet();
+        if (!Boolean.TRUE.equals(m.getAccesCabinet())) {
+            m.setAccesCabinet(true);
+            medecinRepository.save(m);
+        }
     }
 
     @Transactional
@@ -292,6 +422,7 @@ public class StripeSubscriptionFlowService {
         } catch (StripeException ignored) {
             /* période Stripe optionnelle */
         }
+        activerAccesCabinetSiMedecin(a);
         abonnementRepository.save(a);
     }
 

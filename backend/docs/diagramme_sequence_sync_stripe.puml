@@ -1,0 +1,41 @@
+@startuml
+!theme plain
+
+title sd [Synchroniser une offre avec Stripe]
+
+autonumber
+
+actor Admin as "Super administrateur"
+boundary UI as ":UI Offres abonnement"
+control Controller as "BillingController"
+control Sync as "StripeOfferSyncService"
+participant Stripe as "Stripe API"
+entity DAO as "OffreAbonnementRepository"
+
+ref over Admin, UI
+  S'authentifier
+end ref
+
+Admin -> UI : 1 : Cliquer sur Synchroniser Stripe
+UI -> Controller : 2 : POST /api/billing/offres/{id}/sync-stripe
+Controller -> Sync : 3 : synchroniserOffre(id)
+Sync -> DAO : 4 : findById(id)
+DAO --> Sync : 5 : OffreAbonnement
+
+alt Cles Stripe invalides ou reseau indisponible
+  Sync -> Stripe : 6 : Creer / mettre a jour Product + Prices
+  Stripe --> Sync : 7 : Erreur (cle, reseau, prix)
+  Sync --> Controller : 8 : Erreur technique
+  Controller --> UI : 9 : 502 Bad Gateway
+  UI --> Admin : 10 : Afficher message d'erreur Stripe
+else Synchronisation reussie
+  Sync -> Stripe : 6 : products.create / prices.create
+  Stripe --> Sync : 7 : stripeProductId + priceIds
+  Sync -> DAO : 8 : save(offre avec IDs Stripe)
+  DAO --> Sync : 9 : Offre synchronisee
+  Sync --> Controller : 10 : OffreAbonnement
+  Controller --> UI : 11 : 200 OK
+  UI --> Admin : 12 : Afficher message de succes
+end
+
+@enduml

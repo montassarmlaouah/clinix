@@ -85,6 +85,6 @@ export class MedecinService {
 
   /** Médecin cabinet : ajouter un patient */
   ajouterPatientCabinet(medecinId: string, dto: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/${medecinId}/patients`, dto);
+    return this.http.post<any>(`${this.baseUrl}/${medecinId}/patients?scope=cabinet`, dto);
   }
 }

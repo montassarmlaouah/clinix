@@ -87,6 +87,29 @@ public class SubscriptionAccessService {
                 .findFirst();
     }
 
+    /** Dernier abonnement cabinet actif et payé (toutes dates), le plus récent en premier. */
+    @Transactional(readOnly = true)
+    public Optional<AbonnementClinique> findLatestPaidCabinetSubscription(String medecinId) {
+        if (!StringUtils.hasText(medecinId)) {
+            return Optional.empty();
+        }
+        return abonnementRepository.findByMedecinCabinetIdOrderByDateCreationDesc(medecinId).stream()
+                .filter(a -> a.getClinique() == null)
+                .filter(this::isActiveAndPaid)
+                .findFirst();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AbonnementClinique> findLatestPaidCliniqueSubscription(String cliniqueId) {
+        if (!StringUtils.hasText(cliniqueId)) {
+            return Optional.empty();
+        }
+        return abonnementRepository.findByCliniqueIdOrderByDateCreationDesc(cliniqueId).stream()
+                .filter(a -> a.getMedecinCabinet() == null)
+                .filter(this::isActiveAndPaid)
+                .findFirst();
+    }
+
     public boolean isActiveAndPaid(AbonnementClinique a) {
         if (a == null || !STATUT_ACTIF.equalsIgnoreCase(a.getStatut())) {
             return false;
@@ -95,6 +118,15 @@ public class SubscriptionAccessService {
         boolean paid = montant != null && montant.signum() > 0;
         boolean stripeOk = StringUtils.hasText(a.getStripeSubscriptionId());
         return paid || stripeOk;
+    }
+
+    /** Actif, payé et dans la période (dateFin incluse). Aligné sur le filtre d'accès API. */
+    public boolean isAccessCurrentlyAllowed(AbonnementClinique a) {
+        if (!isActiveAndPaid(a)) {
+            return false;
+        }
+        LocalDate today = LocalDate.now();
+        return a.getDateFin() != null && !a.getDateFin().isBefore(today);
     }
 
     /**

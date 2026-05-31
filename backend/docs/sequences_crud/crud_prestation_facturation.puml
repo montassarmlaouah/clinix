@@ -1,0 +1,134 @@
+@startuml
+!theme plain
+
+title sd [CRUD - Prestation facturation]
+
+actor Administrateur_clinique as "Administrateur clinique"
+boundary UI as ":UI Facturation"
+control Controller as "FacturationPatientController"
+control Service as "FacturationPatientService"
+entity DAO as "PrestationFacturationRepository"
+
+== Creer ==
+
+
+autonumber
+
+ref over Administrateur_clinique, UI
+  S'authentifier
+end ref
+
+
+Administrateur_clinique -> UI : Cliquer Creer / Nouveau
+UI --> Administrateur_clinique : Afficher formulaire
+Administrateur_clinique -> UI : Remplir et confirmer
+UI -> Controller : POST /api/facturation-patient/prestations/clinique/{id}/initialiser
+Controller -> Service : initialiserCatalogue(dto)
+Service -> DAO : save(entity)
+DAO --> Service : Entity creee
+Service --> Controller : Entity
+Controller --> UI : 201 Created
+UI --> Administrateur_clinique : Message de succes
+
+== Consulter la liste ==
+
+autonumber
+
+ref over Administrateur_clinique, UI
+  S'authentifier
+end ref
+
+
+Administrateur_clinique -> UI : Ouvrir la liste
+UI -> Controller : GET /api/facturation-patient/prestations/clinique/{cliniqueId}
+Controller -> Service : listerPrestations()
+Service -> DAO : findAll() / findByClinique(...)
+DAO --> Service : Liste
+Service --> Controller : List
+Controller --> UI : 200 OK
+UI --> Administrateur_clinique : Afficher la liste
+
+== Consulter le detail ==
+
+autonumber
+
+ref over Administrateur_clinique, UI
+  S'authentifier
+end ref
+
+
+Administrateur_clinique -> UI : Cliquer sur un element
+UI -> Controller : GET /api/facturation-patient/prestations/{id}
+Controller -> Service : obtenirPrestation(id)
+Service -> DAO : findById(id)
+
+alt [Element introuvable]
+  DAO --> Service : empty
+  Service --> Controller : NotFoundException
+  Controller --> UI : 404 Not Found
+  UI --> Administrateur_clinique : Message d'erreur
+else [Element trouve]
+  DAO --> Service : Entity
+  Service --> Controller : Entity
+  Controller --> UI : 200 OK
+  UI --> Administrateur_clinique : Afficher le detail
+end
+
+== Modifier ==
+
+autonumber
+
+ref over Administrateur_clinique, UI
+  S'authentifier
+end ref
+
+
+Administrateur_clinique -> UI : Cliquer Modifier
+UI --> Administrateur_clinique : Afficher formulaire pre-rempli
+Administrateur_clinique -> UI : Modifier les champs et confirmer
+UI -> Controller : PUT /api/facturation-patient/prestations/{id}
+Controller -> Service : mettreAJourPrestation(id, dto)
+Service -> DAO : findById(id)
+DAO --> Service : Entity
+
+alt [Donnees invalides]
+  Service --> Controller : Erreur validation
+  Controller --> UI : 400 Bad Request
+  UI --> Administrateur_clinique : Afficher erreurs
+else [Modification valide]
+  Service -> DAO : save(entity)
+  DAO --> Service : Entity mise a jour
+  Service --> Controller : Entity
+  Controller --> UI : 200 OK
+  UI --> Administrateur_clinique : Message de succes
+end
+
+== Supprimer ==
+
+autonumber
+
+ref over Administrateur_clinique, UI
+  S'authentifier
+end ref
+
+
+Administrateur_clinique -> UI : Cliquer Supprimer
+UI --> Administrateur_clinique : Boite de confirmation
+Administrateur_clinique -> UI : Confirmer la suppression
+UI -> Controller : DELETE /api/facturation-patient/prestations/{id}
+Controller -> Service : desactiverPrestation(id)
+Service -> DAO : findById(id)
+
+alt [Suppression impossible (contrainte metier)]
+  Service --> Controller : RuntimeException
+  Controller --> UI : 400 Bad Request
+  UI --> Administrateur_clinique : Afficher message d'erreur
+else [Suppression valide]
+  Service -> DAO : delete(entity)
+  DAO --> Service : OK
+  Service --> Controller : void
+  Controller --> UI : 204 No Content
+  UI --> Administrateur_clinique : Element supprime
+end
+
+@enduml

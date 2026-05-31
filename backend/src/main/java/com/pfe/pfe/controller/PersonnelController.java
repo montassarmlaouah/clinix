@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -194,6 +195,11 @@ public class PersonnelController {
         return ResponseEntity.ok(Map.of("message", "Médecin désactivé"));
     }
 
+    @PutMapping("/medecins/{id}/reactiver")
+    public ResponseEntity<?> reactiverMedecin(@PathVariable String id) {
+        return reactiverMembre("MEDECIN", id, "Médecin réactivé");
+    }
+
     // ===== INFIRMIERS =====
     
     @GetMapping("/infirmiers")
@@ -248,6 +254,11 @@ public class PersonnelController {
         return ResponseEntity.ok(Map.of("message", "Infirmier désactivé"));
     }
 
+    @PutMapping("/infirmiers/{id}/reactiver")
+    public ResponseEntity<?> reactiverInfirmier(@PathVariable String id) {
+        return reactiverMembre("INFIRMIER", id, "Infirmier réactivé");
+    }
+
     // ===== RADIOLOGUES =====
     
     @GetMapping("/radiologues")
@@ -275,6 +286,11 @@ public class PersonnelController {
             radiologueRepository.save(r);
         });
         return ResponseEntity.ok(Map.of("message", "Radiologue désactivé"));
+    }
+
+    @PutMapping("/radiologues/{id}/reactiver")
+    public ResponseEntity<?> reactiverRadiologue(@PathVariable String id) {
+        return reactiverMembre("RADIOLOGUE", id, "Radiologue réactivé");
     }
 
     // ===== PHARMACIENS =====
@@ -306,6 +322,11 @@ public class PersonnelController {
         return ResponseEntity.ok(Map.of("message", "Pharmacien désactivé"));
     }
 
+    @PutMapping("/pharmaciens/{id}/reactiver")
+    public ResponseEntity<?> reactiverPharmacien(@PathVariable String id) {
+        return reactiverMembre("PHARMACIEN", id, "Pharmacien réactivé");
+    }
+
     // ===== SECRÉTAIRES =====
     
     @GetMapping("/secretaires")
@@ -333,6 +354,11 @@ public class PersonnelController {
             secretaireRepository.save(s);
         });
         return ResponseEntity.ok(Map.of("message", "Secrétaire désactivé"));
+    }
+
+    @PutMapping("/secretaires/{id}/reactiver")
+    public ResponseEntity<?> reactiverSecretaire(@PathVariable String id) {
+        return reactiverMembre("SECRETAIRE", id, "Secrétaire réactivé");
     }
 
     // ===== CHEFS PERSONNEL =====
@@ -364,6 +390,11 @@ public class PersonnelController {
         return ResponseEntity.ok(Map.of("message", "Chef personnel désactivé"));
     }
 
+    @PutMapping("/chefs-personnel/{id}/reactiver")
+    public ResponseEntity<?> reactiverChefPersonnel(@PathVariable String id) {
+        return reactiverMembre("CHEF_PERSONNEL", id, "Chef personnel réactivé");
+    }
+
     // ===== TECHNICIENS MAINTENANCE =====
     
     @GetMapping("/techniciens-maintenance")
@@ -391,5 +422,19 @@ public class PersonnelController {
             technicienMaintenanceRepository.save(t);
         });
         return ResponseEntity.ok(Map.of("message", "Technicien maintenance désactivé"));
+    }
+
+    @PutMapping("/techniciens-maintenance/{id}/reactiver")
+    public ResponseEntity<?> reactiverTechnicienMaintenance(@PathVariable String id) {
+        return reactiverMembre("TECHNICIEN_MAINTENANCE", id, "Technicien maintenance réactivé");
+    }
+
+    private ResponseEntity<?> reactiverMembre(String role, String id, String successMessage) {
+        try {
+            personnelService.reactiverMembre(role, id);
+            return ResponseEntity.ok(Map.of("message", successMessage));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

@@ -1,0 +1,90 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Connexion JWT
+
+autonumber
+
+actor Utilisateur
+boundary Frontend as "Application Angular\n(Login + AuthService)"
+control AuthController as "AuthController"
+control AuthManager as "AuthenticationManager"
+control UserDetails as "AppUserDetailsService"
+control JwtUtil as "JwtUtil"
+control JwtFilter as "JwtFilter"
+database DB as "Base de donnees"
+
+== Phase 1 : Authentification ==
+
+Utilisateur -> Frontend: Saisir identifiant + mot de passe
+Utilisateur -> Frontend: Cliquer sur « Se connecter »
+Frontend -> Frontend: Supprimer ancien token (localStorage)
+Frontend -> AuthController: POST /auth/login\n{username, password}
+
+AuthController -> AuthController: Valider champs obligatoires
+AuthController -> AuthController: Normaliser username\n(telephone → format 216XXXXXXXX)
+
+alt Champs manquants
+	AuthController --> Frontend: 400 Bad Request
+	Frontend --> Utilisateur: Message d'erreur de validation
+else Identifiants fournis
+	AuthController -> AuthManager: authenticate(UsernamePasswordAuthenticationToken)
+	AuthManager -> UserDetails: loadUserByUsername(username)
+	UserDetails -> DB: Rechercher compte\n(AppUser, admin, personnel, patient)
+	DB --> UserDetails: Utilisateur + hash BCrypt + role + statut
+
+	alt Mot de passe incorrect
+		UserDetails --> AuthManager: Echec verification BCrypt
+		AuthManager --> AuthController: BadCredentialsException
+		AuthController --> Frontend: 400 — Identifiant ou mot de passe incorrect
+		Frontend --> Utilisateur: Afficher message d'erreur
+	else Compte desactive ou non active
+		UserDetails --> AuthManager: Compte inactif / non enregistre
+		AuthManager --> AuthController: DisabledException /\nUsernameNotFoundException
+		AuthController --> Frontend: 403 — Compte desactive
+		Frontend --> Utilisateur: Acces refuse (contacter admin)
+	else Authentification reussie
+		UserDetails --> AuthManager: CustomUserDetails
+		AuthManager --> AuthController: Authentification OK
+
+		AuthController -> UserDetails: loadUserByUsername(username)
+		UserDetails -> DB: Lire profil complet (id, nom, role, cliniqueId...)
+		DB --> UserDetails: Profil utilisateur
+		UserDetails --> AuthController: CustomUserDetails
+
+		AuthController -> JwtUtil: generateToken(user)
+		JwtUtil -> JwtUtil: Construire JWT signe (HMAC)\nClaims : sub, role, id, cliniqueId, exp...
+		JwtUtil --> AuthController: token JWT
+
+		AuthController --> Frontend: 200 OK\n{token, role, user, message}
+		Frontend -> Frontend: Stocker token + cliniqueId\n(localStorage)
+		Frontend --> Utilisateur: Rediriger selon role\n(/dashboard, /infirmier...)
+	end
+end
+
+== Phase 2 : Requete protegee avec JWT ==
+
+Utilisateur -> Frontend: Acceder a une ressource protegee
+Frontend -> Frontend: tokenInterceptor :\najouter Authorization: Bearer {token}
+Frontend -> JwtFilter: GET /api/... (header Authorization)
+
+JwtFilter -> JwtUtil: extractUsername(token)
+JwtUtil --> JwtFilter: username (claims verifies)
+JwtFilter -> UserDetails: loadUserByUsername(username)
+UserDetails -> DB: Verifier compte toujours actif
+DB --> UserDetails: CustomUserDetails
+UserDetails --> JwtFilter: Profil + autorites
+
+JwtFilter -> JwtFilter: SecurityContextHolder\n.setAuthentication(...)
+
+alt Token valide et compte actif
+	JwtFilter -> AuthController: chain.doFilter → endpoint metier
+	AuthController --> Frontend: 200 OK + donnees
+	Frontend --> Utilisateur: Afficher la ressource
+else Token absent, expire ou invalide
+	JwtFilter -> AuthController: chain.doFilter (non authentifie)
+	AuthController --> Frontend: 401 Unauthorized
+	Frontend --> Utilisateur: Rediriger vers /login
+end
+
+@enduml

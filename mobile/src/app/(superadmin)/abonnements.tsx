@@ -653,15 +653,22 @@ function StatCard({ label, value, icon, color }: any) {
 }
 
 function SubCard({ sub, initials, showDate }: any) {
-  const init = initials(sub.cliniqueNom ?? 'C');
+  const label = sub.cliniqueNom ?? sub.medecinCabinetNom ?? 'Abonnement';
+  const init = initials(label);
+  const subtitle = sub.medecinCabinetNom && sub.cliniqueNom
+    ? `Cabinet · ${sub.medecinCabinetNom}`
+    : sub.medecinCabinetNom
+      ? 'Cabinet médical'
+      : 'Clinique';
   return (
     <View style={styles.subCard}>
       <View style={styles.subAvatar}>
         <Text style={styles.subAvatarText}>{init}</Text>
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={styles.subNom}>{sub.cliniqueNom}</Text>
+        <Text style={styles.subNom}>{label}</Text>
         <Text style={styles.subOffre}>{sub.offreNom}</Text>
+        <Text style={styles.subType}>{subtitle}</Text>
         {showDate && (sub.datePremierPaiement || sub.dateDebut) && (
           <Text style={styles.subDate}>{sub.datePremierPaiement ?? sub.dateDebut} → {sub.dateFin}</Text>
         )}
@@ -787,6 +794,7 @@ const styles = StyleSheet.create({
   subAvatarText: { fontSize: 12, fontWeight: '700', color: LUNA_COLORS.primary },
   subNom: { fontSize: 13, fontWeight: '600', color: LUNA_COLORS.textPrimary },
   subOffre: { fontSize: 11, color: LUNA_COLORS.textSecondary, marginTop: 2 },
+  subType: { fontSize: 10, color: LUNA_COLORS.textDisabled, marginTop: 1 },
   subDate: { fontSize: 10, color: LUNA_COLORS.textDisabled, marginTop: 1 },
   subMontantWrap: {
     backgroundColor: LUNA_COLORS.surfaceLight,

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MSG_ABONNEMENT_CABINET_REQUIS, redirectSiAbonnementCabinetRequis } from '../service/cabinet-access.util';
 import { PatientService } from '../service/patient-service';
 import { MedecinService } from '../service/medecin.service';
 import { AuthService } from '../service/auth-service';
@@ -34,6 +35,8 @@ export class PatientComponent implements OnInit {
   // Filtres
   searchTerm: string = '';
   selectedTypeAdmission: string = 'all';
+  /** actifs | archives */
+  patientView: 'actifs' | 'archives' = 'actifs';
   /** clinique | cabinet — via ?scope= ou défaut selon le profil médecin */
   scopeMode: 'clinique' | 'cabinet' = 'clinique';
 
@@ -63,7 +66,8 @@ export class PatientComponent implements OnInit {
     private patientService: PatientService,
     private medecinService: MedecinService,
     public auth: AuthService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -83,7 +87,11 @@ export class PatientComponent implements OnInit {
 
     this.route.queryParamMap.subscribe((params) => {
       this.scopeMode = this.resolveScope(params.get('scope'));
-      this.loadPatients();
+      if (this.auth.isMedecin() && this.scopeMode === 'cabinet') {
+        this.auth.hydrateCabinetAccess().subscribe(() => this.loadPatients());
+      } else {
+        this.loadPatients();
+      }
     });
   }
 
@@ -96,6 +104,9 @@ export class PatientComponent implements OnInit {
       return param;
     }
     if (this.auth.isMedecinCabinetExclusif()) {
+      return 'cabinet';
+    }
+    if (this.auth.isMedecin() && this.auth.peutAccederEspaceCabinet() && !this.auth.hasMedecinClinique()) {
       return 'cabinet';
     }
     return 'clinique';
@@ -146,8 +157,12 @@ export class PatientComponent implements OnInit {
     };
 
     if (this.auth.isMedecin() && this.isScopeCabinet && this.auth.getUserId()) {
-      if (!this.auth.getAccesCabinet()) {
-        this.error = 'Accès cabinet non activé pour votre compte.';
+      if (redirectSiAbonnementCabinetRequis(this.auth, this.router)) {
+        this.isLoading = false;
+        return;
+      }
+      if (!this.auth.peutAccederEspaceCabinet()) {
+        this.error = MSG_ABONNEMENT_CABINET_REQUIS;
         this.isLoading = false;
         return;
       }
@@ -189,15 +204,33 @@ export class PatientComponent implements OnInit {
     onSuccess: (data: Patient[]) => void,
     onError: (err: { error?: { message?: string; details?: string }; message?: string; status?: number }) => void
   ): void {
-    this.patientService.getPatientsByClinique(cliniqueId).subscribe({
+    const req =
+      this.patientView === 'archives' && this.peutVoirArchives()
+        ? this.patientService.getPatientsInactifsParClinique(cliniqueId)
+        : this.patientService.getPatientsByClinique(cliniqueId);
+    req.subscribe({
       next: onSuccess,
       error: (err) => {
+        if (this.patientView === 'archives') {
+          onError(err);
+          return;
+        }
         this.patientService.obtenirTousLesPatients().subscribe({
           next: onSuccess,
           error: onError
         });
       }
     });
+  }
+
+  get peutVoirArchives(): boolean {
+    return this.auth.isAdminClinique() || this.auth.isSecretaire();
+  }
+
+  switchPatientView(mode: 'actifs' | 'archives'): void {
+    this.patientView = mode;
+    this.currentPage = 1;
+    this.loadPatients();
   }
 
   openModal(): void {
@@ -409,6 +442,46 @@ export class PatientComponent implements OnInit {
       error: (err: any) => {
         this.error = err.error?.message || 'Erreur lors de la vérification du patient';
       }
+    });
+  }
+
+  peutDesactiverPatient(): boolean {
+    return this.auth.isAdminClinique() || this.auth.isSecretaire();
+  }
+
+  desactiverPatient(patient: Patient): void {
+    if (!patient.id) return;
+    if (!confirm(`Désactiver le patient ${patient.prenom} ${patient.nom} ?\nLe dossier restera archivé et le compte ne pourra plus se connecter.`)) {
+      return;
+    }
+    this.error = '';
+    this.success = '';
+    this.patientService.supprimerPatient(patient.id).subscribe({
+      next: () => {
+        this.success = 'Patient désactivé.';
+        this.closeDetailsModal();
+        this.loadPatients();
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || 'Impossible de désactiver le patient';
+      },
+    });
+  }
+
+  reactiverPatient(patient: Patient): void {
+    if (!patient.id) return;
+    if (!confirm(`Réactiver le patient ${patient.prenom} ${patient.nom} ?`)) return;
+    this.error = '';
+    this.success = '';
+    this.patientService.reactiverPatient(patient.id).subscribe({
+      next: () => {
+        this.success = 'Patient réactivé.';
+        this.closeDetailsModal();
+        this.loadPatients();
+      },
+      error: (err: any) => {
+        this.error = err.error?.message || 'Impossible de réactiver le patient';
+      },
     });
   }
 

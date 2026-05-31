@@ -22,6 +22,7 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayout,
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: Dashboard },
       // Routes pour Super Admin
@@ -74,7 +75,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./abonnement-paiement-stripe/abonnement-paiement-stripe').then(m => m.AbonnementPaiementStripeComponent),
         canActivate: [RoleGuard],
-        data: { role: ['ROLE_ADMIN_CLINIQUE', 'ADMIN_CLINIQUE', 'ROLE_SECRETAIRE', 'SECRETAIRE'] }
+        data: {
+          role: [
+            'ROLE_ADMIN_CLINIQUE',
+            'ADMIN_CLINIQUE',
+            'ROLE_SECRETAIRE',
+            'SECRETAIRE',
+            'ROLE_MEDECIN',
+            'MEDECIN',
+          ],
+        }
       },
       {
         path: 'cabinets-medecins',
@@ -275,13 +285,6 @@ export const routes: Routes = [
         canActivate: [RoleGuard],
         data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
       },
-      // ——— Statistiques médecin ———
-      {
-        path: 'medecin-statistiques',
-        loadComponent: () => import('./medecin-statistiques/medecin-statistiques').then(m => m.MedecinStatistiquesComponent),
-        canActivate: [RoleGuard],
-        data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
-      },
 
       // ——— Espace médecin (hub + modules métier) ———
 
@@ -326,12 +329,6 @@ export const routes: Routes = [
       {
         path: 'medecin-urgences',
         loadComponent: () => import('./medecin-urgences/medecin-urgences').then(m => m.MedecinUrgencesComponent),
-        canActivate: [RoleGuard],
-        data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
-      },
-      {
-        path: 'medecin-messagerie',
-        loadComponent: () => import('./medecin-messagerie/medecin-messagerie').then(m => m.MedecinMessagerieComponent),
         canActivate: [RoleGuard],
         data: { role: ['MEDECIN', 'ROLE_MEDECIN'] }
       },
@@ -409,6 +406,7 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     component: MainLayout,
+    canActivate: [AuthGuard],
     children: [
       { path: '', component: Dashboard }
     ]

@@ -83,4 +83,14 @@ public class PatientController {
         patientService.supprimerPatient(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}/reactiver")
+    public ResponseEntity<Patient> reactiverPatient(@PathVariable String id) {
+        return ResponseEntity.ok(patientService.reactiverPatient(id));
+    }
+
+    @GetMapping("/clinique/{cliniqueId}/inactifs")
+    public ResponseEntity<List<Patient>> obtenirPatientsInactifsParClinique(@PathVariable String cliniqueId) {
+        return ResponseEntity.ok(patientService.obtenirPatientsInactifsParClinique(cliniqueId));
+    }
 }

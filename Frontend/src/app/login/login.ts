@@ -28,12 +28,19 @@ export class Login {
         const role = this.auth.getRole();
         const normalizedRole = (role || '').toUpperCase().replace(/-/g, '_');
 
-        if (normalizedRole === 'ROLE_INFIRMIER' || normalizedRole === 'INFIRMIER') {
-          this.router.navigate(['/infirmier']);
-          return;
-        }
+        const go = () => {
+          if (normalizedRole === 'ROLE_INFIRMIER' || normalizedRole === 'INFIRMIER') {
+            this.router.navigate(['/infirmier']);
+            return;
+          }
+          this.router.navigate(['/dashboard']);
+        };
 
-        this.router.navigate(['/dashboard']);
+        if (this.auth.isMedecin()) {
+          this.auth.hydrateCabinetAccess().subscribe(() => go());
+        } else {
+          go();
+        }
       },
       error: (err) => {
         console.error('Login error:', err);

@@ -1,0 +1,43 @@
+@startuml
+!theme plain
+
+title sd [Modifier une offre d'abonnement]
+
+autonumber
+
+actor Admin as "Super administrateur"
+boundary UI as ":UI Liste offres"
+control Controller as "BillingController"
+control Service as "BillingManagementService"
+entity DAO as "OffreAbonnementRepository"
+
+ref over Admin, UI
+  S'authentifier
+end ref
+
+Admin -> UI : 1 : Cliquer sur Modifier une offre
+UI --> Admin : 2 : Afficher le formulaire de modification
+Admin -> UI : 3 : Modifier les champs (nom, prix, quotas, categorie)
+Admin -> UI : 4 : Confirmer la modification
+UI -> Controller : 5 : PATCH /api/billing/offres/{id}
+Controller -> Service : 6 : mettreAJourOffre(id, dto)
+Service -> DAO : 7 : findById(id)
+DAO --> Service : 8 : OffreAbonnement
+
+alt Offre introuvable
+  Service --> Controller : 9 : NotFoundException
+  Controller --> UI : 10 : 404 Not Found
+  UI --> Admin : 11 : Afficher message d'erreur
+else Donnees invalides
+  Service --> Controller : 9 : Erreur validation
+  Controller --> UI : 10 : 400 Bad Request
+  UI --> Admin : 11 : Afficher erreurs de validation
+else Modification valide
+  Service -> DAO : 9 : save(offre)
+  DAO --> Service : 10 : Offre mise a jour
+  Service --> Controller : 11 : OffreAbonnement
+  Controller --> UI : 12 : 200 OK
+  UI --> Admin : 13 : Rafraichir la liste + message de succes
+end
+
+@enduml

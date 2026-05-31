@@ -140,7 +140,34 @@ public class BillingController {
             payload.put("sessionId", session.getId());
             return ResponseEntity.ok(payload);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+            return ResponseEntity.badRequest().body(errorMessage(e));
+        }
+    }
+
+    /**
+     * Confirme un paiement Stripe après redirection (session_id) — utile si le webhook local n'est pas joignable.
+     */
+    @PostMapping("/confirm-checkout")
+    @PreAuthorize("hasAnyRole('ADMIN_CLINIQUE','SECRETAIRE','MEDECIN')")
+    public ResponseEntity<?> confirmCheckout(@AuthenticationPrincipal CustomUserDetails user,
+            @RequestBody Map<String, String> req) {
+        try {
+            if (user == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Utilisateur non authentifié."));
+            }
+            String sessionId = req.get("sessionId");
+            if (!StringUtils.hasText(sessionId)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "sessionId Stripe requis."));
+            }
+            // Le type d'abonnement (cabinet vs clinique) est déduit de la session Stripe, pas du scope UI.
+            var abonnement = stripeSubscriptionFlowService.confirmCheckoutSession(
+                    sessionId, user.getId(), user.getCliniqueId());
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("message", "Paiement confirmé. Votre abonnement est actif.");
+            payload.put("abonnement", toAbonnementMap(abonnement));
+            return ResponseEntity.ok(payload);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(errorMessage(e));
         }
     }
 
@@ -369,7 +396,7 @@ public class BillingController {
             String nom = a.getMedecinCabinet().getNom() != null ? a.getMedecinCabinet().getNom() : "";
             m.put("medecinCabinetNom", (prenom + " " + nom).trim());
         }
-        m.put("accesAutorise", subscriptionAccessService.isActiveAndPaid(a));
+        m.put("accesAutorise", subscriptionAccessService.isAccessCurrentlyAllowed(a));
         return m;
     }
 
@@ -441,6 +468,13 @@ public class BillingController {
             return pk != null ? "…" : "";
         }
         return pk.substring(0, 10) + "…" + pk.substring(pk.length() - 6);
+    }
+
+    private Map<String, Object> errorMessage(Exception e) {
+        Map<String, Object> body = new HashMap<>();
+        String msg = e.getMessage();
+        body.put("message", StringUtils.hasText(msg) ? msg : "Erreur lors du traitement de la requête.");
+        return body;
     }
 
     private Map<String, Object> toSmsQuotaMap(com.pfe.pfe.billing.CliniqueSmsQuotaService.SmsQuotaStatus q) {

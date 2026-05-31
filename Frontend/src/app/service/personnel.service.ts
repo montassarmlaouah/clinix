@@ -55,6 +55,10 @@ export class PersonnelService {
     return this.http.delete<any>(`${this.baseUrl}/medecins/${id}`);
   }
 
+  reactiverMedecin(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/medecins/${id}/reactiver`, {});
+  }
+
   // ===== INFIRMIERS =====
 
   listerInfirmiers(): Observable<any[]> {
@@ -67,6 +71,10 @@ export class PersonnelService {
 
   supprimerInfirmier(id: string): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/infirmiers/${id}`);
+  }
+
+  reactiverInfirmier(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/infirmiers/${id}/reactiver`, {});
   }
 
   // ===== RADIOLOGUES =====
@@ -83,6 +91,10 @@ export class PersonnelService {
     return this.http.delete<any>(`${this.baseUrl}/radiologues/${id}`);
   }
 
+  reactiverRadiologue(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/radiologues/${id}/reactiver`, {});
+  }
+
   // ===== PHARMACIENS =====
 
   listerPharmaciens(): Observable<any[]> {
@@ -95,6 +107,10 @@ export class PersonnelService {
 
   supprimerPharmacien(id: string): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/pharmaciens/${id}`);
+  }
+
+  reactiverPharmacien(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/pharmaciens/${id}/reactiver`, {});
   }
 
   // ===== SECRÉTAIRES =====
@@ -111,6 +127,10 @@ export class PersonnelService {
     return this.http.delete<any>(`${this.baseUrl}/secretaires/${id}`);
   }
 
+  reactiverSecretaire(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/secretaires/${id}/reactiver`, {});
+  }
+
   // ===== CHEFS PERSONNEL =====
 
   listerChefsPersonnel(): Observable<any[]> {
@@ -121,6 +141,10 @@ export class PersonnelService {
     return this.http.delete<any>(`${this.baseUrl}/chefs-personnel/${id}`);
   }
 
+  reactiverChefPersonnel(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/chefs-personnel/${id}/reactiver`, {});
+  }
+
   // ===== TECHNICIENS MAINTENANCE =====
 
   listerTechniciensMaintenance(): Observable<any[]> {
@@ -129,6 +153,10 @@ export class PersonnelService {
 
   supprimerTechnicienMaintenance(id: string): Observable<any> {
     return this.http.delete<any>(`${this.baseUrl}/techniciens-maintenance/${id}`);
+  }
+
+  reactiverTechnicienMaintenance(id: string): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/techniciens-maintenance/${id}/reactiver`, {});
   }
 
   // ===== ADMINISTRATEURS CLINIQUE =====

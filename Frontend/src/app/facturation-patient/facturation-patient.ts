@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../service/auth-service';
 import {
@@ -16,7 +17,7 @@ import { Hospitalisation } from '../model/hospitalisation';
 @Component({
   selector: 'app-facturation-patient',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './facturation-patient.html',
   styleUrl: './facturation-patient.css',
 })
@@ -351,13 +352,13 @@ export class FacturationPatientComponent implements OnInit {
   statutClass(statut: StatutFacturePatient): string {
     switch (statut) {
       case 'PAYEE':
-        return 'badge-success';
+        return 'status-pill badge-done';
       case 'TELETRANSMIS':
-        return 'badge-info';
+        return 'status-pill vp-ok';
       case 'EMISE':
-        return 'badge-warning';
+        return 'status-pill vp-doc';
       default:
-        return 'badge-secondary';
+        return 'status-pill badge-todo';
     }
   }
 

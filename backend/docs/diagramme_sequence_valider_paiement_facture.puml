@@ -1,0 +1,49 @@
+@startuml
+!theme plain
+
+title sd [Valider le paiement et teletransmettre CNAM]
+
+autonumber
+
+actor Secretaire as "Secretaire"
+boundary UI as ":UI Detail facture"
+control Controller as "FacturationPatientController"
+control Service as "FacturationPatientService"
+entity DAO as "FacturePatientRepository"
+
+ref over Secretaire, UI
+  S'authentifier
+end ref
+
+Secretaire -> UI : 1 : Emettre la facture
+UI -> Controller : 2 : POST /api/facturation-patient/{id}/emettre
+Controller -> Service : 3 : emettre(id)
+Service -> DAO : 4 : findById(id)
+Service -> Service : 5 : BROUILLON -> EMISE
+Service --> Controller : 6 : Facture emise
+Controller --> UI : 7 : 200 OK
+
+Secretaire -> UI : 8 : Saisir montant paye + mode paiement
+Secretaire -> UI : 9 : Valider le paiement
+UI -> Controller : 10 : POST /api/facturation-patient/{id}/valider-paiement
+Controller -> Service : 11 : validerPaiement(id, dto)
+
+alt Montant invalide ou statut incorrect
+  Service --> Controller : 12 : Erreur validation
+  Controller --> UI : 13 : 400 Bad Request
+  UI --> Secretaire : 14 : Afficher message d'erreur
+else Paiement valide
+  Service -> Service : 12 : EMISE -> PAYEE
+  Service -> DAO : 13 : save(facture)
+  Service --> Controller : 14 : Facture payee
+  Controller --> UI : 15 : 200 OK
+  Secretaire -> UI : 16 : Teletransmettre CNAM
+  UI -> Controller : 17 : POST /api/facturation-patient/{id}/teletransmettre
+  Controller -> Service : 18 : teletransmettre(id)
+  Service -> Service : 19 : Generer ref CNAM + PAYEE -> TELETRANSMIS
+  Service --> Controller : 20 : TeletransmissionResult
+  Controller --> UI : 21 : 200 OK
+  UI --> Secretaire : 22 : Afficher reference CNAM + succes
+end
+
+@enduml

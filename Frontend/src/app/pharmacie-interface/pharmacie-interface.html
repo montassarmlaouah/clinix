@@ -83,15 +83,20 @@
     <section *ngIf="activeTab==='alertes'">
       <div class="table-container luna-shadow">
         <table class="licences-table">
-          <thead><tr><th>Médicament</th><th>Quantité</th><th>Seuil</th><th>Alerte</th></tr></thead>
+          <thead><tr><th>Médicament</th><th>Quantité</th><th>Seuil</th><th>Alerte</th><th class="text-center">E-mail</th></tr></thead>
           <tbody>
             <tr *ngFor="let a of alertesStockBas">
               <td>{{ a.medicament?.nom || '—' }}</td>
               <td>{{ a.quantite }}</td>
               <td>{{ a.seuilAlerte }}</td>
               <td><span class="status-pill badge-danger">Stock bas</span></td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="renvoyerAlerteEmail(a)">
+                  <i class="fas fa-envelope"></i> Renvoyer
+                </button>
+              </td>
             </tr>
-            <tr *ngIf="alertesStockBas.length===0"><td colspan="4" class="empty-state">Aucune alerte pour le moment</td></tr>
+            <tr *ngIf="alertesStockBas.length===0"><td colspan="5" class="empty-state">Aucune alerte pour le moment</td></tr>
           </tbody>
         </table>
       </div>

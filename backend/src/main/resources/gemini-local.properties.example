@@ -1,0 +1,6 @@
+# 1. Copier ce fichier vers : src/main/resources/gemini-local.properties
+# 2. Coller votre clé (https://aistudio.google.com/apikey)
+# 3. Redémarrer complètement le backend (pas seulement DevTools)
+
+gemini.api-key=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+gemini.model=gemini-2.5-flash

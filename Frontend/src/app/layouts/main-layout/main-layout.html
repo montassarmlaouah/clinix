@@ -13,5 +13,5 @@
 </div>
 }
 
-<!-- Chatbot disponible sur toutes les pages -->
-<app-chatbot></app-chatbot>
+<!-- Chatbot disponible sur le web (médecin uniquement) -->
+<app-chatbot *ngIf="authService.isMedecin()"></app-chatbot>

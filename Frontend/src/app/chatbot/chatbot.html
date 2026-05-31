@@ -32,6 +32,16 @@
   <!-- Corps du chat -->
   <div class="chat-body" *ngIf="!isMinimized">
     <div class="chat-messages">
+      <div *ngIf="isLoading" class="message bot-message">
+        <div class="message-avatar">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
       <div *ngFor="let message of messages" 
            class="message"
            [class.bot-message]="message.isBot"
@@ -75,7 +85,7 @@
           [(ngModel)]="userMessage"
           (keypress)="handleKeyPress($event)"
           placeholder="Tapez votre message...">
-        <button class="send-btn" (click)="sendMessage()" [disabled]="!userMessage.trim()">
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!userMessage.trim() || isLoading">
           <i class="bi bi-send-fill"></i>
         </button>
       </div>

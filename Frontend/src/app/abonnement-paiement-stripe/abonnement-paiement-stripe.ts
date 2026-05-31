@@ -33,7 +33,9 @@ export class AbonnementPaiementStripeComponent implements OnInit {
     const q = this.route.snapshot.queryParamMap;
     const qScope = (q.get('scope') || '').toLowerCase();
     if (qScope === 'cabinet') {
-      this.billingScope = 'cabinet';
+      // Le scope "cabinet" n'est valable que pour les médecins.
+      // (Ne pas dépendre d'un flag JWT "accesCabinet" qui peut être absent / incohérent côté données.)
+      this.billingScope = this.auth.isMedecin() ? 'cabinet' : 'clinique';
     } else if (qScope === 'clinique') {
       this.billingScope = 'clinique';
     } else if (this.auth.isMedecinCabinetExclusif()) {
@@ -62,7 +64,8 @@ export class AbonnementPaiementStripeComponent implements OnInit {
   }
 
   private verifierAbonnementPaye(): void {
-    const scope = this.billingScope === 'cabinet' ? 'cabinet' : undefined;
+    // Toujours expliciter le scope pour éviter les ambiguïtés backend (clinique vs cabinet).
+    const scope: 'clinique' | 'cabinet' = this.billingScope;
     this.abonnementService.getCurrentSubscription(scope).subscribe({
       next: (cur) => {
         if (cur?.accesAutorise === true) {
@@ -151,7 +154,7 @@ export class AbonnementPaiementStripeComponent implements OnInit {
     this.error = '';
     this.preparing = true;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const successUrl = `${origin}/mon-abonnement?checkout=success`;
+    const successUrl = `${origin}/mon-abonnement?checkout=success&scope=${this.billingScope}&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/abonnement-paiement?offreId=${encodeURIComponent(this.offre.id)}&interval=${this.interval}&scope=${this.billingScope}`;
 
     this.abonnementService
@@ -160,7 +163,7 @@ export class AbonnementPaiementStripeComponent implements OnInit {
         interval: this.interval,
         successUrl,
         cancelUrl,
-        scope: this.billingScope === 'cabinet' ? 'cabinet' : undefined,
+        scope: this.billingScope,
       })
       .subscribe({
         next: (r) => {
@@ -181,7 +184,7 @@ export class AbonnementPaiementStripeComponent implements OnInit {
 
   retourTarifs(): void {
     this.router.navigate(['/tarifs-abonnement'], {
-      queryParams: this.billingScope === 'cabinet' ? { scope: 'cabinet' } : {},
+      queryParams: { scope: this.billingScope },
     });
   }
 }

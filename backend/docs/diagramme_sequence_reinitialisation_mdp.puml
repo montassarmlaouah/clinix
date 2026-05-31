@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Reinitialisation du mot de passe via OTP SMS
+
+autonumber
+
+actor Utilisateur
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control ForgotService as "Service Mot de passe oublie"
+control SmsService as "TunisieSmsService"
+database DB as "Base de donnees"
+
+Utilisateur -> Frontend: Saisir le numero de telephone
+Frontend -> API: POST /auth/forgot-password (telephone)
+API -> ForgotService: demanderReinitialisation(telephone)
+ForgotService -> DB: Rechercher utilisateur par telephone
+
+alt Telephone enregistre
+	DB --> ForgotService: Utilisateur trouve
+	ForgotService -> ForgotService: Generer code OTP + date d'expiration
+	ForgotService -> DB: Enregistrer l'OTP
+	ForgotService -> SmsService: envoyerSms(telephone, OTP)
+	SmsService --> ForgotService: Accuse d'envoi
+	API --> Frontend: 200 OK (OTP envoye)
+	Frontend --> Utilisateur: Afficher l'etape de saisie du code
+
+	Utilisateur -> Frontend: Saisir le code OTP + nouveau mot de passe
+	Frontend -> API: POST /auth/reset-password (telephone, OTP, nouveauMdp)
+	API -> ForgotService: validerEtReinitialiser(...)
+	ForgotService -> DB: Verifier l'OTP (validite + expiration)
+	alt OTP valide
+		ForgotService -> ForgotService: Hacher le nouveau mot de passe
+		ForgotService -> DB: Mettre a jour le mot de passe + invalider l'OTP
+		API --> Frontend: 200 OK (mot de passe mis a jour)
+		Frontend --> Utilisateur: Rediriger vers la page de connexion
+	else OTP invalide ou expire
+		API --> Frontend: 400 Bad Request
+		Frontend --> Utilisateur: Demander une nouvelle tentative
+	end
+else Telephone inconnu
+	API --> Frontend: Reponse generique (anti-enumeration)
+	Frontend --> Utilisateur: Message neutre
+end
+
+@enduml

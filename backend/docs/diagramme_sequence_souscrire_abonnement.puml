@@ -1,0 +1,48 @@
+@startuml
+!theme plain
+
+title sd [Souscrire et payer un abonnement (Stripe Checkout)]
+
+autonumber
+
+actor User as "Admin clinique / Medecin"
+boundary UI as ":UI Tarifs abonnement"
+control Controller as "BillingController"
+control Flow as "StripeSubscriptionFlowService"
+participant Stripe as "Stripe Checkout"
+entity DAO as "AbonnementCliniqueRepository"
+
+ref over User, UI
+  S'authentifier
+end ref
+
+User -> UI : 1 : Choisir une offre et la periode (mensuel / annuel)
+User -> UI : 2 : Cliquer sur Souscrire
+UI -> Controller : 3 : POST /api/billing/checkout
+Controller -> Flow : 4 : createCheckoutSession(cliniqueId, offreId, interval)
+Flow -> DAO : 5 : Charger clinique + offre (prix Stripe)
+DAO --> Flow : 6 : Donnees
+Flow -> Stripe : 7 : sessions.create(checkout)
+Stripe --> Flow : 8 : sessionId + checkoutUrl
+Flow --> Controller : 9 : Session Stripe
+Controller --> UI : 10 : {checkoutUrl, sessionId}
+UI -> Stripe : 11 : Redirection vers paiement securise
+
+alt Paiement reussi
+  Stripe -> Controller : 12 : POST /api/webhooks/stripe (checkout.session.completed)
+  Controller -> Flow : 13 : handleCheckoutCompleted(session)
+  Flow -> DAO : 14 : Creer / maj AbonnementClinique (ACTIF)
+  Stripe --> User : 15 : Redirection successUrl
+  User -> UI : 16 : Consulter Mon abonnement
+  UI -> Controller : 17 : GET /api/billing/abonnement-courant
+  Controller --> UI : 18 : 200 OK (statut, periode, montant)
+  UI --> User : 19 : Afficher abonnement actif
+else Paiement annule ou session expiree
+  Stripe -> Controller : 12 : webhook checkout.session.expired
+  Controller -> Flow : 13 : handleCheckoutExpired(session)
+  Flow -> DAO : 14 : Marquer tentative expiree
+  Stripe --> User : 15 : Redirection cancelUrl
+  UI --> User : 16 : Afficher message d'annulation
+end
+
+@enduml

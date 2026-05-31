@@ -61,7 +61,7 @@ function roleLabelSingular(role: PersonnelRole): string {
 
 function statutBadge(actif?: boolean) {
   if (actif) return { label: 'Actif', color: 'success' as const };
-  return { label: 'En attente', color: 'warning' as const };
+  return { label: 'Désactivé', color: 'error' as const };
 }
 
 export function AdminPersonnelScreen(): React.JSX.Element {
@@ -72,10 +72,12 @@ export function AdminPersonnelScreen(): React.JSX.Element {
   const [activeRole, setActiveRole] = useState<PersonnelRole>('MEDECIN');
   const [byRole, setByRole] = useState<Partial<Record<PersonnelRole, PersonnelMember[]>>>({});
   const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'tous' | 'actifs' | 'inactifs'>('tous');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [detail, setDetail] = useState<PersonnelMember | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
 
   const liste = byRole[activeRole] ?? [];
 
@@ -116,18 +118,24 @@ export function AdminPersonnelScreen(): React.JSX.Element {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return liste;
-    return liste.filter(
+    let rows = liste;
+    if (statusFilter === 'actifs') {
+      rows = rows.filter((p) => p.actif);
+    } else if (statusFilter === 'inactifs') {
+      rows = rows.filter((p) => !p.actif);
+    }
+    if (!q) return rows;
+    return rows.filter(
       (p) =>
         `${p.prenom} ${p.nom}`.toLowerCase().includes(q) ||
         normalizeTelephoneDigits(p.telephone).includes(q.replace(/\D/g, '')) ||
         (p.specialite ?? '').toLowerCase().includes(q),
     );
-  }, [liste, query]);
+  }, [liste, query, statusFilter]);
 
   const stats = useMemo(() => {
     const actifs = liste.filter((p) => p.actif).length;
-    return { total: liste.length, actifs, enAttente: liste.length - actifs };
+    return { total: liste.length, actifs, desactives: liste.length - actifs };
   }, [liste]);
 
   const roleSingular = roleLabelSingular(activeRole);
@@ -157,11 +165,41 @@ export function AdminPersonnelScreen(): React.JSX.Element {
     try {
       await personnelService.supprimer(activeRole, String(person.id));
       setDetail(null);
+      Alert.alert('Succès', 'Compte personnel désactivé.');
       await load(true);
     } catch {
       Alert.alert('Erreur', 'Impossible de désactiver ce membre.');
     } finally {
       setDeleting(false);
+    }
+  }
+
+  function confirmReactivate(person: PersonnelMember) {
+    const name = `${person.prenom} ${person.nom}`.trim();
+    Alert.alert(
+      'Réactiver le compte',
+      `Réactiver ${name} ? Le compte pourra à nouveau se connecter.`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Réactiver',
+          onPress: () => void handleReactivate(person),
+        },
+      ],
+    );
+  }
+
+  async function handleReactivate(person: PersonnelMember) {
+    setReactivating(true);
+    try {
+      await personnelService.reactiver(activeRole, String(person.id));
+      setDetail(null);
+      Alert.alert('Succès', 'Compte personnel réactivé.');
+      await load(true);
+    } catch {
+      Alert.alert('Erreur', 'Impossible de réactiver ce membre.');
+    } finally {
+      setReactivating(false);
     }
   }
 
@@ -221,10 +259,10 @@ export function AdminPersonnelScreen(): React.JSX.Element {
         </View>
         <View style={styles.statsRow}>
           <LunaStatCard
-            label="En attente"
-            value={stats.enAttente}
-            icon="time-outline"
-            color={LUNA_COLORS.warning}
+            label="Désactivés"
+            value={stats.desactives}
+            icon="ban-outline"
+            color={LUNA_COLORS.error}
             style={styles.statCard}
           />
           <LunaStatCard
@@ -246,6 +284,19 @@ export function AdminPersonnelScreen(): React.JSX.Element {
           placeholder="Nom, prénom, téléphone…"
           placeholderTextColor={LUNA_COLORS.textDisabled}
         />
+        <View style={styles.statusToggle}>
+          {(['tous', 'actifs', 'inactifs'] as const).map((key) => (
+            <Pressable
+              key={key}
+              style={[styles.statusBtn, statusFilter === key && styles.statusBtnActive]}
+              onPress={() => setStatusFilter(key)}
+            >
+              <Text style={[styles.statusBtnText, statusFilter === key && styles.statusBtnTextActive]}>
+                {key === 'tous' ? 'Tous' : key === 'actifs' ? 'Actifs' : 'Désactivés'}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <Pressable style={styles.addPrimary} onPress={openAdd}>
           <Ionicons name="person-add-outline" size={18} color={LUNA_COLORS.textInverse} />
           <Text style={styles.addPrimaryTxt}>Ajouter {roleSingular}</Text>
@@ -341,22 +392,35 @@ export function AdminPersonnelScreen(): React.JSX.Element {
                 <Text style={styles.detailLine}>E-mail : {detail.email}</Text>
               ) : null}
               <Text style={styles.detailLine}>
-                Statut : {detail.actif ? 'Compte actif' : "En attente d'activation"}
+                Statut : {detail.actif ? 'Compte actif' : 'Compte désactivé'}
               </Text>
               {detail.clinique?.nom ? (
                 <Text style={styles.detailLine}>Clinique : {detail.clinique.nom}</Text>
               ) : null}
 
-              <Pressable
-                style={[styles.dangerBtn, deleting && styles.disabled]}
-                disabled={deleting}
-                onPress={() => confirmDeactivate(detail)}
-              >
-                <Ionicons name="ban-outline" size={18} color={LUNA_COLORS.error} />
-                <Text style={styles.dangerTxt}>
-                  {deleting ? 'Désactivation…' : 'Désactiver le compte'}
-                </Text>
-              </Pressable>
+              {detail.actif ? (
+                <Pressable
+                  style={[styles.dangerBtn, deleting && styles.disabled]}
+                  disabled={deleting}
+                  onPress={() => confirmDeactivate(detail)}
+                >
+                  <Ionicons name="ban-outline" size={18} color={LUNA_COLORS.error} />
+                  <Text style={styles.dangerTxt}>
+                    {deleting ? 'Désactivation…' : 'Désactiver le compte'}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={[styles.successBtn, reactivating && styles.disabled]}
+                  disabled={reactivating}
+                  onPress={() => confirmReactivate(detail)}
+                >
+                  <Ionicons name="checkmark-circle-outline" size={18} color={LUNA_COLORS.success} />
+                  <Text style={styles.successTxt}>
+                    {reactivating ? 'Réactivation…' : 'Réactiver le compte'}
+                  </Text>
+                </Pressable>
+              )}
             </ScrollView>
           ) : null}
         </View>
@@ -514,5 +578,29 @@ const styles = StyleSheet.create({
     backgroundColor: LUNA_COLORS.errorLight, // ✨ badge errorLight
   },
   dangerTxt: { fontSize: fontSize.base, color: LUNA_COLORS.error, fontWeight: fontWeight.semibold },
+  successBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xxl,
+    padding: spacing.lg,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.success,
+    backgroundColor: LUNA_COLORS.successLight,
+  },
+  successTxt: { fontSize: fontSize.base, color: LUNA_COLORS.success, fontWeight: fontWeight.semibold },
+  statusToggle: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  statusBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: LUNA_COLORS.surface,
+    borderWidth: 1,
+    borderColor: LUNA_COLORS.borderSubtle,
+  },
+  statusBtnActive: { backgroundColor: LUNA_COLORS.secondary, borderColor: LUNA_COLORS.secondary },
+  statusBtnText: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary },
+  statusBtnTextActive: { color: LUNA_COLORS.textInverse, fontWeight: fontWeight.semibold },
   disabled: { opacity: 0.6 },
 });

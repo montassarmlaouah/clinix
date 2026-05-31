@@ -986,4 +986,43 @@ public class PersonnelService {
         } while (exists.test(numeroOrdre));
         return numeroOrdre;
     }
+
+    /**
+     * Réactive un compte personnel désactivé (soft delete).
+     */
+    public void reactiverMembre(String roleNom, String id) {
+        if (!StringUtils.hasText(id)) {
+            throw new RuntimeException("Identifiant personnel requis");
+        }
+        String role = roleNom == null ? "" : roleNom.trim().toUpperCase().replace("ROLE_", "");
+        User user = switch (role) {
+            case "MEDECIN" -> medecinRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Médecin non trouvé"));
+            case "INFIRMIER" -> infirmierRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Infirmier non trouvé"));
+            case "RADIOLOGUE" -> radiologueRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Radiologue non trouvé"));
+            case "PHARMACIEN" -> pharmacienRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Pharmacien non trouvé"));
+            case "SECRETAIRE" -> secretaireRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Secrétaire non trouvé"));
+            case "CHEF_PERSONNEL" -> chefPersonnelRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Chef personnel non trouvé"));
+            case "TECHNICIEN_MAINTENANCE" -> technicienMaintenanceRepository.findById(id.trim())
+                .map(u -> (User) u)
+                .orElseThrow(() -> new RuntimeException("Technicien maintenance non trouvé"));
+            default -> throw new RuntimeException("Rôle non reconnu: " + roleNom);
+        };
+        if (Boolean.TRUE.equals(user.getActif())) {
+            throw new RuntimeException("Ce compte est déjà actif");
+        }
+        user.setActif(true);
+        userRepository.save(user);
+    }
 }

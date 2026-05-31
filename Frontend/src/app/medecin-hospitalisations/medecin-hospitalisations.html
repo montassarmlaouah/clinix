@@ -1,62 +1,185 @@
-<div class="page-wrap">
-  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
-  <h1>Hospitalisations en cours</h1>
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
 
-  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-  <div *ngIf="loading" class="text-muted">Chargement…</div>
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Hospitalisations en cours</h1>
+      <p class="page-subtitle">Patients hospitalisés, chambres et notes cliniques.</p>
+    </div>
+  </header>
 
-  <div class="panel" *ngIf="!loading && liste.length">
-    <table class="table table-sm">
-      <thead>
-        <tr>
-          <th>Patient</th>
-          <th>Motif</th>
-          <th>Entrée</th>
-          <th>Chambre</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let h of liste">
-          <td>{{ h.patient ? (h.patient.prenom + ' ' + h.patient.nom) : '—' }}</td>
-          <td>{{ h.motif }}</td>
-          <td>{{ h.dateEntree | date:'shortDate' }}</td>
-          <td>{{ h.chambre?.numero || h.chambre?.id || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="messages-section">
+    <div class="alert alert-luna-success" *ngIf="success">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>{{ success }}</span>
+    </div>
+    <div class="alert alert-luna-danger" *ngIf="error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ error }}</span>
+    </div>
+    <div class="alert alert-luna-danger" *ngIf="notesError">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ notesError }}</span>
+    </div>
   </div>
-  <section class="panel mt-3" *ngIf="!loading && liste.length">
-    <h3>Notes d'hospitalisation</h3>
-    <div class="mb-2">
-      <label>Hospitalisation</label>
-      <select [(ngModel)]="selectedHospitalisationId" (change)="onHospitalisationChange()">
-        <option value="">Sélectionner</option>
-        <option *ngFor="let h of liste" [value]="h.id">
-          {{ h.patient ? (h.patient.prenom + ' ' + h.patient.nom) : 'Patient' }} - {{ h.dateEntree | date:'shortDate' }}
-        </option>
-      </select>
+
+  <div class="stats-grid stats-grid-3">
+    <div class="stat-card card-pending">
+      <i class="bi bi-hospital stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTotal }}</span>
+        <span class="stat-label">Hospitalisations actives</span>
+      </div>
+    </div>
+    <div class="stat-card card-warning">
+      <i class="bi bi-door-closed stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statAvecChambre }}</span>
+        <span class="stat-label">Avec chambre assignée</span>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <i class="bi bi-journal-medical stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statNotes }}</span>
+        <span class="stat-label">Notes (sélection)</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="filters-section" aria-label="Filtres">
+    <div class="filter-field">
+      <label for="search-hosp">Rechercher</label>
+      <div class="input-with-icon">
+        <i class="bi bi-search"></i>
+        <input
+          id="search-hosp"
+          type="search"
+          class="luna-input"
+          [(ngModel)]="searchText"
+          placeholder="Patient, motif, chambre…"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="suivi-block" aria-labelledby="hosp-heading">
+    <div class="suivi-header">
+      <h2 id="hosp-heading" class="suivi-title">Liste des hospitalisations</h2>
     </div>
 
-    <div class="alert alert-danger" *ngIf="notesError">{{ notesError }}</div>
-    <div *ngIf="loadingNotes" class="text-muted">Chargement des notes…</div>
+    <div class="empty-state luna-shadow" *ngIf="loading">
+      <i class="bi bi-arrow-repeat"></i>
+      <p>Chargement…</p>
+    </div>
 
-    <div *ngIf="selectedHospitalisationId">
-      <textarea
-        rows="3"
-        [(ngModel)]="noteText"
-        placeholder="Ajouter une note clinique pour le patient"></textarea>
-      <div class="mt-2">
-        <button class="btn btn-primary btn-sm" (click)="ajouterNote()">Ajouter la note</button>
+    <div class="table-container luna-shadow" *ngIf="!loading && filteredListe.length">
+      <div class="table-scroll">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Motif</th>
+              <th>Entrée</th>
+              <th>Chambre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              class="luna-row"
+              *ngFor="let h of filteredListe"
+              [class.luna-row--selected]="h.id === selectedHospitalisationId"
+              (click)="selectedHospitalisationId = h.id!; onHospitalisationChange()"
+              style="cursor: pointer"
+            >
+              <td>
+                <div class="cell-primary">
+                  {{ h.patient ? h.patient.prenom + ' ' + h.patient.nom : '—' }}
+                </div>
+              </td>
+              <td>{{ h.motif || '—' }}</td>
+              <td class="date-cell">{{ h.dateEntree | date : 'shortDate' }}</td>
+              <td>{{ h.chambre?.numero || h.chambre?.id || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-container">
+        <p class="pagination-info">
+          {{ filteredListe.length }} hospitalisation{{ filteredListe.length > 1 ? 's' : '' }}
+          <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+        </p>
       </div>
     </div>
 
-    <ul class="mt-3" *ngIf="notes.length > 0">
-      <li *ngFor="let n of notes">
-        <strong>{{ n.auteurNom }}</strong> ({{ n.auteurRole }}) - {{ n.dateCreation | date:'dd/MM/yyyy HH:mm' }}
-        <div>{{ n.contenu }}</div>
+    <div class="empty-state luna-shadow" *ngIf="!loading && liste.length && !filteredListe.length">
+      <i class="bi bi-search"></i>
+      <p>Aucun résultat pour « {{ searchText }} ».</p>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && !liste.length && !error">
+      <i class="bi bi-inbox"></i>
+      <p>Aucune hospitalisation en cours.</p>
+    </div>
+  </section>
+
+  <section class="notes-panel luna-shadow" *ngIf="liste.length" aria-labelledby="notes-heading">
+    <h2 id="notes-heading" class="notes-panel-title">
+      <i class="bi bi-journal-text text-luna-teal"></i>
+      Notes d'hospitalisation
+    </h2>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-8">
+        <label class="field-label">Hospitalisation</label>
+        <div class="input-with-icon">
+          <i class="bi bi-hospital"></i>
+          <select
+            class="luna-input luna-select"
+            [(ngModel)]="selectedHospitalisationId"
+            (change)="onHospitalisationChange()"
+          >
+            <option value="">Sélectionner</option>
+            <option *ngFor="let h of liste" [value]="h.id">
+              {{ h.patient ? h.patient.prenom + ' ' + h.patient.nom : 'Patient' }} —
+              {{ h.dateEntree | date : 'shortDate' }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="selectedHospitalisationId">
+      <label class="field-label">Nouvelle note clinique</label>
+      <textarea
+        class="luna-input luna-textarea"
+        rows="3"
+        [(ngModel)]="noteText"
+        placeholder="Ajouter une note pour le patient hospitalisé"
+      ></textarea>
+      <div class="demande-actions mt-3" style="border-top: none; padding-top: 0; margin-top: 0.75rem">
+        <button type="button" class="btn btn-luna-primary" (click)="ajouterNote()">
+          <i class="bi bi-plus-circle"></i> Ajouter la note
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="loadingNotes" class="text-muted small mt-3">Chargement des notes…</div>
+
+    <ul class="notes-list mt-3" *ngIf="!loadingNotes && notes.length">
+      <li class="note-item" *ngFor="let n of notes">
+        <div class="note-meta">
+          <strong>{{ n.auteurNom }}</strong> · {{ n.auteurRole }} ·
+          {{ n.dateCreation | date : 'dd/MM/yyyy HH:mm' }}
+        </div>
+        <div class="note-body">{{ n.contenu }}</div>
       </li>
     </ul>
-    <p *ngIf="!loadingNotes && notes.length === 0" class="text-muted">Aucune note pour cette hospitalisation.</p>
+    <p class="form-hint" *ngIf="!loadingNotes && notes.length === 0 && selectedHospitalisationId">
+      Aucune note pour cette hospitalisation.
+    </p>
   </section>
-  <p *ngIf="!loading && !liste.length && !error" class="text-muted">Aucune hospitalisation en cours.</p>
 </div>

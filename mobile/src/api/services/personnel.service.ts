@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost } from '@/src/api/client';
+import { apiDelete, apiGet, apiPost, apiPut } from '@/src/api/client';
 import { PERSONNEL } from '@/src/api/endpoints';
 import type {
   CreerPersonnelPayload,
@@ -31,6 +31,19 @@ function deleteUrl(role: PersonnelRole, id: string): string {
     RADIOLOGUE: PERSONNEL.RADIOLOGUE_BY_ID,
     CHEF_PERSONNEL: PERSONNEL.CHEF_BY_ID,
     TECHNICIEN_MAINTENANCE: PERSONNEL.TECHNICIEN_BY_ID,
+  }[role];
+  return byId(id);
+}
+
+function reactiverUrl(role: PersonnelRole, id: string): string {
+  const byId = {
+    MEDECIN: PERSONNEL.MEDECIN_REACTIVER,
+    INFIRMIER: PERSONNEL.INFIRMIER_REACTIVER,
+    PHARMACIEN: PERSONNEL.PHARMACIEN_REACTIVER,
+    SECRETAIRE: PERSONNEL.SECRETAIRE_REACTIVER,
+    RADIOLOGUE: PERSONNEL.RADIOLOGUE_REACTIVER,
+    CHEF_PERSONNEL: PERSONNEL.CHEF_REACTIVER,
+    TECHNICIEN_MAINTENANCE: PERSONNEL.TECHNICIEN_REACTIVER,
   }[role];
   return byId(id);
 }
@@ -70,5 +83,9 @@ export const personnelService = {
 
   supprimer(role: PersonnelRole, id: string): Promise<void> {
     return apiDelete(deleteUrl(role, id));
+  },
+
+  reactiver(role: PersonnelRole, id: string): Promise<void> {
+    return apiPut<void>(reactiverUrl(role, id), {});
   },
 };

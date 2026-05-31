@@ -21,6 +21,7 @@ import com.pfe.pfe.model.Clinique;
 import com.pfe.pfe.model.FacturePatient;
 import com.pfe.pfe.model.LigneFacturePatient;
 import com.pfe.pfe.model.Patient;
+import com.pfe.pfe.model.StatutFacturePatient;
 import com.pfe.pfe.repository.FacturePatientRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,10 @@ public class FacturePatientPdfService {
     public byte[] genererPdf(String factureId) {
         FacturePatient facture = facturePatientRepository.findByIdWithDetails(factureId)
             .orElseThrow(() -> new RuntimeException("Facture non trouvée"));
+
+        if (facture.getStatut() == StatutFacturePatient.BROUILLON) {
+            throw new IllegalStateException("Impossible de télécharger le PDF d'une facture au statut Brouillon. Émettez la facture d'abord.");
+        }
 
         Patient patient = facture.getPatient();
         Clinique clinique = facture.getClinique();

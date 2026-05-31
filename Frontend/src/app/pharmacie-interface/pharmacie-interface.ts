@@ -159,6 +159,19 @@ export class PharmacieInterfaceComponent implements OnInit {
     });
   }
 
+  renvoyerAlerteEmail(stock: StockLite): void {
+    if (!stock.id) return;
+    this.clearMessages();
+    this.http.post(`${this.api}/stocks/${stock.id}/alerte-email`, {}).subscribe({
+      next: () => {
+        this.success = 'Alerte e-mail renvoyée aux pharmaciens et administrateurs.';
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.error = err?.error?.message || 'Envoi de l\'alerte e-mail impossible.';
+      },
+    });
+  }
+
   chargerDemandesMedicaments(): void {
     const cid = this.cliniqueId;
     const params = cid ? { cliniqueId: cid } : undefined;
@@ -327,14 +340,17 @@ export class PharmacieInterfaceComponent implements OnInit {
     }
 
     const actuelle = Number(this.mouvementStock.quantite || 0);
-    const nouvelle = this.mouvementType === 'entree' ? actuelle + delta : actuelle - delta;
-    if (nouvelle < 0) {
+    if (this.mouvementType === 'sortie' && delta > actuelle) {
       this.error = 'Stock insuffisant pour cette sortie.';
       return;
     }
 
-    const payload = { quantite: nouvelle };
-    this.http.put(`${this.api}/stocks/${this.mouvementStock.id}`, payload).subscribe({
+    const payload = { quantite: delta };
+    const url =
+      this.mouvementType === 'entree'
+        ? `${this.api}/stocks/${this.mouvementStock.id}/entree`
+        : `${this.api}/stocks/${this.mouvementStock.id}/sortie`;
+    this.http.put(url, payload).subscribe({
       next: () => {
         this.success = this.mouvementType === 'entree' ? 'Entrée enregistrée.' : 'Sortie enregistrée.';
         if (this.mouvementType === 'entree') {

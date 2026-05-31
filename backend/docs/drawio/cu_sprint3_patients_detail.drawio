@@ -1,0 +1,86 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="Sprint 3 - Patients &amp; dossier medical (detail)" id="cu_sprint3_patients_detail">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1030" pageHeight="775" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="boundary" value="Enregistrement patient et dossier medical" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=14;fillColor=none;strokeColor=#000000;align=center;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="40" y="30" width="950" height="695" as="geometry" />
+        </mxCell>
+        <mxCell id="AUTH" value="S&#x27;authentifier" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="810" y="357" width="130" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="H1" value="Gerer
+patients" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="260" y="80" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ha0" value="" style="endArrow=none;html=1;strokeColor=#333333;rounded=0;" edge="1" parent="1" source="SEC" target="H1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hi0" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;" edge="1" parent="1" source="H1" target="AUTH">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E1" value="Enregistrer un patient" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he0_0" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E1" target="H1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E2" value="Mettre a jour
+infos administratives" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="125" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he0_1" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E2" target="H1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E3" value="Rechercher / filtrer
+patients" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="190" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he0_2" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E3" target="H1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="H2" value="Gerer dossier
+medical" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="260" y="315" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="ha1" value="" style="endArrow=none;html=1;strokeColor=#333333;rounded=0;" edge="1" parent="1" source="MED" target="H2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hi1" value="&lt;&lt;include&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;" edge="1" parent="1" source="H2" target="AUTH">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E4" value="Consulter le dossier" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="295" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he1_0" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E4" target="H2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E5" value="Enregistrer consultation" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="360" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he1_1" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E5" target="H2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E6" value="Generer ordonnance" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="425" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he1_2" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E6" target="H2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="E7" value="Demander examens" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="490" width="220" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="he1_3" value="&lt;&lt;extend&gt;&gt;" style="endArrow=open;dashed=1;html=1;strokeColor=#9673A6;fontSize=11;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="E7" target="H2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SEC" value="Secretaire" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="120" width="50" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="MED" value="Medecin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="100" y="280" width="50" height="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -27,6 +27,9 @@ export class Header implements OnInit {
 
   ngOnInit() {
     this.loadCurrentUser();
+    if (this.auth.isMedecin()) {
+      this.auth.hydrateCabinetAccess().subscribe();
+    }
     // Update page title based on current route
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
@@ -88,7 +91,6 @@ export class Header implements OnInit {
       '/radiologue-messagerie': { title: 'Messagerie', subtitle: 'Échanges avec les médecins' },
       '/medecin-hospitalisations': { title: 'Hospitalisations', subtitle: 'Séjours en cours' },
       '/medecin-urgences': { title: 'Urgences', subtitle: 'File et urgences actives' },
-      '/medecin-messagerie': { title: 'Messagerie', subtitle: 'Messages au personnel' },
       '/infirmier': { title: 'Espace infirmier', subtitle: 'Soins, constantes, chambres, alertes' },
       '/infirmier-bracelet': { title: 'Bracelet patient', subtitle: 'Identifier un patient' },
       '/patient': { title: 'Mon espace santé', subtitle: 'Accès rapide à vos services' },

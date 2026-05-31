@@ -50,12 +50,25 @@ public class BillingManagementService {
 
     public Optional<AbonnementClinique> getCurrentSubscription(String cliniqueId) {
         return subscriptionAccessService.findActiveCliniqueSubscription(cliniqueId)
-                .or(() -> subscriptionAccessService.findLatestCliniqueSubscription(cliniqueId));
+                .or(() -> subscriptionAccessService.findLatestPaidCliniqueSubscription(cliniqueId))
+                .or(() -> subscriptionAccessService.findLatestCliniqueSubscription(cliniqueId)
+                        .filter(this::isDisplayablePendingSubscription));
     }
 
     public Optional<AbonnementClinique> getCurrentSubscriptionForMedecinCabinet(String medecinId) {
         return subscriptionAccessService.findActiveCabinetSubscription(medecinId)
-                .or(() -> subscriptionAccessService.findLatestCabinetSubscription(medecinId));
+                .or(() -> subscriptionAccessService.findLatestPaidCabinetSubscription(medecinId))
+                .or(() -> subscriptionAccessService.findLatestCabinetSubscription(medecinId)
+                        .filter(this::isDisplayablePendingSubscription));
+    }
+
+    /** Ne pas afficher un checkout en attente si un abonnement payé existe déjà dans l'historique. */
+    private boolean isDisplayablePendingSubscription(AbonnementClinique a) {
+        if (a == null) {
+            return false;
+        }
+        String statut = a.getStatut();
+        return statut == null || !"EN_ATTENTE_PAIEMENT".equalsIgnoreCase(statut.trim());
     }
 
     public List<AbonnementClinique> getSubscriptionHistory(String cliniqueId) {
@@ -203,6 +216,8 @@ public class BillingManagementService {
         a.setPeriodeFacturation(BillingConstants.INTERVAL_YEARLY.equalsIgnoreCase(interval)
                 ? BillingConstants.INTERVAL_YEARLY
                 : BillingConstants.INTERVAL_MONTHLY);
+        medecin.setAccesCabinet(true);
+        medecinRepository.save(medecin);
         return abonnementRepository.save(a);
     }
 

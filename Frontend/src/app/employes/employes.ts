@@ -37,6 +37,7 @@ export class Employes implements OnInit {
 
   // Filtres
   searchTerm: string = '';
+  personnelStatusFilter: 'all' | 'active' | 'inactive' = 'all';
 
   // États
   isLoading: boolean = false;
@@ -229,6 +230,12 @@ export class Employes implements OnInit {
         (personnel.telephone?.includes(term)) ||
         (personnel.specialite?.toLowerCase().includes(term))
       );
+    }
+
+    if (this.personnelStatusFilter === 'active') {
+      list = list.filter((p) => p.actif);
+    } else if (this.personnelStatusFilter === 'inactive') {
+      list = list.filter((p) => !p.actif);
     }
 
     return list;
@@ -853,6 +860,7 @@ export class Employes implements OnInit {
       next: () => {
         this.success = 'Compte désactivé avec succès.';
         this.chargerToutLePersonnel();
+        this.closeDetailsModal();
         this.isLoading = false;
         setTimeout(() => (this.success = ''), 3000);
       },
@@ -862,6 +870,73 @@ export class Employes implements OnInit {
         setTimeout(() => (this.error = ''), 3500);
       }
     });
+  }
+
+  onPersonnelStatusFilterChange(): void {
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  private observableReactiverPersonnel(role: string, id: string) {
+    switch (role) {
+      case 'MEDECIN': return this.personnelService.reactiverMedecin(id);
+      case 'INFIRMIER': return this.personnelService.reactiverInfirmier(id);
+      case 'PHARMACIEN': return this.personnelService.reactiverPharmacien(id);
+      case 'SECRETAIRE': return this.personnelService.reactiverSecretaire(id);
+      case 'RADIOLOGUE': return this.personnelService.reactiverRadiologue(id);
+      case 'CHEF_PERSONNEL': return this.personnelService.reactiverChefPersonnel(id);
+      case 'TECHNICIEN_MAINTENANCE': return this.personnelService.reactiverTechnicienMaintenance(id);
+      default: return null;
+    }
+  }
+
+  reactiverCompte(personnel: any): void {
+    const id = personnel?.id;
+    if (!id) {
+      this.error = 'Identifiant du personnel introuvable.';
+      setTimeout(() => (this.error = ''), 3000);
+      return;
+    }
+
+    const role = (personnel?.role || this.getRoleValue() || '').replace(/^ROLE_/, '');
+    const observable = this.observableReactiverPersonnel(role, id);
+    if (!observable) {
+      this.error = `Rôle non pris en charge pour la réactivation: ${role || 'inconnu'}`;
+      setTimeout(() => (this.error = ''), 3500);
+      return;
+    }
+
+    this.isLoading = true;
+    observable.subscribe({
+      next: () => {
+        this.success = 'Compte réactivé avec succès.';
+        this.chargerToutLePersonnel();
+        this.closeDetailsModal();
+        this.isLoading = false;
+        setTimeout(() => (this.success = ''), 3000);
+      },
+      error: (err: any) => {
+        this.error = err?.error?.message || 'Erreur lors de la réactivation du compte.';
+        this.isLoading = false;
+        setTimeout(() => (this.error = ''), 3500);
+      }
+    });
+  }
+
+  confirmerReactivationPersonnel(personnel: any): void {
+    const name = `${personnel?.prenom ?? ''} ${personnel?.nom ?? ''}`.trim() || 'ce membre';
+    if (!confirm(`Réactiver ${name} ? Le compte pourra à nouveau se connecter.`)) {
+      return;
+    }
+    this.reactiverCompte(personnel);
+  }
+
+  confirmerDesactivationPersonnel(personnel: any): void {
+    const name = `${personnel?.prenom ?? ''} ${personnel?.nom ?? ''}`.trim() || 'ce membre';
+    if (!confirm(`Désactiver ${name} ? Le compte ne pourra plus se connecter.`)) {
+      return;
+    }
+    this.desactiverCompte(personnel);
   }
 
   // Utilitaires

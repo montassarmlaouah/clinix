@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, of, tap } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { LoginRequest, AuthResponse, AppRole, ROLES_PERSONNEL, VerificationCodeRequest } from '../model/user.model';
+import { AbonnementService } from './abonnement.service';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +12,10 @@ import { LoginRequest, AuthResponse, AppRole, ROLES_PERSONNEL, VerificationCodeR
 export class AuthService {
   private baseUrl = 'http://localhost:8080/auth';
   private smsUrl = 'http://localhost:8080/api/sms';
+  /** Abonnement cabinet actif et payé (vérifié via API billing). */
+  private cabinetAbonnementActif = false;
+  private cabinetAccessHydrated = false;
+  private readonly abonnementService = inject(AbonnementService);
 
   constructor(private http: HttpClient, private router: Router) { }
 
@@ -297,20 +303,66 @@ export class AuthService {
   }
 
   /**
+   * Accès fonctionnel cabinet : abonnement cabinet actif et payé uniquement.
+   */
+  peutAccederEspaceCabinet(): boolean {
+    return this.isMedecin() && this.cabinetAbonnementActif;
+  }
+
+  /** Tout médecin peut consulter les forfaits et payer un abonnement cabinet. */
+  peutVoirForfaitsCabinet(): boolean {
+    return this.isMedecin();
+  }
+
+  /** Abonnement cabinet manquant ou expiré (après hydrate). */
+  doitPayerAbonnementCabinet(): boolean {
+    return this.isMedecin() && this.cabinetAccessHydrated && !this.cabinetAbonnementActif;
+  }
+
+  isCabinetAccessHydrated(): boolean {
+    return this.cabinetAccessHydrated;
+  }
+
+  /** Charge l'état d'abonnement cabinet (sans reconnexion). */
+  hydrateCabinetAccess(): Observable<void> {
+    if (!this.isMedecin()) {
+      this.cabinetAccessHydrated = true;
+      return of(undefined);
+    }
+    return this.abonnementService.getCurrentSubscription('cabinet').pipe(
+      tap((cur) => {
+        this.cabinetAbonnementActif = cur?.accesAutorise === true;
+        this.cabinetAccessHydrated = true;
+      }),
+      map(() => undefined),
+      catchError(() => {
+        this.cabinetAbonnementActif = false;
+        this.cabinetAccessHydrated = true;
+        return of(undefined);
+      })
+    );
+  }
+
+  /**
    * Médecin pouvant gérer un cabinet (patients cabinet, abonnement cabinet).
    */
   isMedecinCabinet(): boolean {
-    return this.isMedecin() && this.getAccesCabinet();
+    return this.peutAccederEspaceCabinet();
   }
 
-  /** Médecin de clinique avec accès cabinet (deux abonnements possibles). */
+  /** Médecin de clinique avec abonnement cabinet actif. */
   medecinCliniqueEtCabinet(): boolean {
-    return this.isMedecin() && this.hasMedecinClinique() && this.getAccesCabinet();
+    return this.isMedecin() && this.hasMedecinClinique() && this.peutAccederEspaceCabinet();
   }
 
-  /** Abonnement / forfaits cabinet médical (médecin avec accès cabinet uniquement). */
+  /** Médecin de clinique pouvant souscrire / utiliser le module cabinet. */
+  medecinAvecModuleCabinet(): boolean {
+    return this.isMedecin() && (this.hasMedecinClinique() || this.isMedecinCabinetExclusif());
+  }
+
+  /** Abonnement / forfaits cabinet médical (consultation et paiement). */
   peutGererAbonnementCabinet(): boolean {
-    return this.isMedecin() && this.getAccesCabinet();
+    return this.peutVoirForfaitsCabinet();
   }
 
   isInfirmier(): boolean {

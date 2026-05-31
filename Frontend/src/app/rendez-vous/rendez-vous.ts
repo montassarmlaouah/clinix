@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { MSG_ABONNEMENT_CABINET_REQUIS, redirectSiAbonnementCabinetRequis } from '../service/cabinet-access.util';
 import { RendezVousService } from '../service/rendez-vous.service';
 import { AuthService } from '../service/auth-service';
 import { RendezVous, RendezVousDTO } from '../model/rendez-vous';
@@ -52,24 +53,32 @@ export class RendezVousComponent implements OnInit {
         private authService: AuthService,
         private patientService: PatientService,
         private medecinService: MedecinService,
-        private route: ActivatedRoute
+        private route: ActivatedRoute,
+        private router: Router
     ) { }
 
     ngOnInit(): void {
         this.route.queryParamMap.subscribe((params) => {
             this.scopeMode = this.resolveScope(params.get('scope'));
-            this.chargerRendezVous();
+            const demarrer = () => {
+                this.chargerRendezVous();
+                if (this.isSecretaire()) {
+                    this.chargerPatients();
+                    this.chargerMedecins();
+                }
+                if (this.isPatient()) {
+                    this.chargerMedecins();
+                }
+                if (this.isMedecin() && this.isScopeCabinet) {
+                    this.chargerPatientsCabinet();
+                }
+            };
+            if (this.isMedecin() && this.scopeMode === 'cabinet') {
+                this.authService.hydrateCabinetAccess().subscribe(() => demarrer());
+            } else {
+                demarrer();
+            }
         });
-        if (this.isSecretaire()) {
-            this.chargerPatients();
-            this.chargerMedecins();
-        }
-        if (this.isPatient()) {
-            this.chargerMedecins();
-        }
-        if (this.isMedecin() && this.isScopeCabinet) {
-            this.chargerPatientsCabinet();
-        }
     }
 
     get isScopeCabinet(): boolean {
@@ -83,7 +92,18 @@ export class RendezVousComponent implements OnInit {
         if (this.authService.isMedecinCabinetExclusif()) {
             return 'cabinet';
         }
+        if (
+            this.authService.isMedecin() &&
+            this.authService.peutAccederEspaceCabinet() &&
+            !this.authService.hasMedecinClinique()
+        ) {
+            return 'cabinet';
+        }
         return 'clinique';
+    }
+
+    private get apiScope(): 'clinique' | 'cabinet' | undefined {
+        return this.isScopeCabinet ? 'cabinet' : undefined;
     }
 
     ouvrirModalPrendreRdv(): void {
@@ -131,8 +151,12 @@ export class RendezVousComponent implements OnInit {
                 return;
             }
             if (this.isScopeCabinet) {
-                if (!this.authService.getAccesCabinet()) {
-                    this.error = 'Accès cabinet non activé pour votre compte.';
+                if (redirectSiAbonnementCabinetRequis(this.authService, this.router)) {
+                    this.loading = false;
+                    return;
+                }
+                if (!this.authService.peutAccederEspaceCabinet()) {
+                    this.error = MSG_ABONNEMENT_CABINET_REQUIS;
                     this.loading = false;
                     return;
                 }
@@ -274,7 +298,7 @@ export class RendezVousComponent implements OnInit {
 
         this.error = null;
         if (this.isEditMode && this.selectedRendezVous?.id) {
-            this.rendezVousService.updateRendezVous(this.selectedRendezVous.id, this.formData).subscribe({
+            this.rendezVousService.updateRendezVous(this.selectedRendezVous.id, this.formData, this.apiScope).subscribe({
                 next: () => {
                     this.successMessage = 'Rendez-vous modifié avec succès';
                     this.fermerModal();
@@ -285,7 +309,7 @@ export class RendezVousComponent implements OnInit {
                 }
             });
         } else {
-            this.rendezVousService.creerRendezVous(this.formData).subscribe({
+            this.rendezVousService.creerRendezVous(this.formData, this.apiScope).subscribe({
                 next: () => {
                     this.successMessage = 'Rendez-vous créé avec succès';
                     this.fermerModal();

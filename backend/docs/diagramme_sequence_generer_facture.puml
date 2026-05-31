@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+
+title sd [Generer une facture patient (sortie hospitalisation)]
+
+autonumber
+
+actor Secretaire as "Secretaire / Admin clinique"
+boundary UI as ":UI Facturation patient"
+control Controller as "FacturationPatientController"
+control Service as "FacturationPatientService"
+entity DAO as "FacturePatientRepository"
+
+ref over Secretaire, UI
+  S'authentifier
+end ref
+
+Secretaire -> UI : 1 : Selectionner une hospitalisation terminee
+Secretaire -> UI : 2 : Cliquer sur Generer la facture
+UI -> Controller : 3 : POST /api/facturation-patient/generer
+Controller -> Service : 4 : genererDepuisHospitalisation(request)
+Service -> DAO : 5 : Charger hospitalisation + patient + chambre
+DAO --> Service : 6 : Donnees sejour
+
+alt Hospitalisation introuvable ou deja facturee
+  Service --> Controller : 7 : Erreur metier
+  Controller --> UI : 8 : 400 Bad Request
+  UI --> Secretaire : 9 : Afficher message d'erreur
+else Generation valide
+  Service -> Service : 7 : Cloturer sejour (date sortie, liberer chambre)
+  Service -> Service : 8 : Calculer jours + lignes prestations CNAM
+  Service -> DAO : 9 : save(facture statut BROUILLON)
+  DAO --> Service : 10 : FacturePatient
+  Service --> Controller : 11 : Facture brouillon
+  Controller --> UI : 12 : 201 Created
+  UI --> Secretaire : 13 : Afficher facture generee
+end
+
+@enduml

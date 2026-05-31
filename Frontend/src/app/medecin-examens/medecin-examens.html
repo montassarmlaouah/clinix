@@ -1,51 +1,219 @@
-<div class="page-wrap">
-  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
-  <h1>Examens (imagerie)</h1>
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
 
-  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Examens (imagerie)</h1>
+      <p class="page-subtitle">Demandes d'imagerie, suivi radiologique et comptes rendus.</p>
+    </div>
+    <div class="header-actions" *ngIf="medecinId">
+      <button type="button" class="btn btn-luna-primary btn-open-demande" (click)="ouvrirModalDemande()">
+        <i class="bi bi-plus-lg"></i>
+        Nouvelle demande
+      </button>
+    </div>
+  </header>
 
-  <div class="panel">
-    <h2>Nouvelle demande</h2>
-    <label>Patient</label>
-    <select class="form-control" [(ngModel)]="patientId">
-      <option value="">— Choisir —</option>
-      <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
-    </select>
-    <label class="mt-2">Type</label>
-    <input class="form-control" [(ngModel)]="form.type" placeholder="Ex. RADIO, SCANNER, IRM" />
-    <label class="mt-2">Motif clinique</label>
-    <textarea class="form-control" rows="2" [(ngModel)]="form.motif"></textarea>
-    <label class="mt-2">Indications cliniques</label>
-    <textarea class="form-control" rows="2" [(ngModel)]="form.indicationsCliniques" placeholder="Contexte, antécédents utiles…"></textarea>
-    <label class="mt-2">Questions / objectifs pour le radiologue</label>
-    <textarea class="form-control" rows="2" [(ngModel)]="form.questionsMedecin" placeholder="Ex. recherche de fracture, suspicion AVC…"></textarea>
-    <label class="mt-2">Documents joints (références)</label>
-    <textarea class="form-control" rows="2" [(ngModel)]="form.piecesJointes" placeholder="Noms de fichiers, chemins ou liens"></textarea>
-    <label class="mt-2">Niveau d'urgence</label>
-    <select class="form-control" [(ngModel)]="form.niveauUrgence">
-      <option value="BASSE">Basse</option>
-      <option value="NORMALE">Normale</option>
-      <option value="HAUTE">Haute</option>
-      <option value="URGENTE">Urgente</option>
-    </select>
-    <button class="btn btn-primary mt-2" (click)="demander()" [disabled]="!medecinId">Envoyer la demande</button>
+  <div class="messages-section">
+    <div class="alert alert-luna-success" *ngIf="success">
+      <i class="bi bi-check-circle-fill"></i>
+      <span>{{ success }}</span>
+    </div>
+    <div class="alert alert-luna-danger" *ngIf="error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ error }}</span>
+    </div>
   </div>
 
-  <div class="panel">
-    <h2>Mes demandes</h2>
-    <div *ngIf="loading">Chargement…</div>
-    <table class="table table-sm" *ngIf="!loading && liste.length">
-      <thead><tr><th>Date</th><th>Patient</th><th>Type</th><th>Urgence</th><th>Statut</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let e of liste">
-          <td>{{ e.date | date:'shortDate' }}</td>
-          <td>{{ e.patient?.prenom }} {{ e.patient?.nom }}</td>
-          <td>{{ e.type }}</td>
-          <td>{{ e.niveauUrgence || '—' }}</td>
-          <td>{{ e.statut || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p *ngIf="!loading && !liste.length" class="text-muted">Aucune demande.</p>
+  <div class="stats-grid">
+    <div class="stat-card card-pending">
+      <i class="bi bi-hourglass-split stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statEnAttente }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card card-warning">
+      <i class="bi bi-radioactive stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statEnCours }}</span>
+        <span class="stat-label">En cours</span>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <i class="bi bi-check-circle stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTermines }}</span>
+        <span class="stat-label">Terminés / validés</span>
+      </div>
+    </div>
+    <div class="stat-card card-total">
+      <i class="bi bi-list-ul stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTotal }}</span>
+        <span class="stat-label">Total demandes</span>
+      </div>
+    </div>
   </div>
+
+  <section class="filters-section" aria-label="Filtres">
+    <div class="filter-field">
+      <label for="search-examens">Rechercher</label>
+      <div class="input-with-icon">
+        <i class="bi bi-search"></i>
+        <input
+          id="search-examens"
+          type="search"
+          class="luna-input"
+          [(ngModel)]="searchText"
+          placeholder="Patient, type, motif, statut…"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <div class="demande-modal-backdrop" *ngIf="showDemandeModal" (click)="fermerModalDemande()">
+    <div
+      class="demande-modal-panel luna-shadow"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="examen-modal-title"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="demande-card-head demande-modal-head">
+        <h2 id="examen-modal-title" class="demande-card-title">Nouvelle demande d'imagerie</h2>
+        <button type="button" class="demande-modal-close" (click)="fermerModalDemande()" aria-label="Fermer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="demande-card-body">
+        <div class="form-section">
+          <h3 class="form-section-title"><i class="bi bi-person-heart"></i> Patient</h3>
+          <label class="field-label">Patient <span class="req">*</span></label>
+          <div class="input-with-icon">
+            <i class="bi bi-person"></i>
+            <select class="luna-input luna-select" [(ngModel)]="patientId">
+              <option value="">Sélectionnez un patient</option>
+              <option *ngFor="let p of patients" [value]="p.id">{{ p.prenom }} {{ p.nom }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="form-section-title"><i class="bi bi-radioactive"></i> Examen</h3>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="field-label">Type <span class="req">*</span></label>
+              <div class="input-with-icon">
+                <i class="bi bi-tag"></i>
+                <input class="luna-input" [(ngModel)]="form.type" placeholder="RADIO, SCANNER, IRM…" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="field-label">Niveau d'urgence</label>
+              <div class="input-with-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+                <select class="luna-input luna-select" [(ngModel)]="form.niveauUrgence">
+                  <option value="BASSE">Basse</option>
+                  <option value="NORMALE">Normale</option>
+                  <option value="HAUTE">Haute</option>
+                  <option value="URGENTE">Urgente</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Motif clinique</label>
+              <textarea class="luna-input luna-textarea" rows="2" [(ngModel)]="form.motif"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Indications cliniques</label>
+              <textarea class="luna-input luna-textarea" rows="2" [(ngModel)]="form.indicationsCliniques" placeholder="Contexte, antécédents…"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Questions pour le radiologue</label>
+              <textarea class="luna-input luna-textarea" rows="2" [(ngModel)]="form.questionsMedecin"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="field-label">Documents joints (références)</label>
+              <textarea class="luna-input luna-textarea" rows="2" [(ngModel)]="form.piecesJointes"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="demande-actions">
+          <button type="button" class="btn btn-luna-outline" (click)="fermerModalDemande()">
+            <i class="bi bi-x-lg"></i> Annuler
+          </button>
+          <button type="button" class="btn btn-luna-outline" (click)="resetForm()">
+            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+          </button>
+          <button type="button" class="btn btn-luna-primary" (click)="demander()" [disabled]="!medecinId">
+            <i class="bi bi-send-check"></i> Envoyer la demande
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="suivi-block" aria-labelledby="examens-heading">
+    <div class="suivi-header">
+      <h2 id="examens-heading" class="suivi-title">Mes demandes d'imagerie</h2>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="loading">
+      <i class="bi bi-arrow-repeat"></i>
+      <p>Chargement des demandes…</p>
+    </div>
+
+    <div class="table-container luna-shadow" *ngIf="!loading && filteredListe.length">
+      <div class="table-scroll">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Type</th>
+              <th>Urgence</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="luna-row" *ngFor="let e of filteredListe">
+              <td class="date-cell">{{ e.date | date : 'shortDate' }}</td>
+              <td>
+                <div class="cell-primary">{{ e.patient?.prenom }} {{ e.patient?.nom }}</div>
+                <div class="cell-muted" *ngIf="e.motif">{{ e.motif }}</div>
+              </td>
+              <td>{{ e.type }}</td>
+              <td>{{ libelleUrgence(e.niveauUrgence) }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="statutPillClass(e.statut)">
+                  {{ libelleStatut(e.statut) }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-container">
+        <p class="pagination-info">
+          Affichage de {{ filteredListe.length }} sur {{ liste.length }} demande{{ liste.length > 1 ? 's' : '' }}
+          <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && liste.length && !filteredListe.length">
+      <i class="bi bi-search"></i>
+      <p>Aucun résultat pour « {{ searchText }} ».</p>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && !liste.length">
+      <i class="bi bi-inbox"></i>
+      <p>Aucune demande d'imagerie pour le moment.</p>
+    </div>
+  </section>
 </div>

@@ -1,7 +1,9 @@
 <div class="tarifs-page">
   <header class="tarifs-hero">
-    <a routerLink="/mon-abonnement" class="back-link"><i class="fas fa-arrow-left"></i> Mon abonnement</a>
-    <h1>Forfaits clinique</h1>
+    <a routerLink="/mon-abonnement" [queryParams]="{ scope: billingScope }" class="back-link">
+      <i class="fas fa-arrow-left"></i> Mon abonnement
+    </a>
+    <h1>{{ billingScope === 'cabinet' ? 'Forfaits cabinet' : 'Forfaits clinique' }}</h1>
     <p class="lead">
       Forfaits définis par le super administrateur. Choisissez la facturation, puis continuez vers une page sécurisée
       <strong>Stripe (mode test)</strong> pour saisir une carte (ex. 4242 4242 4242 4242).
@@ -28,17 +30,22 @@
   </header>
 
   <section class="messages-section">
+    <div class="alert alert-info" *ngIf="messagePaiementRequis">
+      <i class="fas fa-info-circle"></i> {{ messagePaiementRequis }}
+    </div>
     <div class="alert alert-danger" *ngIf="error">
       <i class="fas fa-circle-exclamation"></i> {{ error }}
     </div>
     <div class="alert alert-success" *ngIf="simSuccess">
       <i class="fas fa-check-circle"></i> {{ simSuccess }}
-      <a routerLink="/mon-abonnement" class="inline-link" *ngIf="!abonnementPaye">Voir mon abonnement</a>
+      <a routerLink="/mon-abonnement" [queryParams]="{ scope: billingScope }" class="inline-link" *ngIf="!abonnementPaye"
+        >Voir mon abonnement</a
+      >
     </div>
     <div class="alert alert-info" *ngIf="abonnementPaye">
       <i class="fas fa-shield-check"></i>
       Abonnement déjà actif et payé — les boutons de paiement sont désactivés.
-      <a routerLink="/mon-abonnement" class="inline-link">Retour à mon abonnement</a>
+      <a routerLink="/mon-abonnement" [queryParams]="{ scope: billingScope }" class="inline-link">Retour à mon abonnement</a>
     </div>
   </section>
 
@@ -82,6 +89,6 @@
 
   <div class="empty" *ngIf="!loading && !offres.length && !error">
     <p>Aucun forfait clinique actif pour le moment.</p>
-    <a routerLink="/mon-abonnement" class="back-link">Retour</a>
+    <a routerLink="/mon-abonnement" [queryParams]="{ scope: billingScope }" class="back-link">Retour</a>
   </div>
 </div>

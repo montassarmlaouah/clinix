@@ -16,6 +16,7 @@ export interface Patient {
   typeAdmission?: string;
   numeroPatient?: string;
   verifieParSecretaire?: boolean;
+  actif?: boolean;
   dossierMedical?: unknown;
   // Champs UI historiques — le backend peut ne pas les renseigner
   cin?:                    string;
@@ -92,4 +93,10 @@ export const patientService = {
 
   deletePatient: (id: number | string) =>
     apiDelete<void>(PATIENTS.DELETE(id)),
+
+  reactiverPatient: (id: number | string) =>
+    apiPut<Patient>(PATIENTS.REACTIVER(id), {}),
+
+  getInactifsByClinique: (cliniqueId: number | string) =>
+    apiGet<Patient[]>(PATIENTS.INACTIFS_BY_CLINIQUE(cliniqueId)),
 };

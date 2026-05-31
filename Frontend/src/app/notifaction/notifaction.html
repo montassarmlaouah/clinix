@@ -1,106 +1,145 @@
-<section class="notifications-page" aria-labelledby="notifications-heading">
-  <header class="notifications-hero">
-    <div class="notifications-hero__text">
-      <div class="notifications-hero__icon-wrap" aria-hidden="true">
-        <i class="bi bi-bell-fill"></i>
-      </div>
-      <div>
-        <h1 id="notifications-heading" class="notifications-hero__title">Notifications</h1>
-        <p class="notifications-hero__subtitle">
-          Aujourd’hui · <strong>{{ todayNotifications.length }}</strong>
-          {{ todayNotifications.length === 1 ? 'élément' : 'éléments' }}
-        </p>
-      </div>
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/dashboard"><i class="bi bi-arrow-left"></i> Tableau de bord</a>
+  </nav>
+
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Notifications</h1>
+      <p class="page-subtitle">
+        Aujourd'hui · <strong>{{ todayNotifications.length }}</strong>
+        {{ todayNotifications.length === 1 ? 'élément' : 'éléments' }}
+      </p>
     </div>
-    <div class="notifications-hero__stats" role="status">
-      <div class="stat-pill stat-pill--muted" *ngIf="todayNotifications.length > 0">
-        <span class="stat-pill__value">{{ todayNotifications.length - unreadToday }}</span>
-        <span class="stat-pill__label">Lues</span>
-      </div>
-      <div class="stat-pill stat-pill--accent" *ngIf="unreadToday > 0">
-        <span class="stat-pill__value">{{ unreadToday }}</span>
-        <span class="stat-pill__label">Non lues</span>
-      </div>
-      <div class="stat-pill stat-pill--muted" *ngIf="todayNotifications.length === 0">
-        <span class="stat-pill__label">Aucune pour aujourd’hui</span>
-      </div>
-    </div>
-    <div class="notifications-hero__actions">
-      <span class="badge-live" *ngIf="unreadCount > 0">
-        <span class="badge-live__dot"></span>
-        {{ unreadCount }} au total non lue(s)
-      </span>
-      <button type="button" class="btn-ghost" (click)="loadTodayNotifications()" [disabled]="loading">
+    <div class="header-actions">
+      <button type="button" class="btn btn-luna-outline" (click)="loadTodayNotifications()" [disabled]="loading">
         <i class="bi bi-arrow-clockwise" [class.spin]="loading"></i>
         Actualiser
       </button>
-      <button type="button" class="btn-solid" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
+      <button type="button" class="btn btn-luna-primary" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
         <i class="bi bi-check2-all"></i>
         Tout marquer comme lu
       </button>
     </div>
   </header>
 
-  <div class="notifications-panel">
-    <div class="loading-block" *ngIf="loading">
-      <div class="loading-block__spinner" role="status">
-        <span class="visually-hidden">Chargement des notifications…</span>
-      </div>
-      <p>Chargement…</p>
-    </div>
-
-    <div class="alert-banner" *ngIf="error" role="alert">
+  <div class="messages-section">
+    <div class="alert alert-luna-danger" *ngIf="error" role="alert">
       <i class="bi bi-exclamation-triangle-fill"></i>
       <span>{{ error }}</span>
     </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card card-total">
+      <i class="bi bi-bell stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ todayNotifications.length }}</span>
+        <span class="stat-label">Aujourd'hui</span>
+      </div>
+    </div>
+    <div class="stat-card card-warning">
+      <i class="bi bi-envelope stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ unreadToday }}</span>
+        <span class="stat-label">Non lues (jour)</span>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <i class="bi bi-envelope-open stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ readToday }}</span>
+        <span class="stat-label">Lues (jour)</span>
+      </div>
+    </div>
+    <div class="stat-card card-pending">
+      <i class="bi bi-inbox stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ unreadCount }}</span>
+        <span class="stat-label">Total non lues</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="filters-section" aria-label="Filtres">
+    <div class="filter-field">
+      <label for="search-notif">Rechercher</label>
+      <div class="input-with-icon">
+        <i class="bi bi-search"></i>
+        <input
+          id="search-notif"
+          type="search"
+          class="luna-input"
+          [(ngModel)]="searchText"
+          placeholder="Titre, message, type…"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="suivi-block" aria-labelledby="notif-heading">
+    <div class="suivi-header">
+      <h2 id="notif-heading" class="suivi-title">Notifications du jour</h2>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="loading">
+      <i class="bi bi-arrow-repeat spin"></i>
+      <p>Chargement des notifications…</p>
+    </div>
 
     <div class="notifications-list" *ngIf="!loading && !error">
-      <div class="empty-state" *ngIf="todayNotifications.length === 0">
-        <div class="empty-state__icon">
-          <i class="bi bi-inbox"></i>
-        </div>
-        <h2 class="empty-state__title">Boîte vide pour aujourd’hui</h2>
-        <p class="empty-state__text">Les nouvelles alertes apparaîtront ici. Vous pouvez actualiser pour vérifier.</p>
-        <button type="button" class="btn-outline" (click)="loadTodayNotifications()">
-          <i class="bi bi-arrow-clockwise"></i>
-          Actualiser
+      <div class="empty-state luna-shadow" *ngIf="todayNotifications.length === 0">
+        <i class="bi bi-inbox"></i>
+        <h2 class="suivi-title mb-2">Boîte vide pour aujourd'hui</h2>
+        <p>Les nouvelles alertes apparaîtront ici.</p>
+        <button type="button" class="btn btn-luna-outline mt-3" (click)="loadTodayNotifications()">
+          <i class="bi bi-arrow-clockwise"></i> Actualiser
         </button>
       </div>
 
+      <div class="empty-state luna-shadow" *ngIf="todayNotifications.length && !filteredNotifications.length">
+        <i class="bi bi-search"></i>
+        <p>Aucun résultat pour « {{ searchText }} ».</p>
+      </div>
+
       <article
-        class="notification-card"
-        *ngFor="let notification of todayNotifications; trackBy: trackByNotifId"
+        class="notification-card luna-shadow"
+        *ngFor="let notification of filteredNotifications; trackBy: trackByNotifId"
         [ngClass]="getNotificationClass(notification.type)"
         [class.notification-card--unread]="!notification.lu"
         (click)="markAsRead(notification)"
-        [attr.aria-label]="notification.titre">
+        [attr.aria-label]="notification.titre"
+      >
         <div class="notification-card__accent" aria-hidden="true"></div>
         <div class="notification-card__icon" aria-hidden="true">
           <i class="bi" [ngClass]="getNotificationIcon(notification.type)"></i>
         </div>
         <div class="notification-card__body">
           <div class="notification-card__top">
-            <h2 class="notification-card__title">{{ notification.titre }}</h2>
+            <h3 class="notification-card__title">{{ notification.titre }}</h3>
             <time class="notification-card__time" [attr.datetime]="notification.dateCreation">
               {{ formatDate(notification.dateCreation) }}
             </time>
           </div>
           <p class="notification-card__message">{{ notification.message }}</p>
           <div class="notification-card__meta">
-            <span class="type-chip" [attr.data-type]="((notification.type && notification.type.trim()) ? notification.type : 'INFO').toLowerCase()">
+            <span
+              class="status-pill"
+              [attr.data-type]="((notification.type && notification.type.trim()) ? notification.type : 'INFO').toLowerCase()"
+            >
               {{ libelleType(notification.type) }}
             </span>
-            <span class="new-chip" *ngIf="!notification.lu">
-              <span class="new-chip__dot"></span>
-              Nouveau
+            <span class="status-pill vp-doc" *ngIf="!notification.lu">
+              <i class="bi bi-circle-fill" style="font-size: 0.45rem"></i> Nouveau
             </span>
             <a
               *ngIf="notification.actionUrl && lienNotificationAutorise(notification)"
-              class="link-open"
+              class="btn btn-luna-outline btn-compact ms-auto"
               [routerLink]="notification.actionUrl"
-              (click)="$event.stopPropagation()">
-              <span>Ouvrir</span>
-              <i class="bi bi-arrow-up-right"></i>
+              (click)="$event.stopPropagation()"
+            >
+              Ouvrir <i class="bi bi-arrow-up-right"></i>
             </a>
           </div>
         </div>
@@ -109,12 +148,20 @@
             type="button"
             class="btn-icon-delete"
             (click)="deleteNotification(notification.id); $event.stopPropagation()"
-            title="Supprimer cette notification"
-            aria-label="Supprimer">
+            title="Supprimer"
+            aria-label="Supprimer"
+          >
             <i class="bi bi-trash3"></i>
           </button>
         </div>
       </article>
     </div>
-  </div>
-</section>
+
+    <div class="pagination-container" *ngIf="!loading && filteredNotifications.length">
+      <p class="pagination-info">
+        {{ filteredNotifications.length }} notification{{ filteredNotifications.length > 1 ? 's' : '' }}
+        <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+      </p>
+    </div>
+  </section>
+</div>

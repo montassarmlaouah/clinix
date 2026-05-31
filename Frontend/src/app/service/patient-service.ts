@@ -57,6 +57,14 @@ export class PatientService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
+  reactiverPatient(id: string): Observable<Patient> {
+    return this.http.put<Patient>(`${this.baseUrl}/${id}/reactiver`, {});
+  }
+
+  getPatientsInactifsParClinique(cliniqueId: string): Observable<Patient[]> {
+    return this.http.get<Patient[]>(`${this.baseUrl}/clinique/${cliniqueId}/inactifs`);
+  }
+
   // Rechercher des patients
   rechercherPatients(keyword: string): Observable<Patient[]> {
     return this.http.get<Patient[]>(`${this.baseUrl}/recherche?keyword=${keyword}`);
@@ -64,10 +72,14 @@ export class PatientService {
 
   /** Patients suivis en cabinet par le médecin connecté (GET /api/medecins/{id}/patients). */
   getPatientsCabinetMedecin(medecinId: string): Observable<Patient[]> {
-    return this.http.get<Patient[]>(`${environment.apiUrl}/api/medecins/${medecinId}/patients`);
+    return this.http.get<Patient[]>(`${environment.apiUrl}/api/medecins/${medecinId}/patients`, {
+      params: { scope: 'cabinet' },
+    });
   }
 
   creerPatientCabinet(medecinId: string, dto: PatientDTO): Observable<Patient> {
-    return this.http.post<Patient>(`${environment.apiUrl}/api/medecins/${medecinId}/patients`, dto);
+    return this.http.post<Patient>(`${environment.apiUrl}/api/medecins/${medecinId}/patients`, dto, {
+      params: { scope: 'cabinet' },
+    });
   }
 }

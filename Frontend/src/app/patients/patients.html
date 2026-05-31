@@ -40,9 +40,20 @@
           <option value="CABINET">Cabinet</option>
         </select>
       </div>
+      <div class="filter-group" *ngIf="peutVoirArchives">
+        <label class="luna-label">Affichage</label>
+        <div class="btn-group">
+          <button type="button" class="btn btn-sm" [class.btn-primary]="patientView === 'actifs'" (click)="switchPatientView('actifs')">
+            Actifs
+          </button>
+          <button type="button" class="btn btn-sm" [class.btn-primary]="patientView === 'archives'" (click)="switchPatientView('archives')">
+            Archivés
+          </button>
+        </div>
+      </div>
     </section>
 
-    <div class="d-flex justify-content-end mb-3" *ngIf="!auth.isInfirmier()">
+    <div class="d-flex justify-content-end mb-3" *ngIf="!auth.isInfirmier() && patientView === 'actifs'">
       <button class="btn btn-primary" (click)="openModal()">
         <i class="fas fa-plus"></i> Ajouter un patient
       </button>
@@ -61,6 +72,15 @@
         </div>
         <button type="button" class="luna-list-edit" title="Voir" (click)="viewPatient(patient); $event.stopPropagation()">
           <i class="fas fa-pencil-alt"></i>
+        </button>
+        <button
+          type="button"
+          class="luna-list-edit ms-1"
+          title="Réactiver"
+          *ngIf="patientView === 'archives'"
+          (click)="reactiverPatient(patient); $event.stopPropagation()"
+        >
+          <i class="fas fa-undo"></i>
         </button>
       </div>
       <div class="empty-state" *ngIf="paginatedPatients.length === 0">
@@ -372,6 +392,22 @@
             </div>
           </div>
           <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-danger me-2"
+              *ngIf="peutDesactiverPatient() && selectedPatient && patientView === 'actifs'"
+              (click)="desactiverPatient(selectedPatient!)"
+            >
+              Désactiver le patient
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-success me-2"
+              *ngIf="peutVoirArchives && selectedPatient && patientView === 'archives'"
+              (click)="reactiverPatient(selectedPatient!)"
+            >
+              Réactiver le patient
+            </button>
             <button
               type="button"
               class="btn btn-outline-primary me-auto"

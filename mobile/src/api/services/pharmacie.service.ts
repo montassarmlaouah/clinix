@@ -51,6 +51,38 @@ export const pharmacieService = {
   listStocksBas: (cliniqueId?: string | number | null) =>
     apiGet<Stock[]>(`${STOCKS.BAS}${cliniqueQuery(cliniqueId)}`),
 
+  entreeStock: (id: string, quantite: number) =>
+    apiPut<Stock>(STOCKS.ENTREE(id), { quantite }),
+
+  sortieStock: (id: string, quantite: number) =>
+    apiPut<Stock>(STOCKS.SORTIE(id), { quantite }),
+
+  renvoyerAlerteEmail: (id: string) =>
+    apiPost<void>(STOCKS.ALERTE_EMAIL(id), {}),
+
+  createStock: (payload: {
+    medicamentId: string;
+    quantite: number;
+    lot: string;
+    seuilAlerte: number;
+    dateExpiration?: string;
+    cliniqueId?: string | number | null;
+  }) => apiPost<Stock>(STOCKS.CREATE, payload),
+
+  updateStock: (
+    id: string,
+    payload: {
+      medicamentId: string;
+      quantite: number;
+      lot: string;
+      seuilAlerte: number;
+      dateExpiration?: string;
+      cliniqueId?: string | number | null;
+    },
+  ) => apiPut<Stock>(STOCKS.UPDATE(id), payload),
+
+  deleteStock: (id: string) => apiDelete<void>(STOCKS.DELETE(id)),
+
   listDemandesEnAttente: (cliniqueId?: string | number | null) =>
     apiGet<DemandeMedicament[]>(
       `${DEMANDES_MEDICAMENT.EN_ATTENTE}${cliniqueQuery(cliniqueId)}`,

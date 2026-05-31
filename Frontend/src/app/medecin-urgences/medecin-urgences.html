@@ -1,36 +1,159 @@
-<div class="page-wrap">
-  <nav class="back-nav"><a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a></nav>
-  <h1>Urgences</h1>
+<div class="licences-container">
+  <nav class="back-nav">
+    <a routerLink="/medecin"><i class="bi bi-arrow-left"></i> Espace médecin</a>
+  </nav>
 
-  <div class="alert alert-danger" *ngIf="error">{{ error }}</div>
-  <div *ngIf="loading">Chargement…</div>
+  <header class="page-header">
+    <div class="header-title">
+      <h1>Urgences</h1>
+      <p class="page-subtitle">Prises en charge actives et file d’attente.</p>
+    </div>
+  </header>
 
-  <div class="panel" *ngIf="!loading">
-    <h2>Urgences actives</h2>
-    <table class="table table-sm" *ngIf="actives.length">
-      <thead><tr><th>Patient</th><th>Motif</th><th>Niveau</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let u of actives">
-          <td>{{ u.patient ? (u.patient.prenom + ' ' + u.patient.nom) : '—' }}</td>
-          <td>{{ u.motif || u.description || '—' }}</td>
-          <td>{{ u.niveau || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p *ngIf="!actives.length" class="text-muted">Aucune urgence active.</p>
+  <div class="messages-section">
+    <div class="alert alert-luna-danger" *ngIf="error">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ error }}</span>
+    </div>
   </div>
 
-  <div class="panel" *ngIf="!loading">
-    <h2>En attente</h2>
-    <table class="table table-sm" *ngIf="enAttente.length">
-      <thead><tr><th>Patient</th><th>Motif</th></tr></thead>
-      <tbody>
-        <tr *ngFor="let u of enAttente">
-          <td>{{ u.patient ? (u.patient.prenom + ' ' + u.patient.nom) : '—' }}</td>
-          <td>{{ u.motif || u.description || '—' }}</td>
-        </tr>
-      </tbody>
-    </table>
-    <p *ngIf="!enAttente.length" class="text-muted">Aucune urgence en attente.</p>
+  <div class="stats-grid stats-grid-3">
+    <div class="stat-card card-pending">
+      <i class="bi bi-lightning-charge stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statActives }}</span>
+        <span class="stat-label">Urgences actives</span>
+      </div>
+    </div>
+    <div class="stat-card card-warning">
+      <i class="bi bi-hourglass-split stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statEnAttente }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <i class="bi bi-clipboard2-pulse stat-icon"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ statTotal }}</span>
+        <span class="stat-label">Total affiché</span>
+      </div>
+    </div>
   </div>
+
+  <section class="filters-section" aria-label="Filtres">
+    <div class="filter-field">
+      <label for="search-urg">Rechercher</label>
+      <div class="input-with-icon">
+        <i class="bi bi-search"></i>
+        <input
+          id="search-urg"
+          type="search"
+          class="luna-input"
+          [(ngModel)]="searchText"
+          placeholder="Patient, motif, niveau…"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="suivi-block" aria-labelledby="urg-actives-heading">
+    <div class="suivi-header">
+      <h2 id="urg-actives-heading" class="suivi-title">Urgences actives</h2>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="loading">
+      <i class="bi bi-arrow-repeat"></i>
+      <p>Chargement…</p>
+    </div>
+
+    <div class="table-container luna-shadow" *ngIf="!loading && filteredActives.length">
+      <div class="table-scroll">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Motif</th>
+              <th>Niveau</th>
+              <th>Date / heure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="luna-row" *ngFor="let u of filteredActives">
+              <td>
+                <div class="cell-primary">{{ libellePatient(u) }}</div>
+              </td>
+              <td>{{ libelleMotif(u) }}</td>
+              <td>
+                <span [ngClass]="niveauClass(u.niveau)">{{ u.niveau || '—' }}</span>
+              </td>
+              <td class="date-cell">{{ u.dateHeure ? (u.dateHeure | date : 'dd/MM/yyyy HH:mm') : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-container">
+        <p class="pagination-info">
+          {{ filteredActives.length }} urgence{{ filteredActives.length > 1 ? 's' : '' }} active{{ filteredActives.length > 1 ? 's' : '' }}
+          <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && actives.length && !filteredActives.length">
+      <i class="bi bi-search"></i>
+      <p>Aucun résultat pour « {{ searchText }} ».</p>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && !actives.length && !error">
+      <i class="bi bi-inbox"></i>
+      <p>Aucune urgence active.</p>
+    </div>
+  </section>
+
+  <section class="suivi-block" aria-labelledby="urg-attente-heading">
+    <div class="suivi-header">
+      <h2 id="urg-attente-heading" class="suivi-title">File d’attente</h2>
+    </div>
+
+    <div class="table-container luna-shadow" *ngIf="!loading && filteredEnAttente.length">
+      <div class="table-scroll">
+        <table class="licences-table">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Motif</th>
+              <th>Date / heure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="luna-row" *ngFor="let u of filteredEnAttente">
+              <td>
+                <div class="cell-primary">{{ libellePatient(u) }}</div>
+              </td>
+              <td>{{ libelleMotif(u) }}</td>
+              <td class="date-cell">{{ u.dateHeure ? (u.dateHeure | date : 'dd/MM/yyyy HH:mm') : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination-container">
+        <p class="pagination-info">
+          {{ filteredEnAttente.length }} en attente
+          <ng-container *ngIf="searchText.trim()"> (filtrées)</ng-container>
+        </p>
+      </div>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && enAttente.length && !filteredEnAttente.length">
+      <i class="bi bi-search"></i>
+      <p>Aucun résultat pour « {{ searchText }} ».</p>
+    </div>
+
+    <div class="empty-state luna-shadow" *ngIf="!loading && !enAttente.length && !error">
+      <i class="bi bi-inbox"></i>
+      <p>Aucune urgence en attente.</p>
+    </div>
+  </section>
 </div>

@@ -1,34 +1,44 @@
 @startuml
 !theme plain
 
-title Diagramme de sequence - Connexion utilisateur
+title Diagramme de sequence - Connexion JWT (alias connexion)
 
 autonumber
 
 actor Utilisateur
 boundary Frontend as "Application Angular"
-control API as "Backend Spring Boot"
-control AuthService as "Service Authentification"
+control AuthController as "AuthController"
+control AuthManager as "AuthenticationManager"
+control UserDetails as "AppUserDetailsService"
+control JwtUtil as "JwtUtil"
 database DB as "Base de donnees"
 
-Utilisateur -> Frontend: Saisir email + mot de passe
-Frontend -> API: POST /auth/login (credentials)
-API -> AuthService: authentifier(credentials)
-AuthService -> DB: Rechercher utilisateur par email
-DB --> AuthService: Utilisateur + hash + roles
-AuthService -> AuthService: Verifier le mot de passe
+Utilisateur -> Frontend: Saisir identifiant + mot de passe
+Utilisateur -> Frontend: Cliquer sur Se connecter
+Frontend -> AuthController: POST /auth/login {username, password}
 
-alt Identifiants valides
-	AuthService -> AuthService: Generer access token (JWT)
-	AuthService -> AuthService: Generer refresh token
-	AuthService --> API: Tokens + profil utilisateur
-	API --> Frontend: 200 OK + tokens + profil
-	Frontend -> Frontend: Stocker token + ouvrir session
-	Frontend --> Utilisateur: Redirection vers tableau de bord
+AuthController -> AuthController: Normaliser username
+AuthController -> AuthManager: authenticate(credentials)
+AuthManager -> UserDetails: loadUserByUsername(username)
+UserDetails -> DB: Rechercher utilisateur
+DB --> UserDetails: Compte + hash BCrypt + role
+
+alt Identifiants valides et compte actif
+	UserDetails --> AuthManager: CustomUserDetails
+	AuthManager --> AuthController: OK
+	AuthController -> JwtUtil: generateToken(user)
+	JwtUtil --> AuthController: JWT signe (HMAC)
+	AuthController --> Frontend: 200 OK {token, role, user}
+	Frontend -> Frontend: Stocker token (localStorage)
+	Frontend --> Utilisateur: Rediriger selon role
 else Identifiants invalides
-	AuthService --> API: Erreur d'authentification
-	API --> Frontend: 401 Unauthorized
-	Frontend --> Utilisateur: Afficher message d'erreur
+	AuthManager --> AuthController: BadCredentialsException
+	AuthController --> Frontend: 400 Bad Request
+	Frontend --> Utilisateur: Message d'erreur
+else Compte desactive
+	AuthManager --> AuthController: DisabledException
+	AuthController --> Frontend: 403 Forbidden
+	Frontend --> Utilisateur: Acces refuse
 end
 
 @enduml

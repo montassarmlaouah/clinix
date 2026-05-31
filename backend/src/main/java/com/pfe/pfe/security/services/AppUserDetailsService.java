@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.pfe.pfe.billing.SubscriptionAccessService;
 import com.pfe.pfe.model.*;
 import com.pfe.pfe.repository.*;
 import com.pfe.pfe.security.model.AppRole;
@@ -29,6 +30,7 @@ public class AppUserDetailsService implements UserDetailsService {
     private final TechnicienMaintenanceRepository technicienMaintenanceRepository;
     private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SubscriptionAccessService subscriptionAccessService;
 
     @Autowired
     public AppUserDetailsService(AppUserRepository appUserRepository, 
@@ -41,7 +43,8 @@ public class AppUserDetailsService implements UserDetailsService {
                                   ChefPersonnelRepository chefPersonnelRepository,
                                   TechnicienMaintenanceRepository technicienMaintenanceRepository,
                                   PatientRepository patientRepository,
-                                  PasswordEncoder passwordEncoder) {
+                                  PasswordEncoder passwordEncoder,
+                                  SubscriptionAccessService subscriptionAccessService) {
         this.appUserRepository = appUserRepository;
         this.adminCliniqueRepository = adminCliniqueRepository;
         this.medecinRepository = medecinRepository;
@@ -53,6 +56,7 @@ public class AppUserDetailsService implements UserDetailsService {
         this.technicienMaintenanceRepository = technicienMaintenanceRepository;
         this.patientRepository = patientRepository;
         this.passwordEncoder = passwordEncoder;
+        this.subscriptionAccessService = subscriptionAccessService;
     }
 
     @Override
@@ -79,7 +83,12 @@ public class AppUserDetailsService implements UserDetailsService {
             Medecin medecin = medecinOpt.get();
             String cliniqueId = medecin.getClinique() != null ? medecin.getClinique().getId() : null;
             boolean accesCabinet = medecin.getClinique() == null
-                    || Boolean.TRUE.equals(medecin.getAccesCabinet());
+                    || Boolean.TRUE.equals(medecin.getAccesCabinet())
+                    || subscriptionAccessService.hasActivePaidCabinetSubscription(medecin.getId());
+            if (accesCabinet && medecin.getClinique() != null && !Boolean.TRUE.equals(medecin.getAccesCabinet())) {
+                medecin.setAccesCabinet(true);
+                medecinRepository.save(medecin);
+            }
             return buildCustomUserDetails(medecin, "MEDECIN", cliniqueId, username, accesCabinet);
         }
         

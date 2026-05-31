@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NotificationService, Notification } from '../service/notification.service';
 import { AuthService } from '../service/auth-service';
@@ -15,7 +16,7 @@ export interface RoleNotificationGuide {
 
 @Component({
   selector: 'app-notifaction',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './notifaction.html',
   styleUrl: './notifaction.css',
 })
@@ -25,6 +26,7 @@ export class Notifaction implements OnInit {
   unreadCount: number = 0;
   loading: boolean = false;
   error: string | null = null;
+  searchText = '';
   guideExpanded = false;
   expandedRoleIndex: number | null = null;
 
@@ -38,9 +40,23 @@ export class Notifaction implements OnInit {
     this.loadUnreadCount();
   }
 
-  /** Nombre de notifications du jour encore non lues (liste affichée). */
   get unreadToday(): number {
     return this.todayNotifications.filter((n) => !n.lu).length;
+  }
+
+  get readToday(): number {
+    return this.todayNotifications.length - this.unreadToday;
+  }
+
+  get filteredNotifications(): Notification[] {
+    const q = this.searchText.trim().toLowerCase();
+    if (!q) return this.todayNotifications;
+    return this.todayNotifications.filter((n) => {
+      const titre = (n.titre || '').toLowerCase();
+      const message = (n.message || '').toLowerCase();
+      const type = (n.type || '').toLowerCase();
+      return titre.includes(q) || message.includes(q) || type.includes(q);
+    });
   }
 
   trackByNotifId(_index: number, n: Notification): number {
@@ -72,7 +88,7 @@ export class Notifaction implements OnInit {
         this.error = 'Erreur lors du chargement des notifications';
         this.loading = false;
         console.error('Erreur:', err);
-      }
+      },
     });
   }
 
@@ -83,7 +99,7 @@ export class Notifaction implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors du comptage des notifications non lues:', err);
-      }
+      },
     });
   }
 
@@ -97,7 +113,7 @@ export class Notifaction implements OnInit {
         },
         error: (err) => {
           console.error('Erreur lors du marquage comme lu:', err);
-        }
+        },
       });
     }
   }
@@ -105,12 +121,13 @@ export class Notifaction implements OnInit {
   markAllAsRead(): void {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.todayNotifications.forEach(n => n.lu = true);
+        this.todayNotifications.forEach((n) => (n.lu = true));
         this.loadUnreadCount();
+        this.notificationService.requestCountRefresh();
       },
       error: (err) => {
         console.error('Erreur lors du marquage de toutes les notifications:', err);
-      }
+      },
     });
   }
 
@@ -118,32 +135,40 @@ export class Notifaction implements OnInit {
     if (confirm('Voulez-vous vraiment supprimer cette notification?')) {
       this.notificationService.deleteNotification(id).subscribe({
         next: () => {
-          this.todayNotifications = this.todayNotifications.filter(n => n.id !== id);
+          this.todayNotifications = this.todayNotifications.filter((n) => n.id !== id);
           this.loadUnreadCount();
           this.notificationService.requestCountRefresh();
         },
         error: (err) => {
           console.error('Erreur lors de la suppression:', err);
-        }
+        },
       });
     }
   }
 
   getNotificationIcon(type: string): string {
-    switch(type) {
-      case 'SUCCESS': return 'bi-check-circle-fill';
-      case 'WARNING': return 'bi-exclamation-triangle-fill';
-      case 'ERROR': return 'bi-x-circle-fill';
-      default: return 'bi-info-circle-fill';
+    switch (type) {
+      case 'SUCCESS':
+        return 'bi-check-circle-fill';
+      case 'WARNING':
+        return 'bi-exclamation-triangle-fill';
+      case 'ERROR':
+        return 'bi-x-circle-fill';
+      default:
+        return 'bi-info-circle-fill';
     }
   }
 
   getNotificationClass(type: string): string {
-    switch(type) {
-      case 'SUCCESS': return 'notification-success';
-      case 'WARNING': return 'notification-warning';
-      case 'ERROR': return 'notification-error';
-      default: return 'notification-info';
+    switch (type) {
+      case 'SUCCESS':
+        return 'notification-success';
+      case 'WARNING':
+        return 'notification-warning';
+      case 'ERROR':
+        return 'notification-error';
+      default:
+        return 'notification-info';
     }
   }
 
@@ -154,7 +179,7 @@ export class Notifaction implements OnInit {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
 
-    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 1) return "À l'instant";
     if (diffMins < 60) return `Il y a ${diffMins} min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
 
@@ -162,25 +187,10 @@ export class Notifaction implements OnInit {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
 
-  isCurrentRole(guide: RoleNotificationGuide): boolean {
-    const role = this.auth.getRole();
-    if (!role) return false;
-    return guide.roleKeys.some(key => key === role || role === key.replace('ROLE_', ''));
-  }
-
-  toggleGuide(): void {
-    this.guideExpanded = !this.guideExpanded;
-  }
-
-  toggleRoleAccordion(index: number): void {
-    this.expandedRoleIndex = this.expandedRoleIndex === index ? null : index;
-  }
-
-  /** Indique si le lien « Ouvrir » peut être affiché pour le rôle courant (aligné sur RoleGuard). */
   lienNotificationAutorise(n: Notification): boolean {
     return this.auth.peutAccederNotificationLien(n.actionUrl);
   }

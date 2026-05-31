@@ -23,6 +23,7 @@ export class MedecinDossierComponent implements OnInit {
   dossier: DossierMedical | null = null;
   loading = false;
   error = '';
+  searchPatient = '';
 
   constructor(
     private http: HttpClient,
@@ -37,6 +38,29 @@ export class MedecinDossierComponent implements OnInit {
       next: (data) => (this.patients = data || []),
       error: () => (this.error = 'Impossible de charger les patients.'),
     });
+  }
+
+  get statPatients(): number {
+    return this.patients.length;
+  }
+
+  get statDossierOuvert(): number {
+    return this.dossier ? 1 : 0;
+  }
+
+  get filteredPatients(): any[] {
+    const q = this.searchPatient.trim().toLowerCase();
+    if (!q) return this.patients;
+    return this.patients.filter((p) =>
+      `${p.prenom || ''} ${p.nom || ''}`.toLowerCase().includes(q)
+    );
+  }
+
+  get allergiesText(): string {
+    if (!this.dossier?.allergies?.length) return '—';
+    return Array.isArray(this.dossier.allergies)
+      ? this.dossier.allergies.join(', ')
+      : String(this.dossier.allergies);
   }
 
   chargerDossier(): void {

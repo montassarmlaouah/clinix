@@ -1,0 +1,55 @@
+@startuml
+!theme plain
+
+title sd [Traiter une demande d'operation]
+
+autonumber
+
+actor Admin as "Admin clinique"
+boundary UI as ":UI Demandes operation"
+control Controller as "DemandeOperationController"
+control Service as "DemandeOperationService"
+entity DAO as "DemandeOperationRepository"
+
+ref over Admin, UI
+  S'authentifier
+end ref
+
+Admin -> UI : Ouvrir la liste des demandes d'operation
+UI -> Controller : GET /api/demandes-operation?cliniqueId=...
+Controller -> Service : listerParClinique(cliniqueId)
+Service -> DAO : findByCliniqueIdOrderByDateCreationDesc(...)
+DAO --> Service : Liste des demandes
+Service --> Controller : List<DemandeOperation>
+Controller --> UI : 200 OK
+UI --> Admin : Afficher les demandes (statut EN_ATTENTE, ...)
+
+Admin -> UI : Cliquer Approuver / Refuser / Planifier / Effectuer
+UI --> Admin : Afficher confirmation (selon action)
+
+alt [Admin annule l'action]
+  Admin -> UI : Annuler
+  UI --> Admin : Fermer la confirmation
+else [Admin confirme le traitement]
+  Admin -> UI : Confirmer le changement de statut
+  UI -> Controller : PATCH /api/demandes-operation/{id}/statut
+  Controller -> Service : changerStatut(id, statut)
+  Service -> DAO : findById(id)
+  DAO --> Service : DemandeOperation
+
+  alt [Demande introuvable]
+    Service --> Controller : IllegalArgumentException
+    Controller --> UI : 400 Bad Request
+    UI --> Admin : Afficher message d'erreur
+  else [Statut mis a jour]
+    Service -> Service : setStatut(APPROUVEE | PLANIFIEE | REFUSEE | EFFECTUEE)
+    Service -> DAO : save(demande)
+    DAO --> Service : DemandeOperation mise a jour
+    Service --> Controller : DemandeOperation
+    Controller --> UI : 200 OK
+    UI -> UI : Rafraichir la liste
+    UI --> Admin : Afficher message de succes
+  end
+end
+
+@enduml

@@ -7,6 +7,7 @@ import { PatientService } from '../service/patient-service';
 import { AuthService } from '../service/auth-service';
 import { environment } from '../../environments/environment';
 import { ImagerieDICOM } from '../model/imagerie-dicom';
+import { StatutImagerie } from '../model/enums';
 
 @Component({
   selector: 'app-medecin-examens',
@@ -31,6 +32,9 @@ export class MedecinExamensComponent implements OnInit {
   liste: ImagerieDICOM[] = [];
   loading = false;
   error = '';
+  success = '';
+  searchText = '';
+  showDemandeModal = false;
 
   constructor(
     private http: HttpClient,
@@ -52,6 +56,34 @@ export class MedecinExamensComponent implements OnInit {
     return this.auth.getUserId();
   }
 
+  get statTotal(): number {
+    return this.liste.length;
+  }
+
+  get statEnAttente(): number {
+    return this.liste.filter((e) => !e.statut || e.statut === 'EN_ATTENTE').length;
+  }
+
+  get statEnCours(): number {
+    return this.liste.filter((e) => e.statut === 'EN_COURS').length;
+  }
+
+  get statTermines(): number {
+    return this.liste.filter((e) => e.statut === 'TERMINE' || e.statut === 'VALIDE').length;
+  }
+
+  get filteredListe(): ImagerieDICOM[] {
+    const q = this.searchText.trim().toLowerCase();
+    if (!q) return this.liste;
+    return this.liste.filter((e) => {
+      const patient = `${e.patient?.prenom || ''} ${e.patient?.nom || ''}`.toLowerCase();
+      const type = (e.type || '').toLowerCase();
+      const motif = (e.motif || '').toLowerCase();
+      const statut = (e.statut || '').toLowerCase();
+      return patient.includes(q) || type.includes(q) || motif.includes(q) || statut.includes(q);
+    });
+  }
+
   chargerMesDemandes(): void {
     const mid = this.medecinId;
     if (!mid) return;
@@ -66,6 +98,27 @@ export class MedecinExamensComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  ouvrirModalDemande(): void {
+    this.showDemandeModal = true;
+    this.error = '';
+  }
+
+  fermerModalDemande(): void {
+    this.showDemandeModal = false;
+  }
+
+  resetForm(): void {
+    this.patientId = '';
+    this.form = {
+      type: 'RADIO',
+      motif: '',
+      indicationsCliniques: '',
+      questionsMedecin: '',
+      piecesJointes: '',
+      niveauUrgence: 'NORMALE',
+    };
   }
 
   demander(): void {
@@ -88,17 +141,54 @@ export class MedecinExamensComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.form = {
-            type: 'RADIO',
-            motif: '',
-            indicationsCliniques: '',
-            questionsMedecin: '',
-            piecesJointes: '',
-            niveauUrgence: 'NORMALE',
-          };
+          this.success = 'Demande d\'imagerie envoyée au service de radiologie.';
+          this.resetForm();
+          this.fermerModalDemande();
           this.chargerMesDemandes();
         },
         error: () => (this.error = 'Demande refusée.'),
       });
+  }
+
+  libelleStatut(statut?: StatutImagerie | string): string {
+    switch ((statut || 'EN_ATTENTE').toUpperCase()) {
+      case 'EN_COURS':
+        return 'En cours';
+      case 'TERMINE':
+        return 'Terminé';
+      case 'VALIDE':
+        return 'Validé';
+      case 'REFUSE':
+        return 'Refusé';
+      default:
+        return 'En attente';
+    }
+  }
+
+  statutPillClass(statut?: StatutImagerie | string): string {
+    switch ((statut || 'EN_ATTENTE').toUpperCase()) {
+      case 'EN_COURS':
+        return 'vp-doc';
+      case 'TERMINE':
+      case 'VALIDE':
+        return 'vp-ok';
+      case 'REFUSE':
+        return 'vp-ko';
+      default:
+        return 'vp-nurse';
+    }
+  }
+
+  libelleUrgence(niveau?: string): string {
+    switch ((niveau || 'NORMALE').toUpperCase()) {
+      case 'BASSE':
+        return 'Basse';
+      case 'HAUTE':
+        return 'Haute';
+      case 'URGENTE':
+        return 'Urgente';
+      default:
+        return 'Normale';
+    }
   }
 }

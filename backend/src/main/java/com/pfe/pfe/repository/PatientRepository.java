@@ -38,5 +38,13 @@ public interface PatientRepository extends JpaRepository<Patient, String> {
         """)
     List<Patient> findAllActifs();
 
+    @Query("""
+        SELECT p FROM Patient p
+        WHERE p.clinique.id = :cliniqueId
+        AND p.actif = false
+        ORDER BY p.nom ASC, p.prenom ASC
+        """)
+    List<Patient> findInactifsByCliniqueId(@Param("cliniqueId") String cliniqueId);
+
     long countByMedecinCabinetId(String medecinId);
 }

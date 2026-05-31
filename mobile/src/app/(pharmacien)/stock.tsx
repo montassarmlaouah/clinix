@@ -1,5 +1,6 @@
+import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 
 import { pharmacieService, type Medicament, type Stock } from '@/src/api/services/pharmacie.service';
 import { EmptyState, ListCard, LoadingOverlay, LunaHeroHeader, LunaScreen, SegmentTabs } from '@/src/components/common';
@@ -10,6 +11,7 @@ import { spacing } from '@/src/theme/spacing';
 type TabKey = 'medicaments' | 'stocks';
 
 export default function PharmacienStockScreen(): React.JSX.Element {
+  const router = useRouter();
   const cliniqueId = useAuthStore((s) => s.cliniqueId);
   const [tab, setTab] = useState<TabKey>('stocks');
   const [medicaments, setMedicaments] = useState<Medicament[]>([]);
@@ -48,6 +50,10 @@ export default function PharmacienStockScreen(): React.JSX.Element {
           onChange={setTab}
         />
       </LunaHeroHeader>
+
+      <Pressable style={styles.linkFull} onPress={() => router.push('/(pharmacien)/pharmacie' as never)}>
+        <Text style={styles.linkFullText}>Interface complète (CRUD, mouvements, bons d'entrée)</Text>
+      </Pressable>
 
       <FlatList
         data={tab === 'stocks' ? stocks : medicaments}
@@ -90,6 +96,19 @@ export default function PharmacienStockScreen(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
+  linkFull: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    backgroundColor: LUNA_COLORS.secondaryLight,
+    borderRadius: 12,
+  },
+  linkFullText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: LUNA_COLORS.secondary,
+    textAlign: 'center',
+  },
   list: { padding: spacing.lg, paddingBottom: 80 },
   card: {
     backgroundColor: LUNA_COLORS.surface,

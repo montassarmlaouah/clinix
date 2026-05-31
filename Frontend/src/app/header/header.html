@@ -122,7 +122,7 @@
         <span *ngIf="!isSidebarCollapsed">Facturation patient</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-     
+
     </div>
     <div class="menu-section" *ngIf="hasAnyRole(['ROLE_MEDECIN'])">
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
@@ -131,11 +131,7 @@
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
 
-      <a routerLink="/medecin-statistiques" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-graph-up-arrow"></i>
-        <span *ngIf="!isSidebarCollapsed">Statistiques</span>
-        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
-      </a>
+
       <a routerLink="/medecin-consultation" routerLinkActive="active" class="nav-link">
         <i class="bi bi-journal-medical"></i>
         <span *ngIf="!isSidebarCollapsed">Consultation</span>
@@ -156,11 +152,7 @@
         <span *ngIf="!isSidebarCollapsed">Urgences</span>
         <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
       </a>
-      <a routerLink="/medecin-messagerie" routerLinkActive="active" class="nav-link">
-        <i class="bi bi-chat-dots"></i>
-        <span *ngIf="!isSidebarCollapsed">Messagerie</span>
-        <i class="bi bi-chevron-right arrow" *ngIf="!isSidebarCollapsed"></i>
-      </a>
+
       <a routerLink="/medecin-dossier" routerLinkActive="active" class="nav-link">
         <i class="bi bi-folder2-open"></i>
         <span *ngIf="!isSidebarCollapsed">Dossier médical</span>
@@ -283,6 +275,7 @@
       <a
         *ngIf="auth.isMedecin() && !auth.isMedecinCabinetExclusif()"
         routerLink="/mon-abonnement"
+        [queryParams]="{ scope: 'cabinet' }"
         routerLinkActive="active"
         class="nav-link"
       >
@@ -575,3 +568,4 @@
     </div>
   </header>
 </div>
+

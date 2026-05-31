@@ -148,8 +148,34 @@ public class PatientService {
     
     public void supprimerPatient(String id) {
         Patient patient = obtenirPatientParId(id);
+        if (Boolean.FALSE.equals(patient.getActif())) {
+            throw new RuntimeException("Ce patient est déjà désactivé");
+        }
+        boolean hospitalise = hospitalisationRepository.findByPatientId(id).stream()
+                .anyMatch(h -> h.getStatut() == Hospitalisation.StatutHospitalisation.EN_COURS);
+        if (hospitalise) {
+            throw new RuntimeException("Impossible de désactiver : hospitalisation en cours");
+        }
         patient.setActif(false);
         patientRepository.save(patient);
+    }
+
+    public Patient reactiverPatient(String id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Patient non trouvé"));
+        if (!Boolean.FALSE.equals(patient.getActif())) {
+            throw new RuntimeException("Ce patient est déjà actif");
+        }
+        patient.setActif(true);
+        Patient saved = patientRepository.save(patient);
+        patientMedecinService.enrichirMedecins(saved);
+        return saved;
+    }
+
+    public List<Patient> obtenirPatientsInactifsParClinique(String cliniqueId) {
+        List<Patient> patients = patientRepository.findInactifsByCliniqueId(cliniqueId);
+        patientMedecinService.enrichirMedecins(patients);
+        return patients;
     }
 
     /**

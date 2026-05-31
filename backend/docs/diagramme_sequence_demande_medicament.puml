@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+
+title Diagramme de sequence - Traitement d'une demande de medicament
+
+autonumber
+
+actor "Medecin / Infirmier" as Demandeur
+actor "Pharmacien" as Pharmacien
+boundary Frontend as "Application Angular"
+control API as "Backend Spring Boot"
+control DemandeService as "Service Demande Medicament"
+control StockService as "Service Stock"
+control Notif as "Service Notification"
+database DB as "Base de donnees"
+
+Demandeur -> Frontend: Creer une demande (patient, medicament, quantite, urgence)
+Frontend -> API: POST /demandes-medicament
+API -> DemandeService: creerDemande(...)
+DemandeService -> DB: Enregistrer la demande (statut = EN_ATTENTE)
+DemandeService -> Notif: notifier(pharmacien)
+API --> Frontend: 201 Created
+Frontend --> Demandeur: Demande envoyee
+
+Pharmacien -> Frontend: Consulter la file des demandes
+Frontend -> API: GET /demandes-medicament?statut=EN_ATTENTE
+API --> Frontend: Liste des demandes
+
+Pharmacien -> Frontend: Valider la demande
+Frontend -> API: PATCH /demandes-medicament/{id}/valider
+API -> DemandeService: validerDemande(id)
+DemandeService -> StockService: verifierStock(medicament, quantite)
+
+alt Stock suffisant
+	StockService -> DB: Decrementer le stock
+	DemandeService -> DB: Mettre a jour la demande (statut = VALIDEE)
+	DemandeService -> Notif: notifier(demandeur, "validee")
+	API --> Frontend: 200 OK
+	Frontend --> Pharmacien: Demande validee, stock mis a jour
+else Stock insuffisant
+	DemandeService -> DB: Mettre a jour la demande (statut = REFUSEE + motif)
+	DemandeService -> Notif: notifier(demandeur, "refusee")
+	API --> Frontend: 409 Conflict (stock insuffisant)
+	Frontend --> Pharmacien: Refus avec motif
+end
+
+@enduml

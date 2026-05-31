@@ -5,7 +5,7 @@
   </header>
 
   <div class="hub-grid">
-    <a *ngFor="let link of links" [routerLink]="link.route" class="hub-card">
+    <a *ngFor="let link of links" [routerLink]="link.route" [queryParams]="link.queryParams" class="hub-card">
       <i class="bi" [ngClass]="link.icon"></i>
       <strong>{{ link.title }}</strong>
       <span>{{ link.description }}</span>

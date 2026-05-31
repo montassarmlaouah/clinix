@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -17,7 +18,7 @@ export interface UrgenceVue {
 @Component({
   selector: 'app-medecin-urgences',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './medecin-urgences.html',
   styleUrl: './medecin-urgences.css',
 })
@@ -28,6 +29,7 @@ export class MedecinUrgencesComponent implements OnInit {
   enAttente: UrgenceVue[] = [];
   loading = false;
   error = '';
+  searchText = '';
 
   constructor(private http: HttpClient) {}
 
@@ -39,7 +41,7 @@ export class MedecinUrgencesComponent implements OnInit {
         this.loadEnAttente();
       },
       error: () => {
-        this.error = 'Erreur chargement urgences actives.';
+        this.error = 'Impossible de charger les urgences actives.';
         this.loading = false;
       },
     });
@@ -52,9 +54,70 @@ export class MedecinUrgencesComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = (this.error ? this.error + ' ' : '') + 'Erreur file d’attente.';
+        this.error = (this.error ? this.error + ' ' : '') + 'Impossible de charger la file d’attente.';
         this.loading = false;
       },
     });
+  }
+
+  get statActives(): number {
+    return this.actives.length;
+  }
+
+  get statEnAttente(): number {
+    return this.enAttente.length;
+  }
+
+  get statTotal(): number {
+    return this.actives.length + this.enAttente.length;
+  }
+
+  get filteredActives(): UrgenceVue[] {
+    return this.filterUrgences(this.actives);
+  }
+
+  get filteredEnAttente(): UrgenceVue[] {
+    return this.filterUrgences(this.enAttente);
+  }
+
+  private filterUrgences(list: UrgenceVue[]): UrgenceVue[] {
+    const q = this.searchText.trim().toLowerCase();
+    if (!q) {
+      return list;
+    }
+    return list.filter((u) => {
+      const patient = u.patient ? `${u.patient.prenom} ${u.patient.nom}`.toLowerCase() : '';
+      const motif = (u.motif || u.description || '').toLowerCase();
+      const niveau = (u.niveau || '').toLowerCase();
+      return patient.includes(q) || motif.includes(q) || niveau.includes(q);
+    });
+  }
+
+  libellePatient(u: UrgenceVue): string {
+    if (!u.patient) {
+      return '—';
+    }
+    return `${u.patient.prenom || ''} ${u.patient.nom || ''}`.trim() || '—';
+  }
+
+  libelleMotif(u: UrgenceVue): string {
+    return u.motif || u.description || '—';
+  }
+
+  niveauClass(niveau?: string): string {
+    const n = (niveau || '').toUpperCase();
+    if (n.includes('CRIT') || n.includes('4') || n === 'ROUGE') {
+      return 'niveau-pill niveau-critique';
+    }
+    if (n.includes('ELEV') || n.includes('3') || n === 'ORANGE') {
+      return 'niveau-pill niveau-eleve';
+    }
+    if (n.includes('MOD') || n.includes('2') || n === 'JAUNE') {
+      return 'niveau-pill niveau-modere';
+    }
+    if (n.includes('FAIB') || n.includes('1') || n === 'VERT') {
+      return 'niveau-pill niveau-faible';
+    }
+    return 'niveau-pill niveau-neutral';
   }
 }

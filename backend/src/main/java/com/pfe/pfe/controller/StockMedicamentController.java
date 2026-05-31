@@ -107,6 +107,9 @@ public class StockMedicamentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Stock non trouvé"));
         }
 
+        int q0 = stock.getQuantite() == null ? 0 : stock.getQuantite();
+        int s0 = stock.getSeuilAlerte() == null ? 0 : stock.getSeuilAlerte();
+
         if (payload.containsKey("quantite") && payload.get("quantite") != null) {
             stock.setQuantite(Integer.parseInt(payload.get("quantite").toString()));
         }
@@ -123,7 +126,9 @@ public class StockMedicamentController {
             stock.setDateExpiration(LocalDate.parse(payload.get("dateExpiration").toString()));
         }
 
-        return ResponseEntity.ok(stockRepository.save(stock));
+        StockMedicament saved = stockRepository.save(stock);
+        stockMedicamentAlerteService.notifierSiStockDevenuFaible(saved, q0, s0);
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
@@ -180,5 +185,16 @@ public class StockMedicamentController {
         StockMedicament saved = stockRepository.save(stock);
         stockMedicamentAlerteService.notifierSiStockDevenuFaible(saved, q0, s0);
         return ResponseEntity.ok(saved);
+    }
+
+    /** Renvoie e-mail + notifications pour un stock en alerte (admin clinique / pharmacien). */
+    @PostMapping("/{id}/alerte-email")
+    public ResponseEntity<?> renvoyerAlerteEmail(@PathVariable String id) {
+        try {
+            stockMedicamentAlerteService.renvoyerAlerteStockFaible(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

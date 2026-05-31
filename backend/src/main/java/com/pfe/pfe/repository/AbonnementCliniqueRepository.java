@@ -27,6 +27,9 @@ public interface AbonnementCliniqueRepository extends JpaRepository<AbonnementCl
 
     Optional<AbonnementClinique> findByStripeSubscriptionId(String stripeSubscriptionId);
 
+    @Query("SELECT a FROM AbonnementClinique a JOIN FETCH a.offre LEFT JOIN FETCH a.clinique LEFT JOIN FETCH a.medecinCabinet WHERE a.id = :id")
+    Optional<AbonnementClinique> findByIdWithDetails(@Param("id") String id);
+
     /**
      * Abonnements au statut Actif (toutes cliniques, super admin).
      * Le statut est stocké en majuscules côté application ({@code ACTIF}).

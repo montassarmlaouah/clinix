@@ -70,6 +70,11 @@
     </section>
 
     <aside class="luna-card">
+      <div class="alert alert-luna-danger mb-3" *ngIf="auth.doitPayerAbonnementCabinet()">
+        <i class="bi bi-info-circle me-2"></i>
+        Abonnement cabinet requis.
+        <a routerLink="/tarifs-abonnement" [queryParams]="{ scope: 'cabinet' }">Choisir un forfait et payer</a>
+      </div>
       <h2 class="card-title"><i class="bi bi-person-plus me-2"></i>Patient cabinet</h2>
       <p class="card-hint">Ajouter un patient suivi hors file active clinique (lié à votre cabinet).</p>
       <div class="form-grid-2">
@@ -98,7 +103,12 @@
           <input class="luna-input" [(ngModel)]="cabinetForm.adresse" />
         </div>
       </div>
-      <button type="button" class="btn btn-primary mt-3" (click)="ajouterPatientCabinet()" [disabled]="!medecinId">
+      <button
+        type="button"
+        class="btn btn-primary mt-3"
+        (click)="ajouterPatientCabinet()"
+        [disabled]="!medecinId || !auth.peutAccederEspaceCabinet()"
+      >
         Enregistrer le patient cabinet
       </button>
 

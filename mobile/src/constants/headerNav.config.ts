@@ -20,6 +20,7 @@ export const HEADER_NAV_MENUS: Record<string, RoleMenuItem[]> = {
     { label: 'Gestion des équipements', route: '/(admin)/equipements', icon: 'construct-outline' },
     { label: 'Mon abonnement', route: '/(admin)/abonnement', icon: 'card-outline' },
     { label: 'Forfaits & paiement', route: '/(admin)/tarifs', icon: 'grid-outline' },
+    { label: 'Facturation patient', route: '/(admin)/facturation-patient', icon: 'receipt-outline' },
   ],
   ROLE_SECRETAIRE: [
     { label: 'Dashboard', route: '/(secretaire)/index', icon: 'speedometer-outline' },

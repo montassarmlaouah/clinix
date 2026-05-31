@@ -23,6 +23,7 @@ import com.pfe.pfe.dto.CreerCabinetMedecinDTO;
 import com.pfe.pfe.dto.PatientDTO;
 import com.pfe.pfe.model.Medecin;
 import com.pfe.pfe.model.Patient;
+import com.pfe.pfe.security.MedecinCabinetSecurity;
 import com.pfe.pfe.service.MedecinService;
 import com.pfe.pfe.service.PatientService;
 
@@ -128,6 +129,7 @@ public class MedecinController {
     public ResponseEntity<?> ajouterPatientCabinet(
             @PathVariable String medecinId,
             @RequestBody PatientDTO dto) {
+        MedecinCabinetSecurity.assertMedecinCabinetAccess(medecinId);
         try {
             Patient p = patientService.creerPatientCabinet(medecinId, dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(p);
@@ -143,6 +145,7 @@ public class MedecinController {
     @GetMapping("/{medecinId}/patients")
     @PreAuthorize("hasAnyRole('MEDECIN','SUPER_ADMIN','ADMIN_CLINIQUE','SECRETAIRE')")
     public ResponseEntity<List<Patient>> listerPatientsCabinet(@PathVariable String medecinId) {
+        MedecinCabinetSecurity.assertMedecinCabinetAccess(medecinId);
         return ResponseEntity.ok(patientService.listerPatientsCabinet(medecinId));
     }
 }

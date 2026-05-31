@@ -24,90 +24,34 @@
     </div>
 
     <ng-container *ngIf="authService.isSuperAdmin() && !loading">
-      <!-- Stats Cards Row -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon">
-              <i class="bi bi-hospital"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Cliniques</h6>
-              <h3>{{ stats.totalCliniques }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon">
-              <i class="bi bi-check-circle"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Cliniques Actives</h6>
-              <h3>{{ stats.cliniquesActives }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon">
-              <i class="bi bi-x-circle"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Cliniques Inactives</h6>
-              <h3>{{ stats.cliniquesInactives }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-info text-white">
-            <div class="stat-icon">
-              <i class="bi bi-bed"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Capacité Totale</h6>
-              <h3>{{ stats.capaciteTotale }}</h3>
-            </div>
-          </div>
-        </div>
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Super administrateur</h4>
+        <p class="text-muted mb-0 small">Vue d'ensemble du réseau Clinix</p>
       </div>
-
-      <!-- Interfaces dédiées (accès rapide hors menu latéral) -->
-      <div class="row g-4 mb-4">
-        <div class="col-md-6">
-          <a routerLink="/clinique" class="text-decoration-none text-reset">
-            <div class="card h-100 border-0 shadow-sm dashboard-hub-card">
-              <div class="card-body d-flex align-items-center gap-3 py-4">
-                <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary">
-                  <i class="bi bi-building fs-2"></i>
-                </div>
-                <div class="flex-grow-1">
-                  <h5 class="mb-1">Interface gestion cliniques</h5>
-                  <p class="text-muted small mb-0">Créer et modifier les cliniques, administrateurs</p>
-                  <span class="badge bg-primary mt-2">{{ stats.totalCliniques }} cliniques</span>
-                </div>
-                <i class="bi bi-arrow-right-circle fs-4 text-primary"></i>
-              </div>
-            </div>
-          </a>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ stats.totalCliniques }}</div>
+            <div class="luna-stat-label">Total Cliniques</div>
+          </div>
         </div>
-        <div class="col-md-6">
-          <a routerLink="/cabinets-medecins" class="text-decoration-none text-reset">
-            <div class="card h-100 border-0 shadow-sm dashboard-hub-card">
-              <div class="card-body d-flex align-items-center gap-3 py-4">
-                <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success">
-                  <i class="bi bi-person-badge fs-2"></i>
-                </div>
-                <div class="flex-grow-1">
-                  <h5 class="mb-1">Interface cabinets médecins</h5>
-                  <p class="text-muted small mb-0">Spécialité, téléphones, fixe et localisation des cabinets</p>
-                  <span class="badge bg-success mt-2 me-1">{{ stats.totalCabinetsMedecins }} cabinets</span>
-                  <span class="badge bg-light text-success border border-success">{{ stats.cabinetsMedecinsActifs }} actifs</span>
-                </div>
-                <i class="bi bi-arrow-right-circle fs-4 text-success"></i>
-              </div>
-            </div>
-          </a>
+        <div class="col-md-6 col-lg-3">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ stats.cliniquesActives }}</div>
+            <div class="luna-stat-label">Cliniques Actives</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ stats.cliniquesInactives }}</div>
+            <div class="luna-stat-label">Cliniques Inactives</div>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ stats.capaciteTotale }}</div>
+            <div class="luna-stat-label">Capacité Totale</div>
+          </div>
         </div>
       </div>
 
@@ -276,53 +220,98 @@
     <!-- ADMIN CLINIQUE DASHBOARD         -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isAdminClinique() && !loading">
-      <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon">
-              <i class="bi bi-people"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Personnel</h6>
-              <h3>{{ adminStats.totalPersonnel }}</h3>
-            </div>
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>Tableau de bord — Administration clinique</h4>
+        <p class="luna-dash-subtitle mb-0 small">
+          <ng-container *ngIf="maClinique?.nom">Établissement : <strong>{{ maClinique?.nom }}</strong></ng-container>
+          <ng-container *ngIf="!maClinique?.nom">Vue d'ensemble de votre clinique</ng-container>
+        </p>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ adminStats.totalPersonnel }}</div>
+            <div class="luna-stat-label">Total personnel</div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon">
-              <i class="bi bi-diagram-3"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Services</h6>
-              <h3>{{ adminStats.totalServices }}</h3>
-            </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ adminStats.totalServices }}</div>
+            <div class="luna-stat-label">Total services</div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon">
-              <i class="bi bi-door-closed"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Chambres</h6>
-              <h3>{{ adminStats.totalChambres }}</h3>
-            </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ adminStats.totalChambres }}</div>
+            <div class="luna-stat-label">Total chambres</div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-info text-white">
-            <div class="stat-icon">
-              <i class="bi bi-cpu"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Équipements</h6>
-              <h3>{{ adminStats.totalEquipements }}</h3>
-            </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ adminStats.totalEquipements }}</div>
+            <div class="luna-stat-label">Total équipements</div>
           </div>
         </div>
       </div>
 
+      <h5 class="mb-3 admin-section-title">
+        <i class="bi bi-cash-stack me-2"></i>Revenus — factures patients
+      </h5>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="luna-stat-tile luna-stat-tile--teal luna-stat-tile--money">
+            <div class="luna-stat-value">{{ adminRevenueTotal | number : '1.2-2' }} DT</div>
+            <div class="luna-stat-label">Encaissements (total)</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="luna-stat-tile luna-stat-tile--blue luna-stat-tile--money">
+            <div class="luna-stat-value">{{ adminRevenueMoisCourant | number : '1.2-2' }} DT</div>
+            <div class="luna-stat-label">Ce mois-ci</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="luna-stat-tile luna-stat-tile--deep luna-stat-tile--money">
+            <div class="luna-stat-value">{{ adminRevenueSemaineCourante | number : '1.2-2' }} DT</div>
+            <div class="luna-stat-label">Cette semaine</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card chart-card mb-4">
+        <div class="card-header bg-white border-0 d-flex flex-wrap justify-content-between align-items-center gap-2 pt-3">
+          <h6 class="mb-0 admin-section-title">
+            <i class="bi bi-bar-chart-line me-2"></i>Évolution des encaissements
+          </h6>
+          <div class="btn-group btn-group-sm admin-revenue-toggle" role="group">
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              [class.active]="adminRevenuePeriode === 'mois'"
+              (click)="basculerAdminRevenuePeriode('mois')"
+            >
+              Par mois
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              [class.active]="adminRevenuePeriode === 'semaine'"
+              (click)="basculerAdminRevenuePeriode('semaine')"
+            >
+              Par semaine
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="luna-chart-caption small mb-3">
+            {{ adminRevenueFacturesPayees }} facture(s) payée(s) — montants encaissés (DT).
+            <a routerLink="/facturation-patient" class="ms-1">Voir la facturation</a>
+          </p>
+          <div class="chart-container" style="height: 300px;">
+            <canvas #adminRevenueChart></canvas>
+          </div>
+        </div>
+      </div>
 
       <div class="row g-4 mb-4">
         <div class="col-lg-8">
@@ -424,56 +413,114 @@
     <!-- MEDECIN DASHBOARD                -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isMedecin() && !loading">
-      <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-4">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon">
-              <i class="bi bi-calendar-check"></i>
+      <div class="luna-dash-intro medecin-dash-intro mb-3">
+        <h4 class="mb-1">
+          <i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord médecin
+        </h4>
+        <p class="text-muted mb-0 small">Vue d'ensemble de votre activité (cabinet et clinique).</p>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ medecinStats.patientsCabinet }}</div>
+            <div class="luna-stat-label">Patients cabinet</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ medecinStats.rendezVousAujourdhui }}</div>
+            <div class="luna-stat-label">RDV aujourd'hui</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ medecinStats.consultationsCeMois }}</div>
+            <div class="luna-stat-label">Consultations (mois)</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ medecinStats.consultationsTotal }}</div>
+            <div class="luna-stat-label">Consultations (total)</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ medecinStats.ordonnancesTotal }}</div>
+            <div class="luna-stat-label">Ordonnances</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+          <a routerLink="/medecin-taches-soins" class="text-decoration-none">
+            <div class="luna-stat-tile luna-stat-tile--deep">
+              <div class="luna-stat-ring">{{ medecinStats.soinsEnAttenteValidation }}</div>
+              <div class="luna-stat-label">Soins à valider</div>
             </div>
-            <div class="stat-content">
-              <h6>RDV Aujourd'hui</h6>
-              <h3>{{ stats.rendezVousAujourdhui }}</h3>
+          </a>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #medecinActivityChart></canvas>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon">
-              <i class="bi bi-hourglass-split"></i>
-            </div>
-            <div class="stat-content">
-              <h6>En Attente</h6>
-              <h3>{{ stats.rendezVousEnAttente }}</h3>
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #medecinOverviewChart></canvas>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card" *ngIf="rendezVousRecents.length > 0">
-        <div class="card-header bg-white">
-          <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Rendez-vous Récents</h5>
+      <div class="card border-0 shadow-sm mb-4" *ngIf="medecinAvecCabinet">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 text-luna-deep"><i class="bi bi-credit-card-2-front me-2 text-luna-teal"></i>Abonnement cabinet</h5>
+          <a routerLink="/mon-abonnement" [queryParams]="{ scope: 'cabinet' }" class="btn btn-sm btn-outline-primary" style="border-color:#26658C;color:#26658C">Gérer</a>
         </div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th>Date</th>
-                  <th>Patient</th>
-                  <th>Motif</th>
-                  <th>Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let rdv of rendezVousRecents">
-                  <td>{{ formatDate(rdv.dateHeure) }}</td>
-                  <td>{{ rdv.patientNom }}</td>
-                  <td>{{ rdv.motif || 'Non spécifié' }}</td>
-                  <td><span [class]="getStatusClass(rdv.statut || '')">{{ getStatusLabel(rdv.statut || '') }}</span></td>
-                </tr>
-              </tbody>
-            </table>
+        <div class="card-body">
+          <div class="alert alert-info mb-0" *ngIf="medecinAbonnementLoading">
+            <i class="bi bi-arrow-repeat me-2"></i>Chargement de votre abonnement…
           </div>
+          <div class="alert alert-warning mb-0" *ngIf="!medecinAbonnementLoading && medecinAbonnementError">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ medecinAbonnementError }}
+          </div>
+          <ng-container *ngIf="!medecinAbonnementLoading && !medecinAbonnementError">
+            <div class="row g-3 align-items-center" *ngIf="medecinAbonnementCabinet; else noAboMedecin">
+              <div class="col-md-3">
+                <span class="badge" [style.background-color]="medecinAbonnementCabinet.accesAutorise ? '#54ACBF' : '#26658C'" [class.text-white]="true">
+                  {{ medecinAbonnementCabinet.accesAutorise ? 'Actif' : 'À régulariser' }}
+                </span>
+              </div>
+              <div class="col-md-3">
+                <div class="text-muted small">Forfait</div>
+                <div class="fw-semibold">{{ medecinAbonnementCabinet.offreNom || '—' }}</div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-muted small">Statut</div>
+                <div class="fw-semibold">{{ libelleStatutAbonnement(medecinAbonnementCabinet.statut) }}</div>
+              </div>
+              <div class="col-md-3">
+                <div class="text-muted small">Fin</div>
+                <div class="fw-semibold">{{ medecinAbonnementCabinet.dateFin | date : 'dd/MM/yyyy' }}</div>
+              </div>
+            </div>
+            <ng-template #noAboMedecin>
+              <p class="text-muted mb-2">Aucun abonnement cabinet actif.</p>
+              <a routerLink="/tarifs-abonnement" [queryParams]="{ scope: 'cabinet' }" class="btn btn-primary btn-sm">
+                Choisir un forfait
+              </a>
+            </ng-template>
+          </ng-container>
         </div>
       </div>
     </ng-container>
@@ -482,42 +529,58 @@
     <!-- RADIOLOGUE DASHBOARD             -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isRadiologue() && !loading">
-      <div class="row g-3 mb-3">
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Radiologie</h4>
+        <p class="text-muted mb-0 small">File d'attente, examens en cours et comptes rendus</p>
+      </div>
+      <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body py-3">
-              <div class="text-muted small">File d'attente</div>
-              <div class="fs-3 fw-semibold text-primary">{{ radiologueStats.fileAttente }}</div>
-              <div class="small text-muted">Sans prise en charge</div>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ radiologueStats.fileAttente }}</div>
+            <div class="luna-stat-label">File d'attente</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body py-3">
-              <div class="text-muted small">Mes examens en cours</div>
-              <div class="fs-3 fw-semibold text-warning">{{ radiologueStats.mesExamensEnCours }}</div>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ radiologueStats.mesExamensEnCours }}</div>
+            <div class="luna-stat-label">Examens en cours</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body py-3">
-              <div class="text-muted small">Comptes rendus à finaliser</div>
-              <div class="fs-3 fw-semibold text-secondary">{{ radiologueStats.comptesRendusAFinaliser }}</div>
-              <div class="small text-muted">Examen terminé, rapport brouillon ou absent</div>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ radiologueStats.comptesRendusAFinaliser }}</div>
+            <div class="luna-stat-label">CR à finaliser</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="card h-100 border-0 shadow-sm">
-            <div class="card-body py-3">
-              <div class="text-muted small">Examens validés</div>
-              <div class="fs-3 fw-semibold text-success">{{ radiologueStats.examensValides }}</div>
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ radiologueStats.examensValides }}</div>
+            <div class="luna-stat-label">Examens validés</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #radiologueWorkflowChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #radiologueOverviewChart></canvas>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <div class="row g-4 mb-4">
         <div class="col-md-8 col-lg-6">
           <div class="card h-100 border-0 shadow-sm">
@@ -547,7 +610,7 @@
     <!-- TECHNICIEN MAINTENANCE           -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isTechnicienMaintenance() && !loading">
-      <div class="technicien-dash-intro mb-4">
+      <div class="luna-dash-intro technicien-dash-intro mb-4">
         <h4 class="mb-1 text-luna-deep">
           <i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord maintenance
         </h4>
@@ -556,51 +619,39 @@
         </p>
       </div>
 
-      <div class="row g-4 mb-4">
+      <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-          <div class="technicien-stat-tile technicien-stat-total">
-            <div class="technicien-stat-icon"><i class="bi bi-box-seam"></i></div>
-            <div class="technicien-stat-body">
-              <span class="technicien-stat-value">{{ technicienEquipementStats.total }}</span>
-              <span class="technicien-stat-label">Références inventaire</span>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ technicienEquipementStats.total }}</div>
+            <div class="luna-stat-label">Références inventaire</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="technicien-stat-tile technicien-stat-ok">
-            <div class="technicien-stat-icon"><i class="bi bi-check-circle"></i></div>
-            <div class="technicien-stat-body">
-              <span class="technicien-stat-value">{{ technicienEquipementStats.fonctionnel }}</span>
-              <span class="technicien-stat-label">Opérationnels</span>
-              <span class="technicien-stat-pct">{{ technicienPctFonctionnel | number:'1.0-1' }}%</span>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ technicienEquipementStats.fonctionnel }}</div>
+            <div class="luna-stat-label">Opérationnels</div>
+            <div class="luna-stat-hint">{{ technicienPctFonctionnel | number:'1.0-1' }}%</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="technicien-stat-tile technicien-stat-danger">
-            <div class="technicien-stat-icon"><i class="bi bi-exclamation-octagon"></i></div>
-            <div class="technicien-stat-body">
-              <span class="technicien-stat-value">{{ technicienEquipementStats.panneHors }}</span>
-              <span class="technicien-stat-label">Panne / hors service</span>
-              <span class="technicien-stat-pct">{{ technicienPctPanneHors | number:'1.0-1' }}%</span>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ technicienEquipementStats.panneHors }}</div>
+            <div class="luna-stat-label">Panne / hors service</div>
+            <div class="luna-stat-hint">{{ technicienPctPanneHors | number:'1.0-1' }}%</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
-          <div class="technicien-stat-tile technicien-stat-warn">
-            <div class="technicien-stat-icon"><i class="bi bi-wrench-adjustable"></i></div>
-            <div class="technicien-stat-body">
-              <span class="technicien-stat-value">{{ technicienEquipementStats.maintenance }}</span>
-              <span class="technicien-stat-label">En maintenance</span>
-              <span class="technicien-stat-pct">{{ technicienPctMaintenance | number:'1.0-1' }}%</span>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ technicienEquipementStats.maintenance }}</div>
+            <div class="luna-stat-label">En maintenance</div>
+            <div class="luna-stat-hint">{{ technicienPctMaintenance | number:'1.0-1' }}%</div>
           </div>
         </div>
       </div>
 
       <div class="row g-4 mb-4 align-items-stretch">
         <div class="col-lg-5">
-          <div class="card border-0 shadow-sm h-100 technicien-chart-card">
+          <div class="card chart-card h-100">
             <div class="card-header bg-white border-0 pt-3 pb-0 px-3">
               <h6 class="mb-0 text-luna-deep fw-bold">
                 <i class="bi bi-pie-chart me-2 text-luna-teal"></i>Répartition par état
@@ -613,33 +664,21 @@
                   <span class="technicien-progress-value">{{ technicienPctFonctionnel | number:'1.0-1' }}%</span>
                 </div>
                 <div class="progress technicien-progress-bar">
-                  <div
-                    class="progress-bar bg-success"
-                    role="progressbar"
-                    [style.width]="technicienPctFonctionnel + '%'">
-                  </div>
+                  <div class="progress-bar luna-progress-bar" role="progressbar" [style.width]="technicienPctFonctionnel + '%'"></div>
                 </div>
                 <div class="technicien-progress-row mt-2">
-                  <span class="technicien-progress-label"><i class="bi bi-exclamation-octagon-fill text-danger me-1"></i>En panne</span>
+                  <span class="technicien-progress-label"><i class="bi bi-exclamation-octagon-fill text-luna-deep me-1"></i>En panne</span>
                   <span class="technicien-progress-value">{{ technicienPctPanneHors | number:'1.0-1' }}%</span>
                 </div>
                 <div class="progress technicien-progress-bar">
-                  <div
-                    class="progress-bar bg-danger"
-                    role="progressbar"
-                    [style.width]="technicienPctPanneHors + '%'">
-                  </div>
+                  <div class="progress-bar luna-progress-bar--deep" role="progressbar" [style.width]="technicienPctPanneHors + '%'"></div>
                 </div>
                 <div class="technicien-progress-row mt-2">
-                  <span class="technicien-progress-label"><i class="bi bi-wrench-adjustable text-warning me-1"></i>Maintenance</span>
+                  <span class="technicien-progress-label"><i class="bi bi-wrench-adjustable text-luna-teal me-1"></i>Maintenance</span>
                   <span class="technicien-progress-value">{{ technicienPctMaintenance | number:'1.0-1' }}%</span>
                 </div>
                 <div class="progress technicien-progress-bar">
-                  <div
-                    class="progress-bar bg-warning"
-                    role="progressbar"
-                    [style.width]="technicienPctMaintenance + '%'">
-                  </div>
+                  <div class="progress-bar luna-progress-bar--light" role="progressbar" [style.width]="technicienPctMaintenance + '%'"></div>
                 </div>
               </div>
               <div *ngIf="technicienEquipementStats.total > 0" class="technicien-chart-wrap">
@@ -715,64 +754,52 @@
     <!-- INFIRMIER DASHBOARD              -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isInfirmier() && !loading">
-
-      <!-- Stat Cards -->
-      <div class="row g-4 mb-4">
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Infirmier(ère)</h4>
+        <p class="text-muted mb-0 small">Patients, plannings, congés et présences</p>
+      </div>
+      <div class="row g-3 mb-4">
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon"><i class="bi bi-people"></i></div>
-            <div class="stat-content">
-              <h6>Total Patients</h6>
-              <h3>{{ infirmierStats.totalPatients }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ infirmierStats.totalPatients }}</div>
+            <div class="luna-stat-label">Total Patients</div>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon"><i class="bi bi-calendar3"></i></div>
-            <div class="stat-content">
-              <h6>Mes Plannings</h6>
-              <h3>{{ infirmierStats.planningsCount }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ infirmierStats.planningsCount }}</div>
+            <div class="luna-stat-label">Mes Plannings</div>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon"><i class="bi bi-calendar-x"></i></div>
-            <div class="stat-content">
-              <h6>Congés en Attente</h6>
-              <h3>{{ infirmierStats.congesEnAttente }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ infirmierStats.congesEnAttente }}</div>
+            <div class="luna-stat-label">Congés en Attente</div>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-info text-white">
-            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-            <div class="stat-content">
-              <h6>Présences ce Mois</h6>
-              <h3>{{ infirmierStats.presencesMois }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ infirmierStats.presencesMois }}</div>
+            <div class="luna-stat-label">Présences ce Mois</div>
           </div>
         </div>
       </div>
 
       <!-- Graphiques infirmier -->
       <div class="row g-4 mb-4">
-        <!-- Bar + Line : Présences par mois -->
         <div class="col-lg-8">
-          <div class="card shadow-sm h-100">
+          <div class="card chart-card h-100">
             <div class="card-body">
-              <div style="position:relative; height:320px;">
+              <div class="chart-container" style="height:320px;">
                 <canvas #infirmierPresencesChart></canvas>
               </div>
             </div>
           </div>
         </div>
-        <!-- Doughnut : Répartition des congés -->
         <div class="col-lg-4">
-          <div class="card shadow-sm h-100">
+          <div class="card chart-card h-100">
             <div class="card-body">
-              <div style="position:relative; height:320px;">
+              <div class="chart-container" style="height:320px;">
                 <canvas #infirmierCongesChart></canvas>
               </div>
             </div>
@@ -781,21 +808,19 @@
       </div>
 
       <div class="row g-4 mb-4">
-        <!-- Distribution par âge -->
         <div class="col-lg-6">
-          <div class="card shadow-sm h-100">
+          <div class="card chart-card h-100">
             <div class="card-body">
-              <div style="position:relative; height:320px;">
+              <div class="chart-container" style="height:320px;">
                 <canvas #infirmierAgeChart></canvas>
               </div>
             </div>
           </div>
         </div>
-        <!-- Distribution par sexe -->
         <div class="col-lg-6">
-          <div class="card shadow-sm h-100">
+          <div class="card chart-card h-100">
             <div class="card-body">
-              <div style="position:relative; height:320px;">
+              <div class="chart-container" style="height:320px;">
                 <canvas #infirmierSexeChart></canvas>
               </div>
             </div>
@@ -809,36 +834,35 @@
     <!-- SECRETAIRE DASHBOARD             -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isSecretaire() && !loading">
-      <!-- Stat Cards -->
-      <div class="row g-4 mb-4">
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Secrétariat</h4>
+        <p class="text-muted mb-0 small">Fichier patients et évolution des admissions</p>
+      </div>
+      <div class="row g-3 mb-4">
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon"><i class="bi bi-people"></i></div>
-            <div class="stat-content">
-              <h6>Total Patients</h6>
-              <h3>{{ secretaireStats.totalPatients }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ secretaireStats.totalPatients }}</div>
+            <div class="luna-stat-label">Total Patients</div>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon"><i class="bi bi-person-plus"></i></div>
-            <div class="stat-content">
-              <h6>Ce Mois</h6>
-              <h3>{{ secretaireStats.patientsRecents }}</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ secretaireStats.patientsRecents }}</div>
+            <div class="luna-stat-label">Nouveaux ce Mois</div>
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon"><i class="bi bi-percent"></i></div>
-            <div class="stat-content">
-              <h6>Taux Croissance</h6>
-              <h3>{{ secretaireStats.taux }}%</h3>
-            </div>
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ secretaireStats.taux }}%</div>
+            <div class="luna-stat-label">Taux Croissance</div>
           </div>
         </div>
-
+        <div class="col-md-6 col-lg-3">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ secretaireStats.rendezVousEnAttente }}</div>
+            <div class="luna-stat-label">RDV en attente</div>
+          </div>
+        </div>
       </div>
 
       <div class="row g-4 mb-4">
@@ -877,74 +901,70 @@
         </div>
       </div>
 
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ secretaireStats.totalPatients }}</span>
-            <h6>Patients enregistrés</h6>
-            <p>Base de données complète et à jour de tous les patients.</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ secretaireStats.patientsRecents }}</span>
-            <h6>Nouveaux ce mois</h6>
-            <p>Nouvelles admissions et enregistrements du mois courant.</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ secretaireStats.taux }}%</span>
-            <h6>Taux de croissance</h6>
-            <p>Progression du fichier patient mois sur mois.</p>
-          </div>
-        </div>
-      </div>
-
     </ng-container>
 
     <!-- ================================ -->
     <!-- PHARMACIEN DASHBOARD             -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isPharmacien() && !loading">
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Pharmacie</h4>
+        <p class="text-muted mb-0 small">Demandes médicaments et stock</p>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ pharmacienStats.totalDemandes }}</div>
+            <div class="luna-stat-label">Demandes reçues</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ pharmacienStats.demandesEnAttente }}</div>
+            <div class="luna-stat-label">En attente</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ pharmacienStats.demandesTraitees }}</div>
+            <div class="luna-stat-label">Traitées</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ pharmacienStats.demandesRefusees }}</div>
+            <div class="luna-stat-label">Refusées</div>
+          </div>
+        </div>
+      </div>
+
       <div class="row g-4 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon"><i class="bi bi-capsule"></i></div>
-            <div class="stat-content">
-              <h6>Demandes reçues</h6>
-              <h3>{{ pharmacienStats.totalDemandes }}</h3>
+        <div class="col-lg-8">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 320px;">
+                <canvas #pharmacienWorkflowChart></canvas>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
-            <div class="stat-content">
-              <h6>En attente</h6>
-              <h3>{{ pharmacienStats.demandesEnAttente }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-            <div class="stat-content">
-              <h6>Traitées</h6>
-              <h3>{{ pharmacienStats.demandesTraitees }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-card bg-gradient-danger text-white">
-            <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
-            <div class="stat-content">
-              <h6>Refusées</h6>
-              <h3>{{ pharmacienStats.demandesRefusees }}</h3>
+        <div class="col-lg-4">
+          <div class="card chart-card h-100">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+              <div class="chart-container w-100" style="height: 260px; max-width: 280px;">
+                <canvas #pharmacienDemandesChart></canvas>
+              </div>
+              <p class="text-muted small mb-0 mt-2 text-center">
+                Taux de traitement :
+                <strong class="text-luna-deep">
+                  {{ pharmacienStats.totalDemandes > 0 ? ((pharmacienStats.demandesTraitees / pharmacienStats.totalDemandes) * 100 | number:'1.0-0') : 0 }}%
+                </strong>
+              </p>
             </div>
           </div>
         </div>
       </div>
+
       <div class="row g-4 mb-4">
         <div class="col-md-8">
           <div class="card border-0 shadow-sm">
@@ -961,17 +981,6 @@
                   <i class="bi bi-grid me-1"></i>Interface pharmacie
                 </a>
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h6 class="text-muted">Taux de traitement</h6>
-              <div class="fs-1 fw-bold text-success">
-                {{ pharmacienStats.totalDemandes > 0 ? ((pharmacienStats.demandesTraitees / pharmacienStats.totalDemandes) * 100 | number:'1.0-0') : 0 }}%
-              </div>
-              <p class="text-muted small">des demandes traitées</p>
             </div>
           </div>
         </div>
@@ -1013,23 +1022,68 @@
     <!-- PATIENT DASHBOARD                -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isPatient() && !loading">
-      <div class="row g-4 mb-4">
-        <div class="col-md-6">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon">
-              <i class="bi bi-hourglass-split"></i>
-            </div>
-            <div class="stat-content">
-              <h6>RDV En Attente</h6>
-              <h3>{{ stats.rendezVousEnAttente }}</h3>
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Mon tableau de bord</h4>
+        <p class="text-muted mb-0 small">Vos rendez-vous et leur statut</p>
+      </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ patientStats.totalRdv }}</div>
+            <div class="luna-stat-label">Total RDV</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ patientStats.enAttente }}</div>
+            <div class="luna-stat-label">En attente</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ patientStats.confirmes }}</div>
+            <div class="luna-stat-label">Confirmés</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ patientStats.termines }}</div>
+            <div class="luna-stat-label">Terminés</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4" *ngIf="patientStats.totalRdv > 0">
+        <div class="col-lg-5">
+          <div class="card chart-card h-100">
+            <div class="card-body">
+              <div class="chart-container" style="height: 300px;">
+                <canvas #patientRdvChart></canvas>
+              </div>
             </div>
           </div>
+        </div>
+        <div class="col-lg-7 d-flex align-items-center">
+          <div class="text-muted small">
+            <p class="mb-2"><i class="bi bi-info-circle me-1 text-luna-teal"></i>Consultez l'historique de vos rendez-vous dans le tableau ci-dessous.</p>
+            <a routerLink="/rendez-vous" class="btn btn-sm btn-outline-primary" style="border-color:#26658C;color:#26658C">
+              <i class="bi bi-calendar-plus me-1"></i>Prendre un rendez-vous
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card border-0 shadow-sm mb-4" *ngIf="patientStats.totalRdv === 0">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+          <p class="mb-2">Aucun rendez-vous pour le moment.</p>
+          <a routerLink="/rendez-vous" class="btn btn-primary btn-sm">Réserver un rendez-vous</a>
         </div>
       </div>
 
       <div class="card" *ngIf="rendezVousRecents.length > 0">
         <div class="card-header bg-white">
-          <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Mes Rendez-vous</h5>
+          <h5 class="mb-0"><i class="bi bi-calendar-event me-2 text-luna-teal"></i>Mes Rendez-vous</h5>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -1060,77 +1114,41 @@
     <!-- CHEF PERSONNEL DASHBOARD         -->
     <!-- ================================ -->
     <ng-container *ngIf="authService.isChefPersonnel() && !loading">
-      <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-4">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon">
-              <i class="bi bi-hospital"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Ma Clinique</h6>
-              <h3>{{ maClinique?.nom || '—' }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon">
-              <i class="bi bi-people"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Total Patients</h6>
-              <h3>{{ stats.totalPatients }}</h3>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4">
-          <div class="stat-card bg-gradient-info text-white">
-            <div class="stat-icon">
-              <i class="bi bi-diagram-3"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Services Actifs</h6>
-              <h3>{{ chefPersonnelStats.servicesActifs }}</h3>
-            </div>
-          </div>
-        </div>
+      <div class="luna-dash-intro mb-3">
+        <h4 class="mb-1"><i class="bi bi-speedometer2 me-2 text-luna-teal"></i>Tableau de bord — Chef du personnel</h4>
+        <p class="text-muted mb-0 small">{{ maClinique?.nom || 'Votre clinique' }} — plannings, services et congés</p>
       </div>
-
-      <div class="row g-4 mb-4">
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-primary text-white">
-            <div class="stat-icon">
-              <i class="bi bi-calendar3"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Plannings</h6>
-              <h3>{{ chefPersonnelStats.planningsCount }}</h3>
-            </div>
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ stats.totalPatients }}</div>
+            <div class="luna-stat-label">Total Patients</div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-success text-white">
-            <div class="stat-icon">
-              <i class="bi bi-calendar-check"></i>
-            </div>
-            <div class="stat-content">
-              <h6>Demandes Congé</h6>
-              <h3>{{ chefPersonnelStats.demandesCongeTotal }}</h3>
-            </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--blue">
+            <div class="luna-stat-ring">{{ chefPersonnelStats.servicesActifs }}</div>
+            <div class="luna-stat-label">Services Actifs</div>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-          <div class="stat-card bg-gradient-warning text-white">
-            <div class="stat-icon">
-              <i class="bi bi-hourglass-split"></i>
-            </div>
-            <div class="stat-content">
-              <h6>En Attente</h6>
-              <h3>{{ chefPersonnelStats.congesEnAttente }}</h3>
-            </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--deep">
+            <div class="luna-stat-ring">{{ chefPersonnelStats.planningsCount }}</div>
+            <div class="luna-stat-label">Plannings</div>
           </div>
         </div>
-
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--light">
+            <div class="luna-stat-ring">{{ chefPersonnelStats.demandesCongeTotal }}</div>
+            <div class="luna-stat-label">Demandes Congé</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg">
+          <div class="luna-stat-tile luna-stat-tile--teal">
+            <div class="luna-stat-ring">{{ chefPersonnelStats.congesEnAttente }}</div>
+            <div class="luna-stat-label">Congés en Attente</div>
+          </div>
+        </div>
       </div>
 
       <div class="row g-4 mb-4">
@@ -1162,30 +1180,6 @@
                 <canvas #chefServicesChart></canvas>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ chefPersonnelStats.servicesActifs }}</span>
-            <h6>Services actifs suivis</h6>
-            <p>Vue globale de la structure des services de la clinique.</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ chefPersonnelStats.planningsCount }}</span>
-            <h6>Plannings suivis</h6>
-            <p>Courbe mensuelle pour anticiper la charge d'organisation.</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="chef-insight-card">
-            <span class="chef-insight-kpi">{{ chefPersonnelStats.congesEnAttente }}</span>
-            <h6>Congés en attente</h6>
-            <p>Indicateur direct des validations à traiter rapidement.</p>
           </div>
         </div>
       </div>

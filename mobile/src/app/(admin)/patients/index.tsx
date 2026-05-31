@@ -5,6 +5,7 @@ export default function AdminPatientsScreen() {
     <PatientsListScreen
       title="Patients"
       detailRouteBase="/(admin)/patients"
+      showArchives
     />
   );
 }

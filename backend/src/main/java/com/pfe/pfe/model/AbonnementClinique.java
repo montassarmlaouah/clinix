@@ -28,12 +28,16 @@ public class AbonnementClinique {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /**
+     * Abonnement "clinique" : clinique_id renseigné.
+     * Abonnement "cabinet" : clinique_id NULL et medecin_cabinet_id renseigné.
+     */
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "clinique_id", nullable = true)
     private Clinique clinique;
 
     /** Cabinet médical (médecin sans clinique) — exclusif avec clinique. */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "medecin_cabinet_id", nullable = true)
     private Medecin medecinCabinet;
 

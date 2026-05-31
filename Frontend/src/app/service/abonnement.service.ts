@@ -16,17 +16,35 @@ export class AbonnementService {
 
   constructor(private http: HttpClient) {}
 
+  private normalizeCategorie(value: unknown): string {
+    const raw = String(value ?? '').trim().toUpperCase();
+    return raw.replace(/\s+/g, '_');
+  }
+
+  private normalizeOffre(o: OffreAbonnement): OffreAbonnement {
+    return {
+      ...o,
+      categorie: this.normalizeCategorie((o as any)?.categorie),
+    };
+  }
+
   listerToutesOffres(): Observable<OffreAbonnement[]> {
-    return this.http.get<OffreAbonnement[]>(`${this.base}/offres`);
+    return this.http
+      .get<OffreAbonnement[]>(`${this.base}/offres`)
+      .pipe(map((rows) => (rows || []).map((o) => this.normalizeOffre(o))));
   }
 
   listerOffresActives(): Observable<OffreAbonnement[]> {
-    return this.http.get<OffreAbonnement[]>(`${this.base}/offres/actives`);
+    return this.http
+      .get<OffreAbonnement[]>(`${this.base}/offres/actives`)
+      .pipe(map((rows) => (rows || []).map((o) => this.normalizeOffre(o))));
   }
 
   /** Médecin cabinet : forfaits catégorie CABINET_MEDICAL. */
   listerOffresActivesCabinet(): Observable<OffreAbonnement[]> {
-    return this.http.get<OffreAbonnement[]>(`${this.base}/offres/actives-cabinet`);
+    return this.http
+      .get<OffreAbonnement[]>(`${this.base}/offres/actives-cabinet`)
+      .pipe(map((rows) => (rows || []).map((o) => this.normalizeOffre(o))));
   }
 
   creerOffre(payload: Partial<OffreAbonnement>): Observable<OffreAbonnement> {
@@ -75,6 +93,17 @@ export class AbonnementService {
 
   getStripeConfig(): Observable<StripeConfigAdminDTO> {
     return this.http.get<StripeConfigAdminDTO>(`${this.base}/stripe-config`);
+  }
+
+  /** Confirme le paiement Stripe via session_id (retour navigateur). */
+  confirmStripeCheckout(
+    sessionId: string,
+    scope?: 'clinique' | 'cabinet'
+  ): Observable<{ message?: string; abonnement?: AbonnementCliniqueSummary }> {
+    return this.http.post<{ message?: string; abonnement?: AbonnementCliniqueSummary }>(
+      `${this.base}/confirm-checkout`,
+      { sessionId, scope }
+    );
   }
 
   getCurrentSubscription(scope?: 'clinique' | 'cabinet'): Observable<AbonnementCliniqueSummary | null> {

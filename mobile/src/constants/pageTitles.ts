@@ -27,6 +27,7 @@ const SEGMENT_TITLES: Record<string, { title: string; subtitle?: string }> = {
   abonnements: { title: 'Abonnements' },
   organisations: { title: 'Cliniques' },
   abonnement: { title: 'Facturation patient', subtitle: 'Sortie · CNAM · PDF' },
+  'facturation-patient': { title: 'Facturation patient', subtitle: 'Sortie · CNAM · PDF' },
   tarifs: { title: 'Forfaits' },
   'abonnement-paiement': { title: 'Paiement' },
   'demandes-operation': { title: 'Demandes opération' },

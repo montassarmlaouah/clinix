@@ -605,9 +605,255 @@ a:hover .dashboard-hub-card {
     box-shadow: 0 0.5rem 1rem rgba(2, 56, 89, 0.12) !important;
 }
 
+/* --- Dashboard LUNA partagé (tous les rôles) --- */
+.luna-dash-intro h4,
+.luna-dash-intro h5,
+.luna-dash-intro h4 .bi,
+.medecin-dash-intro h4,
+.medecin-dash-intro h5,
+.medecin-dash-intro h4 .bi,
+.technicien-dash-intro h4 {
+    color: #023859;
+    font-weight: 700;
+}
+
+.luna-dash-subtitle {
+    color: #023859 !important;
+    font-weight: 500;
+}
+
+.luna-dash-intro .luna-dash-subtitle strong,
+.luna-dash-intro .luna-dash-subtitle {
+    color: #023859;
+}
+
+.admin-section-title {
+    color: #023859;
+    font-weight: 700;
+}
+
+.admin-section-title .bi {
+    color: #023859;
+}
+
+.chart-card .card-header h6 {
+    color: #023859;
+}
+
+.chart-card .luna-chart-caption {
+    color: #023859;
+}
+
+.chart-card .luna-chart-caption a {
+    color: #023859;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.luna-stat-tile,
+.medecin-stat-tile {
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    min-height: 130px;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid rgba(2, 56, 89, 0.08);
+    box-shadow: 0 4px 14px rgba(2, 56, 89, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+a .luna-stat-tile:hover,
+a .medecin-stat-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(2, 56, 89, 0.14);
+}
+
+.luna-stat-ring,
+.medecin-stat-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.65rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #023859;
+    -webkit-text-fill-color: #023859;
+    text-shadow: none;
+    box-shadow: inset 0 0 0 2px rgba(2, 56, 89, 0.12);
+    background: linear-gradient(145deg, #e8f7fa 0%, var(--luna-light) 55%, #c5eef3 100%);
+}
+
+.luna-stat-tile--teal .luna-stat-ring,
+.medecin-stat-tile--teal .medecin-stat-ring {
+    background: linear-gradient(145deg, #dff4f8 0%, rgba(167, 235, 242, 0.85) 55%, #b8e8ef 100%);
+    color: #023859;
+    -webkit-text-fill-color: #023859;
+}
+.luna-stat-tile--blue .luna-stat-ring,
+.medecin-stat-tile--blue .medecin-stat-ring {
+    background: linear-gradient(145deg, #d6eaf4 0%, rgba(167, 235, 242, 0.75) 55%, #a8d4e8 100%);
+    color: #023859;
+    -webkit-text-fill-color: #023859;
+}
+.luna-stat-tile--deep .luna-stat-ring,
+.medecin-stat-tile--deep .medecin-stat-ring {
+    background: linear-gradient(145deg, #cfe4ef 0%, rgba(84, 172, 191, 0.25) 55%, #b5d6e4 100%);
+    color: #023859;
+    -webkit-text-fill-color: #023859;
+}
+.luna-stat-tile--light .luna-stat-ring {
+    background: linear-gradient(145deg, #f0fbfc 0%, var(--luna-light) 55%, #d4f6fa 100%);
+    color: #023859;
+    -webkit-text-fill-color: #023859;
+}
+
+.luna-stat-label,
+.medecin-stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #023859;
+    background: transparent;
+    font-weight: 600;
+    line-height: 1.25;
+    user-select: none;
+}
+
+.luna-stat-tile--money {
+    min-height: 118px;
+}
+
+.luna-stat-tile--money .luna-stat-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    line-height: 1.2;
+}
+
+.luna-stat-tile--money .luna-stat-value,
+.luna-stat-tile--teal .luna-stat-value,
+.luna-stat-tile--blue .luna-stat-value,
+.luna-stat-tile--deep .luna-stat-value,
+.luna-stat-tile--light .luna-stat-value {
+    color: #023859;
+}
+
+.admin-revenue-toggle .btn {
+    border-color: rgba(2, 56, 89, 0.25);
+    color: #023859;
+}
+
+.admin-revenue-toggle .btn.active {
+    background: linear-gradient(135deg, #26658c, #54acbf);
+    border-color: #26658c;
+    color: #fff;
+}
+
+.luna-stat-value,
+.medecin-stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-top: 0.15rem;
+}
+.luna-stat-tile--teal .luna-stat-value,
+.medecin-stat-tile--teal .medecin-stat-value,
+.luna-stat-tile--blue .luna-stat-value,
+.medecin-stat-tile--blue .medecin-stat-value,
+.luna-stat-tile--deep .luna-stat-value,
+.medecin-stat-tile--deep .medecin-stat-value,
+.luna-stat-tile--light .luna-stat-value,
+.medecin-stat-tile--light .medecin-stat-value {
+    color: #023859;
+}
+
+.chart-card .card-body {
+    padding: 1.25rem;
+}
+
+.luna-stat-hint {
+    font-size: 0.7rem;
+    color: var(--luna-blue);
+    font-weight: 600;
+    margin-top: 0.2rem;
+}
+
+.luna-progress-bar {
+    background: linear-gradient(90deg, var(--luna-blue), var(--luna-teal));
+}
+.luna-progress-bar--deep {
+    background: linear-gradient(90deg, var(--luna-deep), var(--luna-blue));
+}
+.luna-progress-bar--light {
+    background: linear-gradient(90deg, var(--luna-light), var(--luna-teal));
+}
+
+.medecin-hub-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 0.5rem;
+}
+.medecin-hub-icon--teal {
+    background: rgba(84, 172, 191, 0.2);
+    color: var(--luna-blue);
+    border: 2px solid var(--luna-teal);
+}
+.medecin-hub-icon--blue {
+    background: rgba(38, 101, 140, 0.12);
+    color: var(--luna-deep);
+    border: 2px solid var(--luna-blue);
+}
+.medecin-hub-icon--deep {
+    background: rgba(2, 56, 89, 0.1);
+    color: var(--luna-deep);
+    border: 2px solid var(--luna-deep);
+}
+
+.medecin-hub-card h6 {
+    color: var(--luna-deep);
+}
+a:hover .medecin-hub-card {
+    border-color: rgba(84, 172, 191, 0.35);
+}
+
+.medecin-luna-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: var(--luna-blue);
+}
+.medecin-luna-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.medecin-luna-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.medecin-luna-dot--teal { background: var(--luna-teal); }
+.medecin-luna-dot--blue { background: var(--luna-blue); }
+.medecin-luna-dot--deep { background: var(--luna-deep); }
+
 /* --- Technicien maintenance : stats + anneaux % --- */
 .text-luna-deep {
-    color: var(--luna-deep);
+    color: #023859;
 }
 .text-luna-teal {
     color: var(--luna-teal);

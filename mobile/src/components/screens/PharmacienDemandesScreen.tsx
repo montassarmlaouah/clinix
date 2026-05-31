@@ -68,6 +68,7 @@ export function PharmacienDemandesScreen(): React.JSX.Element {
               meta={(item.items ?? []).map((l) => `${l.medicament?.nom} ×${l.quantite}`).join(' · ')}
               accentColor={LUNA_COLORS.accentGold}
             />
+            {item.notes ? <Text style={styles.notes}>{item.notes}</Text> : null}
             <View style={styles.actions}>
               <Button title="Délivrer" size="sm" onPress={() => changerStatut(item.id, 'DELIVREE')} />
               <Button title="Partielle" size="sm" variant="ghost" onPress={() => changerStatut(item.id, 'PARTIELLE')} />
@@ -86,5 +87,6 @@ export function PharmacienDemandesScreen(): React.JSX.Element {
 const styles = StyleSheet.create({
   list: { padding: spacing.lg, paddingBottom: 80 }, // ✨ espace tab bar
   cardWrap: { marginBottom: spacing.sm },
+  notes: { fontSize: fontSize.sm, color: LUNA_COLORS.textSecondary, paddingHorizontal: spacing.sm, marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.sm, marginTop: -spacing.sm, marginBottom: spacing.md },
 });
