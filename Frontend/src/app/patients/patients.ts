@@ -205,7 +205,7 @@ export class PatientComponent implements OnInit {
     onError: (err: { error?: { message?: string; details?: string }; message?: string; status?: number }) => void
   ): void {
     const req =
-      this.patientView === 'archives' && this.peutVoirArchives()
+      this.patientView === 'archives' && this.peutVoirArchives
         ? this.patientService.getPatientsInactifsParClinique(cliniqueId)
         : this.patientService.getPatientsByClinique(cliniqueId);
     req.subscribe({

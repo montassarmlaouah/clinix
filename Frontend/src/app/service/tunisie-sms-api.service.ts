@@ -1,13 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 /** Appels sécurisés (JWT) : test d’envoi et DLR TunisieSMS MyStudents. */
 @Injectable({
   providedIn: 'root',
 })
 export class TunisieSmsApiService {
-  private baseUrl = 'http://localhost:8080/api/sms';
+  private baseUrl = `${environment.apiUrl}/api/sms`;
 
   constructor(private http: HttpClient) {}
 

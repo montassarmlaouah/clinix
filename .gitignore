@@ -10,10 +10,16 @@ Frontend/node_modules/
 Frontend/dist/
 Frontend/.angular/
 
+# Mobile - dépendances Node.js
+mobile/node_modules/
+mobile/dist/
+
 # Fichiers d'environnement et secrets
 *.env
+.env
 .env.*
 backend/src/main/resources/application-local.properties
+backend/src/main/resources/gemini-local.properties
 backend/stripe-local.properties
 
 # IDE
