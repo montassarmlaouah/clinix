@@ -52,7 +52,12 @@ chown -R www-data:www-data "${WEB_DIR}" 2>/dev/null || true
 chmod -R 755 "${WEB_DIR}"
 
 log "Redemarrage backend..."
-if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
+if [[ -f "${BACKEND_DIR}/deploy/clinix-backend.service" ]]; then
+  cp "${BACKEND_DIR}/deploy/clinix-backend.service" "/etc/systemd/system/${SERVICE_NAME}.service"
+  systemctl daemon-reload
+  systemctl enable "${SERVICE_NAME}" 2>/dev/null || true
+fi
+if systemctl list-unit-files | grep -q "${SERVICE_NAME}"; then
   systemctl restart "${SERVICE_NAME}"
 else
   log "Service ${SERVICE_NAME} absent — demarrage manuel du JAR si besoin."
@@ -61,7 +66,16 @@ else
     --spring.profiles.active=prod > /var/log/clinix-backend.log 2>&1 &
 fi
 
-sleep 8
+sleep 10
+
+log "Test login Super Admin..."
+LOGIN=$(curl -sf -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"super.admin","password":"Password123!"}' || echo FAIL)
+if ! echo "${LOGIN}" | grep -q '"token"'; then
+  log "ATTENTION: health OK mais login echoue — lancez reparer-backend-serveur.sh"
+  log "Detail login: ${LOGIN}"
+fi
 
 if systemctl is-active --quiet nginx 2>/dev/null; then
   nginx -t && systemctl reload nginx
