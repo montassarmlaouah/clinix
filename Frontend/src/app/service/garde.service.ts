@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Garde } from '../model/garde';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GardeService {
-  private baseUrl = 'http://localhost:8080/api/gardes';
+  private baseUrl = `${environment.apiUrl}/api/gardes`;
 
   constructor(private http: HttpClient) {}
 

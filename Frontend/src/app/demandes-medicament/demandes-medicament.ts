@@ -6,6 +6,7 @@ import { AuthService } from '../service/auth-service';
 import { DemandesMedicamentService, DemandeMedicament } from '../service/demandes-medicament.service';
 import { PatientService } from '../service/patient-service';
 import { ChambreService } from '../service/chambre.service';
+import { environment } from '../../environments/environment';
 
 interface Medicament { id: string; nom: string; forme?: string; dosage?: string; code?: string; }
 interface ItemForm { medicamentId: string; medicamentNom: string; quantite: number; instructions: string; }
@@ -84,7 +85,7 @@ export class DemandesMedicamentComponent implements OnInit {
   }
 
   chargerMedicaments(): void {
-    this.http.get<Medicament[]>('http://localhost:8080/api/medicaments').subscribe({
+    this.http.get<Medicament[]>(`${environment.apiUrl}/api/medicaments`).subscribe({
       next: m => { this.tousMedicaments = m; },
       error: () => { this.tousMedicaments = []; }
     });

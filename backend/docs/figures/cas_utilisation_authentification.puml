@@ -1,0 +1,37 @@
+@startuml cas_utilisation_authentification
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor white
+  BorderColor black
+}
+
+title Cas d'utilisation authentification
+
+actor "Utilisateur" as user
+actor "Administrateur" as admin
+
+admin --|> user
+
+rectangle "Cas d'utilisation authentification" {
+  usecase "Se déconnecter" as UC_deconnecter
+  usecase "Se connecter" as UC_connecter
+  usecase "Consulter profil" as UC_profil
+  usecase "Réinitialiser MDP" as UC_reset_mdp
+  usecase "Gérer rôles" as UC_roles
+  usecase "Se rediriger vers le dashboard" as UC_redirect
+  usecase "mot passe oublié" as UC_forgot
+}
+
+user --> UC_deconnecter
+user --> UC_connecter
+user --> UC_profil
+
+admin --> UC_roles
+
+UC_connecter ..> UC_redirect : <<include>>
+UC_forgot ..> UC_connecter : <<extend>>
+UC_forgot ..> UC_reset_mdp : <<include>>
+
+@enduml

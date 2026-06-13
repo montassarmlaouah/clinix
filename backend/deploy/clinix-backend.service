@@ -1,0 +1,27 @@
+[Unit]
+Description=Clinix Backend (Spring Boot)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/clinix/backend
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=POSTGRES_HOST=localhost
+Environment=POSTGRES_PORT=5432
+Environment=POSTGRES_DB=PFE2
+Environment=POSTGRES_USER=clinix
+Environment=POSTGRES_PASSWORD=Clinix2026Secure!
+Environment=JWT_SECRET=ClinixJwtSecretKey2026Minimum32CharactersLong
+Environment=APP_BILLING_SUCCESS_URL=https://www.cliniix.tech/mon-abonnement?checkout=success
+Environment=APP_BILLING_CANCEL_URL=https://www.cliniix.tech/mon-abonnement?checkout=cancel
+# TunisieSMS — définir TUNISIESMS_API_KEY sur le serveur (ne pas laisser vide)
+Environment=TUNISIESMS_ENABLED=true
+Environment=TUNISIESMS_API_KEY=
+Environment=TUNISIESMS_SENDER=TunSMS Test
+ExecStart=/usr/bin/java -jar /opt/clinix/backend/target/pfe-0.0.1-SNAPSHOT.jar
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

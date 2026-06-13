@@ -270,6 +270,39 @@ public class TunisieSmsService {
         return outcome;
     }
 
+    /**
+     * SMS création / réinitialisation administrateur clinique.
+     * Utilise la clé globale plateforme — sans contrôle de quota abonnement
+     * (l'onboarding admin doit fonctionner même si la clinique n'a pas encore d'abonnement actif).
+     */
+    public SmsSendOutcome sendSmsAdminCliniqueWithOutcome(
+            String cliniqueId, String phoneNumber, String message, String typeSms) {
+        if (!enabled) {
+            log.info("[TunisieSMS] Desactive — SMS admin non envoye vers {}", phoneNumber);
+            return SmsSendOutcome.echec("TunisieSMS est désactivé (tunisiesms.enabled=false).");
+        }
+        if (!StringUtils.hasText(apiUrl) || !StringUtils.hasText(globalApiKey)) {
+            log.warn("[TunisieSMS] URL ou cle globale manquante — SMS admin non envoye.");
+            return SmsSendOutcome.echec("URL API ou clé globale TunisieSMS absente.");
+        }
+
+        String tag = StringUtils.hasText(cliniqueId) ? "admin-clinique:" + cliniqueId : "admin-clinique";
+        SmsSendOutcome outcome = doSendWithOutcome(globalApiKey, globalSender, phoneNumber, message, tag);
+        if (StringUtils.hasText(cliniqueId)) {
+            cliniqueSmsQuotaService.enregistrerEnvoi(
+                    cliniqueId,
+                    phoneNumber,
+                    message,
+                    outcome.envoye() ? "SENT" : "FAILED",
+                    typeSms != null ? typeSms : "ADMIN_PROVISIONING");
+        }
+        return outcome;
+    }
+
+    public void sendSmsAdminClinique(String cliniqueId, String phoneNumber, String message) {
+        sendSmsAdminCliniqueWithOutcome(cliniqueId, phoneNumber, message, "ADMIN_PROVISIONING");
+    }
+
     public void sendSms(String phoneNumber, String message) {
         sendSmsForClinique(null, phoneNumber, message);
     }

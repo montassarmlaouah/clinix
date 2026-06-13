@@ -2,8 +2,11 @@ package com.pfe.pfe.controller;
 
 import java.util.List;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -146,5 +149,20 @@ public class AdministrateurCliniqueController {
     public ResponseEntity<Void> activerAdmin(@PathVariable String id) {
         adminCliniqueService.activerAdmin(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Réinitialiser le mot de passe et renvoyer par SMS (Super Admin uniquement).
+     * POST /api/administrateurs-clinique/{id}/reinitialiser-mot-de-passe
+     */
+    @PostMapping("/{id}/reinitialiser-mot-de-passe")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<?> reinitialiserMotDePasse(@PathVariable String id) {
+        try {
+            Map<String, Object> result = adminCliniqueService.reinitialiserMotDePasseEtEnvoyerSms(id);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 }

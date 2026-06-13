@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Presence } from '../model/presence';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PresenceService {
-  private baseUrl = 'http://localhost:8080/api/presences';
+  private baseUrl = `${environment.apiUrl}/api/presences`;
 
   constructor(private http: HttpClient) {}
 

@@ -5,13 +5,14 @@ import { Observable, of, tap } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { LoginRequest, AuthResponse, AppRole, ROLES_PERSONNEL, VerificationCodeRequest } from '../model/user.model';
 import { AbonnementService } from './abonnement.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private baseUrl = 'http://localhost:8080/auth';
-  private smsUrl = 'http://localhost:8080/api/sms';
+  private baseUrl = `${environment.apiUrl}/auth`;
+  private smsUrl = `${environment.apiUrl}/api/sms`;
   /** Abonnement cabinet actif et payé (vérifié via API billing). */
   private cabinetAbonnementActif = false;
   private cabinetAccessHydrated = false;

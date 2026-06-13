@@ -1,6 +1,8 @@
 package com.pfe.pfe.service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,6 +13,7 @@ import org.springframework.util.StringUtils;
 import com.pfe.pfe.dto.CreerAdministrateurCliniqueDTO;
 import com.pfe.pfe.dto.LoginAdminCliniqueDTO;
 import com.pfe.pfe.dto.RegisterAdminCliniqueDTO;
+import com.pfe.pfe.dto.SmsSendOutcome;
 import com.pfe.pfe.model.AdministrateurClinique;
 import com.pfe.pfe.repository.AdministrateurCliniqueRepository;
 import com.pfe.pfe.repository.CliniqueRepository;
@@ -104,13 +107,52 @@ public class AdministrateurCliniqueService {
                 + ". Compte admin clinique pret. ID: " + saved.getTelephone()
                 + " MDP: " + rawPassword + ". App Clinux.";
         try {
-            // Clé clinique si abonnement SMS + clé renseignée, sinon clé globale (voir TunisieSmsService)
-            tunisieSmsService.sendSmsForClinique(clinique.getId(), saved.getTelephone(), message);
+            tunisieSmsService.sendSmsAdminClinique(clinique.getId(), saved.getTelephone(), message);
         } catch (Exception e) {
             log.warn("SMS TunisieSMS non envoye pour admin clinique {} : {}", saved.getTelephone(), e.getMessage());
         }
 
         return saved;
+    }
+
+    /**
+     * Réinitialise le mot de passe d'un administrateur de clinique et tente l'envoi par SMS.
+     * Réservé au Super Admin (mot de passe perdu si le SMS initial n'est pas arrivé).
+     */
+    public Map<String, Object> reinitialiserMotDePasseEtEnvoyerSms(String adminId) {
+        AdministrateurClinique admin = obtenirAdminParId(adminId);
+        if (admin.getClinique() == null || admin.getClinique().getId() == null) {
+            throw new IllegalArgumentException("Cet administrateur n'est assigné à aucune clinique");
+        }
+
+        String rawPassword = passwordGenerator.generate();
+        admin.setMotDePasse(passwordEncoder.encode(rawPassword));
+        admin.setActif(true);
+        AdministrateurClinique saved = adminCliniqueRepository.save(admin);
+
+        String nomAffiche = saved.getPrenom() != null ? saved.getPrenom() + " " + saved.getNom() : saved.getNom();
+        String message = "Clinux - Nouveau MDP admin " + nomAffiche
+                + ". ID: " + saved.getTelephone()
+                + " MDP: " + rawPassword + ". App Clinux.";
+
+        SmsSendOutcome outcome;
+        try {
+            outcome = tunisieSmsService.sendSmsAdminCliniqueWithOutcome(
+                    saved.getClinique().getId(), saved.getTelephone(), message, "ADMIN_RESET_MDP");
+        } catch (Exception e) {
+            log.warn("SMS TunisieSMS non envoye pour reinitialisation admin {} : {}", saved.getTelephone(), e.getMessage());
+            outcome = SmsSendOutcome.echec(e.getMessage());
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("adminId", saved.getId());
+        result.put("telephone", saved.getTelephone());
+        result.put("smsEnvoye", outcome.envoye());
+        result.put("smsDetail", outcome.detail());
+        result.put("message", outcome.envoye()
+                ? "Mot de passe réinitialisé et envoyé par SMS."
+                : "Mot de passe réinitialisé en base, mais le SMS n'a pas pu être envoyé : " + outcome.detail());
+        return result;
     }
 
     /**

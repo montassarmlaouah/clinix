@@ -8,6 +8,7 @@ import {
   EtatTechnique,
 StatutEquipement
 } from '../model/materiel-medical';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class EquipementService {
 obtenirNomStatut(arg0: StatutEquipement) {
 throw new Error('Method not implemented.');
 }
-  private readonly baseUrl = 'http://localhost:8080/api/equipements';
+  private readonly baseUrl = `${environment.apiUrl}/api/equipements`;
 
   constructor(private http: HttpClient) {}
 

@@ -171,6 +171,16 @@
             <button type="button" class="btn-close" (click)="closeDetailsModal()"></button>
           </div>
           <div class="modal-body">
+            <div class="messages-section mb-3" *ngIf="error || success">
+              <div *ngIf="error" class="alert alert-luna-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ error }}</span>
+              </div>
+              <div *ngIf="success" class="alert alert-luna-success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ success }}</span>
+              </div>
+            </div>
             <!-- Informations personnelles -->
             <div class="detail-section">
               <h6 class="section-title">
@@ -291,6 +301,14 @@
               class="btn btn-secondary"
               (click)="closeDetailsModal()">
               Fermer
+            </button>
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="reinitialiserMotDePasseAdmin(selectedAdmin?.id); $event.stopPropagation()"
+              [disabled]="!selectedAdmin?.id || resettingAdminPassword">
+              <i class="fas fa-sms"></i>
+              {{ resettingAdminPassword ? 'Envoi en cours...' : 'Renvoyer mot de passe par SMS' }}
             </button>
             <button
               type="button"

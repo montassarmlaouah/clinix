@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Absence, AbsenceDTO } from '../model/absence';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AbsenceService {
-  private baseUrl = 'http://localhost:8080/api/absences';
+  private baseUrl = `${environment.apiUrl}/api/absences`;
 
   constructor(private http: HttpClient) {}
 

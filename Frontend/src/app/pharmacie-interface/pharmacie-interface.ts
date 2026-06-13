@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../service/auth-service';
+import { environment } from '../../environments/environment';
 
 interface MedicamentLite {
   id: string;
@@ -49,7 +50,7 @@ interface DemandeMedicamentLite {
   styleUrl: './pharmacie-interface.css',
 })
 export class PharmacieInterfaceComponent implements OnInit {
-  private api = 'http://localhost:8080/api';
+  private api = `${environment.apiUrl}/api`;
 
   activeTab: 'medicaments' | 'stocks' | 'alertes' | 'bons-entree' | 'demandes' = 'medicaments';
 

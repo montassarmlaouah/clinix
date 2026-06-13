@@ -4,12 +4,13 @@ import { Observable } from 'rxjs';
 import { CliniqueSmsOverviewDTO } from '../model/abonnement.model';
 import { CliniqueTunisieSmsConfigDTO, CliniqueTunisieSmsUpdateDTO } from '../model/tunisie-sms-config';
 import { Clinique, CreerCliniqueAvecAdminDTO } from '../model/user.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CliniqueService {
-  private baseUrl = 'http://localhost:8080/api/cliniques';
+  private baseUrl = `${environment.apiUrl}/api/cliniques`;
 
   constructor(private http: HttpClient) { }
 

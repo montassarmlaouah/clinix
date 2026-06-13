@@ -224,7 +224,7 @@ public class CliniqueService {
                 + ". Compte admin clinique pret. ID: " + adminSauvegarde.getTelephone()
                 + " MDP: " + rawPassword + ". App Clinux.";
         try {
-            tunisieSmsService.sendSmsForClinique(cliniqueSauvegardee.getId(), adminSauvegarde.getTelephone(), sms);
+            tunisieSmsService.sendSmsAdminClinique(cliniqueSauvegardee.getId(), adminSauvegarde.getTelephone(), sms);
         } catch (Exception e) {
             // On ne bloque pas la création clinique si le SMS échoue
             log.warn("SMS non envoyé à l'admin clinique {}: {}", adminSauvegarde.getTelephone(), e.getMessage());

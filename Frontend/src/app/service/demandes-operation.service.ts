@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface EquipeMedicaleLigne {
   medecinId?: string;
@@ -53,7 +54,7 @@ export interface DemandeOperationUpdateRequest extends DemandeOperationRequest {
 
 @Injectable({ providedIn: 'root' })
 export class DemandesOperationService {
-  private base = 'http://localhost:8080/api/demandes-operation';
+  private base = `${environment.apiUrl}/api/demandes-operation`;
 
   constructor(private http: HttpClient) {}
 

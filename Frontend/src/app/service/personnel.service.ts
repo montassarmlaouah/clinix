@@ -160,7 +160,7 @@ export class PersonnelService {
   }
 
   // ===== ADMINISTRATEURS CLINIQUE =====
-  private adminCliniqueUrl = 'http://localhost:8080/api/administrateurs-clinique';
+  private adminCliniqueUrl = `${environment.apiUrl}/api/administrateurs-clinique`;
 
   listerAdministrateursClinique(): Observable<any[]> {
     return this.http.get<any[]>(this.adminCliniqueUrl);
@@ -182,5 +182,21 @@ export class PersonnelService {
 
   supprimerAdministrateurClinique(id: string): Observable<any> {
     return this.http.delete<any>(`${this.adminCliniqueUrl}/${id}`);
+  }
+
+  reinitialiserMotDePasseAdministrateur(id: string): Observable<{
+    adminId: string;
+    telephone: string;
+    smsEnvoye: boolean;
+    smsDetail: string;
+    message: string;
+  }> {
+    return this.http.post<{
+      adminId: string;
+      telephone: string;
+      smsEnvoye: boolean;
+      smsDetail: string;
+      message: string;
+    }>(`${this.adminCliniqueUrl}/${id}/reinitialiser-mot-de-passe`, {});
   }
 }

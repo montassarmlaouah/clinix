@@ -67,6 +67,7 @@ export class PersonnelComponent implements OnInit {
 
     error = '';
     success = '';
+    resettingAdminPassword = false;
 
     constructor(
         private personnelService: PersonnelService,
@@ -227,6 +228,8 @@ export class PersonnelComponent implements OnInit {
     }
 
     openDetailsModal(item: any): void {
+        this.error = '';
+        this.success = '';
         // Check if it's an admin (has clinique property) or personnel
         if (item && item.clinique !== undefined) {
             // It's an administrateur
@@ -374,6 +377,36 @@ export class PersonnelComponent implements OnInit {
             error: (err) => {
                 console.error('Erreur suppression administrateur:', err);
                 alert('Erreur lors de la suppression: ' + (err.error?.message || err.message));
+            }
+        });
+    }
+
+    reinitialiserMotDePasseAdmin(id: string): void {
+        if (!id) {
+            alert('Erreur: ID administrateur non trouvé');
+            return;
+        }
+
+        if (!confirm('Générer un nouveau mot de passe et l\'envoyer par SMS sur le numéro de cet administrateur ?')) {
+            return;
+        }
+
+        this.resettingAdminPassword = true;
+        this.error = '';
+        this.success = '';
+
+        this.personnelService.reinitialiserMotDePasseAdministrateur(id).subscribe({
+            next: (res) => {
+                this.resettingAdminPassword = false;
+                if (res.smsEnvoye) {
+                    this.success = res.message || 'Mot de passe réinitialisé et envoyé par SMS.';
+                } else {
+                    this.error = res.message || 'Mot de passe réinitialisé, mais SMS non envoyé.';
+                }
+            },
+            error: (err) => {
+                this.resettingAdminPassword = false;
+                this.error = err.error?.error || err.error?.message || 'Erreur lors de la réinitialisation du mot de passe';
             }
         });
     }
